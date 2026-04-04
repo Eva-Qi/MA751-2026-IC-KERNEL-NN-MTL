@@ -485,6 +485,8 @@ def compute_earnings_yield(
     xbrl_df: pd.DataFrame,
     prices_df: pd.DataFrame,
     as_of_date: str,
+    *,
+    prices_unadj_df: pd.DataFrame | None = None,
 ) -> pd.Series:
     """
     计算截面 Earnings Yield（E/P 比）。
@@ -497,7 +499,8 @@ def compute_earnings_yield(
     实现细节
     --------
     - net_income_ttm: 使用 compute_ttm() 获取，优先年度数据
-    - market_cap: as_of_date 当日价格 × 最新公布股数
+    - market_cap: 使用 unadjusted price × raw SEC shares（避免 stock split mismatch）
+    - 若 prices_unadj_df 未提供，回退到 prices_df（adjusted prices）
     - 市值为 0 或负数时返回 NaN（避免无意义比率）
     - 所有 XBRL 查询严格过滤 available_date <= as_of_date
 
@@ -509,14 +512,18 @@ def compute_earnings_yield(
         index=date, columns=ticker, values=adj_close。
     as_of_date : str
         计算日期，格式 "YYYY-MM-DD"。
+    prices_unadj_df : pd.DataFrame | None
+        未调整价格矩阵。若提供，用于 market_cap 计算（推荐）。
 
     返回
     ----
     pd.Series
         index=ticker, values=E/P（原始未标准化）。数据缺失者为 NaN。
     """
+    # Use unadjusted prices for market_cap if available (fixes stock split mismatch)
+    mktcap_prices = prices_unadj_df if prices_unadj_df is not None else prices_df
     tickers = prices_df.columns.tolist()
-    prices_now = _get_price_at_date(prices_df, as_of_date)
+    prices_now = _get_price_at_date(mktcap_prices, as_of_date)
     shares = _get_shares_outstanding(xbrl_df, prices_df, as_of_date)
 
     results: dict[str, float] = {}
@@ -1058,6 +1065,8 @@ def compute_all_factors(
     xbrl_df: pd.DataFrame,
     prices_df: pd.DataFrame,
     as_of_date: str,
+    *,
+    prices_unadj_df: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
     对给定日期计算全部 6 个学术因子，返回原始值、z-score 和五分位排名。
@@ -1077,21 +1086,21 @@ def compute_all_factors(
         index=date, columns=ticker, values=adj_close。
     as_of_date : str
         计算日期，格式 "YYYY-MM-DD"。
+    prices_unadj_df : pd.DataFrame | None
+        未调整价格矩阵。若提供，EarningsYield 使用此价格计算 market_cap
+        （解决 stock split mismatch）。若 None，回退到 prices_df。
 
     返回
     ----
     pd.DataFrame
         index=ticker，列如上所述。
-        行数等于 prices_df.columns 中 ticker 的数量。
-
-    示例
-    ----
-    >>> factor_df = compute_all_factors(xbrl_df, prices_df, "2023-01-31")
-    >>> factor_df["EarningsYield"].dropna().shape[0] > 100
-    True
     """
+    # EarningsYield uses unadjusted prices for market_cap if available
+    _prices_for_mktcap = prices_unadj_df if prices_unadj_df is not None else prices_df
+
     factor_functions: dict[str, callable] = {
-        "EarningsYield":      compute_earnings_yield,
+        "EarningsYield":      lambda xdf, pdf, d: compute_earnings_yield(
+                                  xdf, pdf, d, prices_unadj_df=_prices_for_mktcap),
         "GrossProfitability": compute_gross_profitability,
         "AssetGrowth":        compute_asset_growth,
         "Accruals":           compute_accruals,
