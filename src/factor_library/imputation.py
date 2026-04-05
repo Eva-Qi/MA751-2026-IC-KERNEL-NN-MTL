@@ -50,6 +50,19 @@ RAW_FACTOR_NAMES = [
     "NetDebtEBITDA",
 ]
 
+# Tickers that did not exist during the sample period (2015-2022).
+# They appear in the panel because SEC lists current S&P 500 members,
+# but imputing their data would fabricate non-existent company history.
+# These should NEVER be imputed — keep all-NaN or drop entirely.
+NONEXISTENT_TICKERS: set[str] = {
+    "GEHC",   # GE Healthcare — 2023 spin-off from GE
+    "KVUE",   # Kenvue — 2023 spin-off from J&J
+    "CEG",    # Constellation Energy — 2022 spin-off from Exelon
+    "SOLV",   # Solventum — 2024 spin-off from 3M
+    "VLTO",   # Veralto — 2023 spin-off from Danaher
+    "GEV",    # GE Vernova — 2024 spin-off from GE
+}
+
 # Only impute if the sector has enough non-NaN values to compute a meaningful median
 _MIN_NON_NULL_FOR_IMPUTATION = 5
 
@@ -79,6 +92,15 @@ def impute_factor_panel(
     """
     df = factor_panel.copy()
     df["_sector"] = df["ticker"].map(sector_map)
+
+    # Guard: never impute tickers that didn't exist during sample period
+    nonexistent_mask = df["ticker"].isin(NONEXISTENT_TICKERS)
+    n_nonexistent = nonexistent_mask.sum()
+    if n_nonexistent > 0:
+        logger.info(
+            "impute: skipping %d rows for %d non-existent tickers: %s",
+            n_nonexistent, len(NONEXISTENT_TICKERS), sorted(NONEXISTENT_TICKERS),
+        )
 
     total_imputed = 0
     total_forced_nan = 0
@@ -122,7 +144,9 @@ def impute_factor_panel(
                     continue
 
                 sector_mask = date_mask & (df["_sector"] == sector)
-                sector_values = df.loc[sector_mask, factor]
+                # Exclude non-existent tickers from imputation candidates
+                valid_sector_mask = sector_mask & ~nonexistent_mask
+                sector_values = df.loc[valid_sector_mask, factor]
 
                 n_missing = sector_values.isna().sum()
                 if n_missing == 0:
@@ -136,7 +160,7 @@ def impute_factor_panel(
                 if pd.isna(sector_median):
                     continue
 
-                null_mask = sector_mask & df[factor].isna()
+                null_mask = valid_sector_mask & df[factor].isna()
                 n_to_impute = null_mask.sum()
                 if n_to_impute > 0:
                     df.loc[null_mask, factor] = sector_median
