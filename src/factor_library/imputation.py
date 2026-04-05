@@ -2,12 +2,13 @@
 imputation.py — Hard Missing-Data Classification + Sector-Aware Imputation
 
 Three types of missing data:
-  Type A: Economically Undefined → NEVER impute, NEVER rank
-  Type B: Temporal (IPO ramp) → OK to impute with sector median
-  Type C: Random/sporadic → OK to impute with sector median
+  Type A: Economically Undefined → NEVER impute (wrong sector for this factor)
+  Type B: Pre-existence → NEVER impute (company not yet public/available)
+  Type C: Post-existence gap → OK to impute with sector median
 
-Type A is determined by an explicit (factor, sector) validity map,
-NOT by an arbitrary threshold.
+Key principle: we only impute a ticker×factor×date if the ticker
+has REAL data for at least one factor on or before that date.
+Otherwise we'd be fabricating history for a non-existent company.
 """
 
 import logging
@@ -18,23 +19,20 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Hard classification: which (factor, sector) combinations are economically
-# undefined and should NEVER be imputed or ranked.
+# Type A: Economically undefined (factor, sector) combinations.
+# These get permanent NaN regardless of data availability.
 # ---------------------------------------------------------------------------
 
-# Type A sectors per factor — these get permanent NaN.
-# Any sector NOT listed here is considered valid (Type B/C).
 INVALID_SECTORS: dict[str, set[str]] = {
     "GrossProfitability": {
-        "Financials",      # No COGS concept — revenue is interest/fee income
-        "Utilities",       # Regulated tariff model, no meaningful COGS
+        "Financials",      # No COGS concept
+        "Utilities",       # No meaningful COGS
         "Real Estate",     # Rental income, no COGS
     },
     "NetDebtEBITDA": {
-        "Financials",      # Debt IS the product (deposits); EBITDA excludes core business
-        "Real Estate",     # REIT leverage measured differently (Debt/FFO standard)
+        "Financials",      # Debt IS the product
+        "Real Estate",     # REIT leverage measured differently
     },
-    # All other factors: valid for all sectors
     "EarningsYield": set(),
     "AssetGrowth": set(),
     "Accruals": set(),
@@ -50,21 +48,24 @@ RAW_FACTOR_NAMES = [
     "NetDebtEBITDA",
 ]
 
-# Tickers that did not exist during the sample period (2015-2022).
-# They appear in the panel because SEC lists current S&P 500 members,
-# but imputing their data would fabricate non-existent company history.
-# These should NEVER be imputed — keep all-NaN or drop entirely.
-NONEXISTENT_TICKERS: set[str] = {
-    "GEHC",   # GE Healthcare — 2023 spin-off from GE
-    "KVUE",   # Kenvue — 2023 spin-off from J&J
-    "CEG",    # Constellation Energy — 2022 spin-off from Exelon
-    "SOLV",   # Solventum — 2024 spin-off from 3M
-    "VLTO",   # Veralto — 2023 spin-off from Danaher
-    "GEV",    # GE Vernova — 2024 spin-off from GE
-}
-
-# Only impute if the sector has enough non-NaN values to compute a meaningful median
 _MIN_NON_NULL_FOR_IMPUTATION = 5
+
+
+def _compute_first_real_date(
+    factor_panel: pd.DataFrame,
+) -> dict[str, pd.Timestamp | None]:
+    """
+    For each ticker, find the earliest date where ANY factor has real data.
+    This approximates when the company became available in our dataset.
+    Tickers with no real data at all → None (non-existent in sample period).
+    """
+    result = {}
+    for ticker in factor_panel["ticker"].unique():
+        t_data = factor_panel[factor_panel["ticker"] == ticker]
+        has_any = t_data[RAW_FACTOR_NAMES].notna().any(axis=1)
+        real_dates = t_data.loc[has_any, "signal_date"]
+        result[ticker] = real_dates.min() if len(real_dates) > 0 else None
+    return result
 
 
 def impute_factor_panel(
@@ -72,38 +73,33 @@ def impute_factor_panel(
     sector_map: pd.Series,
 ) -> pd.DataFrame:
     """
-    Apply hard classification + sector-aware imputation.
+    Apply hard classification + time-aware sector median imputation.
 
-    1. Type A (factor, sector) combinations: force NaN — never impute
-    2. Type B/C: cross-sectional median imputation per sector per date
-    3. Track all imputed values in {factor}_imputed columns
+    Rules:
+    1. Type A: (factor, sector) economically undefined → force NaN
+    2. Pre-existence: date < ticker's first real data date → keep NaN (not yet public)
+    3. Post-existence gap: date >= first real date, factor is NaN → sector median impute
 
-    Parameters
-    ----------
-    factor_panel : pd.DataFrame
-        Must contain 'ticker', 'signal_date', and raw factor columns.
-    sector_map : pd.Series
-        index=ticker, values=sector string.
-
-    Returns
-    -------
-    pd.DataFrame
-        Same structure with imputed values + {factor}_imputed columns.
+    This ensures we never fabricate history for companies that didn't exist yet.
     """
     df = factor_panel.copy()
     df["_sector"] = df["ticker"].map(sector_map)
 
-    # Guard: never impute tickers that didn't exist during sample period
-    nonexistent_mask = df["ticker"].isin(NONEXISTENT_TICKERS)
-    n_nonexistent = nonexistent_mask.sum()
-    if n_nonexistent > 0:
-        logger.info(
-            "impute: skipping %d rows for %d non-existent tickers: %s",
-            n_nonexistent, len(NONEXISTENT_TICKERS), sorted(NONEXISTENT_TICKERS),
-        )
+    # Compute when each ticker first appears with real data
+    first_real = _compute_first_real_date(df)
+    n_nonexistent = sum(1 for v in first_real.values() if v is None)
+    n_late = sum(1 for v in first_real.values()
+                 if v is not None and v > pd.Timestamp("2015-02-01"))
+
+    logger.info(
+        "impute: %d tickers never had data (non-existent), "
+        "%d tickers appeared after start of sample",
+        n_nonexistent, n_late,
+    )
 
     total_imputed = 0
-    total_forced_nan = 0
+    total_type_a = 0
+    total_pre_existence_skipped = 0
 
     for factor in RAW_FACTOR_NAMES:
         if factor not in df.columns:
@@ -111,73 +107,78 @@ def impute_factor_panel(
 
         imputed_col = f"{factor}_imputed"
         df[imputed_col] = False
-
         invalid_sectors = INVALID_SECTORS.get(factor, set())
 
-        # --- Phase 1: Force NaN for Type A (economically undefined) ---
+        # --- Phase 1: Force NaN for Type A ---
         if invalid_sectors:
             type_a_mask = df["_sector"].isin(invalid_sectors)
-            n_forced = type_a_mask.sum()
-            # Force raw value, z-score, and quintile to NaN
             df.loc[type_a_mask, factor] = np.nan
-            zscore_col = f"{factor}_zscore"
-            quintile_col = f"{factor}_quintile"
-            if zscore_col in df.columns:
-                df.loc[type_a_mask, zscore_col] = np.nan
-            if quintile_col in df.columns:
-                df.loc[type_a_mask, quintile_col] = np.nan
-            total_forced_nan += n_forced
-            logger.info(
-                "impute: %s — forced %d Type-A NaN (sectors: %s)",
-                factor, n_forced, sorted(invalid_sectors),
-            )
+            for col_suffix in ["_zscore", "_quintile"]:
+                col = f"{factor}{col_suffix}"
+                if col in df.columns:
+                    df.loc[type_a_mask, col] = np.nan
+            total_type_a += type_a_mask.sum()
 
-        # --- Phase 2: Sector median imputation for Type B/C ---
-        factor_imputed_count = 0
+        # --- Phase 2: Sector median imputation (post-existence only) ---
+        factor_imputed = 0
+        factor_pre_skipped = 0
 
         for date in df["signal_date"].unique():
             date_mask = df["signal_date"] == date
 
-            for sector in df.loc[date_mask, "_sector"].dropna().unique():
-                # Skip Type A sectors
-                if sector in invalid_sectors:
+            for sector_name in df.loc[date_mask, "_sector"].dropna().unique():
+                if sector_name in invalid_sectors:
                     continue
 
-                sector_mask = date_mask & (df["_sector"] == sector)
-                # Exclude non-existent tickers from imputation candidates
-                valid_sector_mask = sector_mask & ~nonexistent_mask
-                sector_values = df.loc[valid_sector_mask, factor]
+                sector_date_mask = date_mask & (df["_sector"] == sector_name)
+                sector_df = df.loc[sector_date_mask]
 
-                n_missing = sector_values.isna().sum()
-                if n_missing == 0:
+                # Only consider tickers that existed by this date
+                eligible_tickers = []
+                for _, row in sector_df.iterrows():
+                    t = row["ticker"]
+                    frd = first_real.get(t)
+                    if frd is not None and date >= frd:
+                        eligible_tickers.append(row.name)  # DataFrame index
+                    elif pd.isna(row[factor]):
+                        factor_pre_skipped += 1
+
+                if not eligible_tickers:
                     continue
 
-                n_valid = sector_values.notna().sum()
+                eligible_mask = df.index.isin(eligible_tickers)
+                eligible_values = df.loc[eligible_mask, factor]
+
+                n_valid = eligible_values.notna().sum()
                 if n_valid < _MIN_NON_NULL_FOR_IMPUTATION:
                     continue
 
-                sector_median = sector_values.median()
+                sector_median = eligible_values.median()
                 if pd.isna(sector_median):
                     continue
 
-                null_mask = valid_sector_mask & df[factor].isna()
-                n_to_impute = null_mask.sum()
+                null_eligible = eligible_mask & df[factor].isna()
+                n_to_impute = null_eligible.sum()
                 if n_to_impute > 0:
-                    df.loc[null_mask, factor] = sector_median
-                    df.loc[null_mask, imputed_col] = True
-                    factor_imputed_count += n_to_impute
+                    df.loc[null_eligible, factor] = sector_median
+                    df.loc[null_eligible, imputed_col] = True
+                    factor_imputed += n_to_impute
 
-        total_imputed += factor_imputed_count
+        total_imputed += factor_imputed
+        total_pre_existence_skipped += factor_pre_skipped
+
         logger.info(
-            "impute: %s — imputed %d values (Type B/C)",
-            factor, factor_imputed_count,
+            "impute: %s — imputed %d (post-existence gaps), "
+            "skipped %d (pre-existence)",
+            factor, factor_imputed, factor_pre_skipped,
         )
 
     df = df.drop(columns=["_sector"])
 
     logger.info(
-        "impute_factor_panel: %d Type-A forced NaN, %d Type-B/C imputed",
-        total_forced_nan, total_imputed,
+        "impute_factor_panel: %d Type-A forced NaN, %d imputed, "
+        "%d pre-existence skipped",
+        total_type_a, total_imputed, total_pre_existence_skipped,
     )
 
     return df
