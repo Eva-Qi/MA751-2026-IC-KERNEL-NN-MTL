@@ -223,7 +223,7 @@ def compute_ttm(
         return None
 
     as_of_ts = pd.Timestamp(as_of_date)
-    stale_cutoff = (as_of_ts - pd.DateOffset(months=18)).strftime("%Y-%m-%d")
+    stale_cutoff = (as_of_ts - pd.DateOffset(months=24)).strftime("%Y-%m-%d")
 
     # 使用预分组缓存
     ticker_df = _get_ticker_sub(xbrl_df, ticker)
@@ -692,9 +692,12 @@ def compute_asset_growth(
     """
     tickers = prices_df.columns.tolist()
 
-    # 以 as_of_date 为当前；一年前截止
+    # 以 as_of_date 为当前；一年前截止（放宽到 9-15 月窗口提高覆盖率）
     as_of_ts = pd.Timestamp(as_of_date)
-    prior_date = (as_of_ts - pd.DateOffset(months=12)).strftime("%Y-%m-%d")
+    # Use 15 months back to widen the search window for prior-year assets.
+    # get_latest_xbrl_value returns the most recent available <= prior_date,
+    # so 15 months gives ~3 extra months of lookback vs strict 12.
+    prior_date = (as_of_ts - pd.DateOffset(months=15)).strftime("%Y-%m-%d")
 
     tags = _CONCEPT_TAGS.get("TOTAL_ASSETS", [])
     results: dict[str, float] = {}
@@ -708,7 +711,7 @@ def compute_asset_growth(
             results[ticker] = np.nan
             continue
 
-        # 一年前总资产
+        # 一年前总资产 (9-15 month window)
         assets_prior = get_latest_xbrl_value(
             xbrl_df, ticker, "TOTAL_ASSETS", prior_date
         )
@@ -791,7 +794,7 @@ def compute_accruals(
     """
     tickers = prices_df.columns.tolist()
     as_of_ts = pd.Timestamp(as_of_date)
-    prior_date = (as_of_ts - pd.DateOffset(months=12)).strftime("%Y-%m-%d")
+    prior_date = (as_of_ts - pd.DateOffset(months=15)).strftime("%Y-%m-%d")
 
     results: dict[str, float] = {}
 
@@ -980,14 +983,61 @@ def compute_net_debt_ebitda(
             continue
 
         ebitda = float(op_income) + float(depreciation)
-        if ebitda <= 0 or abs(ebitda) < 1e6:
+        if ebitda <= 0 or abs(ebitda) < 5e7:  # $50M min for S&P 500
             # EBITDA <= 0 或绝对值 < $1M: 除法结果极端，返回 NaN
             results[ticker] = np.nan
             continue
 
-        results[ticker] = net_debt / ebitda
+        nd_ebitda = net_debt / ebitda
+        # Hard cap: values outside [-50, 100] indicate denominator issues
+        if nd_ebitda < -50 or nd_ebitda > 100:
+            logger.warning(
+                "compute_net_debt_ebitda: %s @ %s — ND/EBITDA=%.1f outside [-50,100], "
+                "net_debt=%.2e, ebitda=%.2e — setting to NaN",
+                ticker, as_of_date, nd_ebitda, net_debt, ebitda,
+            )
+            results[ticker] = np.nan
+            continue
+        results[ticker] = nd_ebitda
 
     return pd.Series(results, name="NetDebtEBITDA")
+
+
+# ---------------------------------------------------------------------------
+# Private helper: consistent value caps (applied BEFORE z-scoring)
+# ---------------------------------------------------------------------------
+
+# Hard caps per factor — values outside these are set to NaN.
+# Determined by: domain expert review, academic literature, and outlier investigation.
+_FACTOR_CAPS: dict[str, tuple[float, float]] = {
+    "EarningsYield":      (-0.5,  1.0),   # Already guarded at 1.0 in compute fn
+    "GrossProfitability": (-1.0,  3.0),   # GP/A > 3 = denominator issue (CHRW confirmed)
+    "AssetGrowth":        (-1.0, 10.0),   # Already guarded at 10.0 in compute fn
+    "Accruals":           (-1.5,  1.5),   # Beyond = restructuring noise
+    "Momentum12_1":       (-0.95, 5.0),   # 5x return in 12 months = hard cap
+    "NetDebtEBITDA":      (-10.0, 20.0),  # >5 = distress; >20 = garbage denominator (LVS/WYNN)
+}
+
+
+def _cap_factor_values(raw: pd.Series, factor_name: str) -> pd.Series:
+    """Cap factor values to hard limits, setting outliers to NaN."""
+    caps = _FACTOR_CAPS.get(factor_name)
+    if caps is None:
+        return raw
+
+    lo, hi = caps
+    n_before = raw.notna().sum()
+    capped = raw.where((raw >= lo) & (raw <= hi), other=np.nan)
+    n_after = capped.notna().sum()
+    n_capped = n_before - n_after
+
+    if n_capped > 0:
+        logger.info(
+            "_cap_factor_values: %s — capped %d values outside [%.1f, %.1f]",
+            factor_name, n_capped, lo, hi,
+        )
+
+    return capped
 
 
 # ---------------------------------------------------------------------------
@@ -1036,6 +1086,10 @@ def _run_factor_batch(
             raw = pd.Series(np.nan, index=prices_df.columns, name=factor_name)
 
         raw.name = factor_name
+
+        # Apply consistent hard caps BEFORE z-scoring
+        raw = _cap_factor_values(raw, factor_name)
+
         z = cross_sectional_zscore(raw)
         z.name = f"{factor_name}_zscore"
 

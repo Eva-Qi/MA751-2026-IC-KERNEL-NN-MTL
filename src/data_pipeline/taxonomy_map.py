@@ -55,6 +55,7 @@ CONCEPT_MAP: dict[str, list[str]] = {
         "NetIncomeLoss",
         "ProfitLoss",
         "NetIncomeLossAvailableToCommonStockholdersBasic",
+        "IncomeLossFromContinuingOperations",  # 49% coverage, fills IPO gaps
     ],
     "REVENUE": [
         "Revenues",
@@ -93,6 +94,7 @@ CONCEPT_MAP: dict[str, list[str]] = {
     "DEPRECIATION": [
         "DepreciationDepletionAndAmortization",
         "DepreciationAndAmortization",
+        "Depreciation",  # 70% coverage, shorter form many companies use
     ],
     "OPERATING_INCOME": [
         "OperatingIncomeLoss",
