@@ -21,10 +21,11 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 
 DATA_DIR = Path(__file__).parent
+RAW_DIR = DATA_DIR / "raw"
 
-XBRL_PATH = DATA_DIR / "xbrl_df.parquet"
-FACTOR_PATH = DATA_DIR / "factor_panel.parquet"
-PRICES_PATH = DATA_DIR / "prices_cache.parquet"
+XBRL_PATH = RAW_DIR / "xbrl_df.parquet"
+FACTOR_PATH = RAW_DIR / "factor_panel.parquet"
+PRICES_PATH = RAW_DIR / "prices_cache.parquet"
 
 BENCHMARK_TICKERS = ["AAPL", "MSFT", "GOOG", "JPM", "XOM"]
 SPOT_CHECK_DATE = "2022-06-30"

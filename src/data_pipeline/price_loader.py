@@ -37,8 +37,8 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # 路径常量
 # ---------------------------------------------------------------------------
-_REPO_ROOT = Path(__file__).resolve().parents[3]          # alpha_system/ 的上层
-_DATA_DIR = _REPO_ROOT / "alpha_system" / "data"
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_DATA_DIR = _REPO_ROOT / "data" / "raw"
 _PRICES_CACHE = _DATA_DIR / "prices_cache.parquet"
 _PRICES_UNADJ_CACHE = _DATA_DIR / "prices_unadj_cache.parquet"
 _VOLUME_CACHE = _DATA_DIR / "volume_cache.parquet"

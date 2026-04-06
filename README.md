@@ -6,19 +6,25 @@ Cross-sectional stock return prediction using a 5-rung complexity ladder: IC-wei
 
 ~500 S&P 500 stocks × 95 months (2016–2024), 13 fundamental factors + FRED macro data.
 
-| File | Size | Source | Description |
-|------|------|--------|-------------|
-| `xbrl_df.parquet` | 3.1MB | SEC EDGAR | Standardized financials (346K rows, 13 concepts) |
-| `prices_cache.parquet` | 9.1MB | yfinance | Daily adjusted close (2831 days × 501 tickers) |
-| `volume_cache.parquet` | 8.4MB | yfinance | Daily volume |
-| `factor_panel.parquet` | 3.6MB | Computed | 6 academic factors × 95 months × ~500 stocks |
-| `macro_features.parquet` | 30KB | FRED | Macro indicators (yield curve, VIX, sentiment, etc.) |
-| `sector_map.json` | 13KB | Wikipedia/SEC | Sector classification |
+Raw inputs live under `data/raw/`:
+- `factor_panel.parquet` — raw factor panel with missing values
+- `xbrl_df.parquet` — standardized SEC XBRL facts
+- `prices_cache.parquet` — adjusted close history
+- `prices_unadj_cache.parquet` — unadjusted close history
+- `volume_cache.parquet` — daily volume
+- `macro_features.parquet` — FRED macro indicators
+- `split_history.parquet` — split-history cache
+- `sector_map.json` — sector classification
+
+Baseline modeling outputs live under `data/baseline/`:
+- `model_dataset.parquet` — complete 4-factor z-scored dataset with forward-return target
 
 ## Structure
 
 ```
-├── data/           Pre-computed datasets (committed)
+├── data/
+│   ├── raw/        Source / intermediate datasets
+│   └── baseline/   Final complete modeling datasets
 ├── docs/           Project plan
 ├── src/            Model code (5 rungs + evaluation)
 └── notebooks/      Exploration & visualization
@@ -28,4 +34,12 @@ Cross-sectional stock return prediction using a 5-rung complexity ladder: IC-wei
 
 ```bash
 pip install -r requirements.txt
+```
+
+## Building Baseline Data
+
+Build the complete 4-factor baseline dataset:
+
+```bash
+python3 data/build_baseline_dataset.py
 ```
