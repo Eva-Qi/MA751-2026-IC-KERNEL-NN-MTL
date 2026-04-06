@@ -7,12 +7,7 @@ This document describes the current baseline data pipeline from raw inputs to th
 Raw / intermediate inputs live under `data/raw/`:
 - `factor_panel.parquet`
 - `xbrl_df.parquet`
-- `prices_cache.parquet`
-- `prices_unadj_cache.parquet`
-- `volume_cache.parquet`
-- `macro_features.parquet`
-- `split_history.parquet`
-- `sector_map.json`
+- ...
 
 Final baseline modeling outputs live under `data/baseline/`:
 - `model_dataset.parquet`
@@ -21,8 +16,7 @@ Final baseline modeling outputs live under `data/baseline/`:
 
 The current baseline dataset is designed for the first-pass predictive models:
 - LASSO
-- kernel methods
-- basic MLP-style models
+- basic MLP
 
 The immediate objective is a complete supervised dataset `T = (X, y)` with:
 - no missing predictor entries
@@ -46,9 +40,6 @@ Those two remain for later work once the baseline modeling path is stable.
 
 The baseline builder is:
 - `python3 data/build_baseline_dataset.py`
-
-Source code:
-- [data/build_baseline_dataset.py](/home/hsi/school/MA751-2026-IC-KERNEL-NN-MTL/data/build_baseline_dataset.py)
 
 The pipeline is:
 
@@ -96,9 +87,6 @@ The pipeline is:
 
 ## Final Dataset
 
-Path:
-- [data/baseline/model_dataset.parquet](/home/hsi/school/MA751-2026-IC-KERNEL-NN-MTL/data/baseline/model_dataset.parquet)
-
 Columns:
 - `ticker`
 - `signal_date`
@@ -133,15 +121,6 @@ Interpretation:
 - the target is nearly symmetric
 - tails are controlled
 - this is much more coherent for cross-sectional stock prediction than using raw absolute forward returns
-
-## Predictor Notes
-
-The 4 predictors are all standardized cross-sectionally, but they are not equally Gaussian:
-- `AssetGrowth_zscore` has the heaviest positive tail
-- current max is about `5.50`
-- this comes from a small set of very large raw `AssetGrowth` observations plus the current winsorize-then-restandardize procedure
-
-This is not currently treated as a blocker for the baseline LASSO path, but it is worth monitoring in experiments.
 
 ## Intended Use
 
