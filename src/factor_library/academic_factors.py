@@ -37,7 +37,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from alpha_system.core.data_pipeline.taxonomy_map import CONCEPT_MAP
+from src.data_pipeline.taxonomy_map import CONCEPT_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -1009,7 +1009,7 @@ def compute_net_debt_ebitda(
 
 # Hard caps per factor — values outside these are set to NaN.
 # Determined by: domain expert review, academic literature, and outlier investigation.
-_FACTOR_CAPS: dict[str, tuple[float, float]] = {
+FACTOR_CAPS: dict[str, tuple[float, float]] = {
     "EarningsYield":      (-0.5,  1.0),   # Already guarded at 1.0 in compute fn
     "GrossProfitability": (-1.0,  3.0),   # GP/A > 3 = denominator issue (CHRW confirmed)
     "AssetGrowth":        (-1.0, 10.0),   # Already guarded at 10.0 in compute fn
@@ -1019,9 +1019,9 @@ _FACTOR_CAPS: dict[str, tuple[float, float]] = {
 }
 
 
-def _cap_factor_values(raw: pd.Series, factor_name: str) -> pd.Series:
+def cap_factor_values(raw: pd.Series, factor_name: str) -> pd.Series:
     """Cap factor values to hard limits, setting outliers to NaN."""
-    caps = _FACTOR_CAPS.get(factor_name)
+    caps = FACTOR_CAPS.get(factor_name)
     if caps is None:
         return raw
 
@@ -1033,7 +1033,7 @@ def _cap_factor_values(raw: pd.Series, factor_name: str) -> pd.Series:
 
     if n_capped > 0:
         logger.info(
-            "_cap_factor_values: %s — capped %d values outside [%.1f, %.1f]",
+            "cap_factor_values: %s — capped %d values outside [%.1f, %.1f]",
             factor_name, n_capped, lo, hi,
         )
 
@@ -1088,12 +1088,12 @@ def _run_factor_batch(
         raw.name = factor_name
 
         # Apply consistent hard caps BEFORE z-scoring
-        raw = _cap_factor_values(raw, factor_name)
+        raw = cap_factor_values(raw, factor_name)
 
         z = cross_sectional_zscore(raw)
         z.name = f"{factor_name}_zscore"
 
-        quintile = _compute_quintile(raw)
+        quintile = compute_quintile(raw)
         quintile.name = f"{factor_name}_quintile"
 
         result_frames[factor_name]                   = raw
@@ -1285,7 +1285,7 @@ def compute_control_factors(
     )
 
 
-def _compute_quintile(raw: pd.Series) -> pd.Series:
+def compute_quintile(raw: pd.Series) -> pd.Series:
     """
     按截面值分为 5 组（quintile），1 = 最低，5 = 最高。
 
@@ -1316,7 +1316,7 @@ def _compute_quintile(raw: pd.Series) -> pd.Series:
         )
         quintile_codes = quintile_codes + 1  # 1-indexed
     except Exception as exc:
-        logger.warning("_compute_quintile: pd.qcut 失败 — %s", exc)
+        logger.warning("compute_quintile: pd.qcut 失败 — %s", exc)
         return pd.Series(np.nan, index=raw.index)
 
     return quintile_codes.reindex(raw.index)
