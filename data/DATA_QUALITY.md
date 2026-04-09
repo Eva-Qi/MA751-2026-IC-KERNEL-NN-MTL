@@ -2,7 +2,7 @@
 
 ## Known Issues (as of 2026-04-02)
 
-The pre-computed `factor_panel.parquet` contains data quality issues in the **EarningsYield** column:
+The raw panel `data/raw/factor_panel.parquet` contains data quality issues in the **EarningsYield** column:
 
 | Issue | Impact | Affected Records |
 |-------|--------|-----------------|
@@ -22,7 +22,7 @@ python3 validate_data_legitimacy.py -o validation_report.md
 
 ## Recommended Handling
 
-When using `factor_panel.parquet` for model training:
+When using `data/raw/factor_panel.parquet` for model training:
 
 1. **Filter EarningsYield outliers**: Drop rows where `|EarningsYield| > 1.0`
 2. **Or use z-scored column**: `EarningsYield_zscore` has winsorization applied (but based on contaminated distribution)
