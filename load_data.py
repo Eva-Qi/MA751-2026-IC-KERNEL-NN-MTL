@@ -7,6 +7,7 @@ DATA_DIR   = Path("data/raw/")
 OUTPUT_DIR = Path("data/")
 
 FACTOR_PANEL   = DATA_DIR / "factor_panel.parquet"
+SPLIT_HISTORY  = DATA_DIR / "split_history.parquet"
 PRICES_CACHE   = DATA_DIR / "prices_cache.parquet"
 MACRO_FEATURES = DATA_DIR / "macro_features.parquet"
 SECTOR_MAP     = DATA_DIR / "sector_map.json"
@@ -43,7 +44,7 @@ FACTOR_RAW_COLS = [
 def build_monthly_returns(prices_path: Path) -> pd.DataFrame:
     prices = pd.read_parquet(prices_path)
     prices.index = pd.DatetimeIndex(prices.index)
-    monthly = prices.resample("ME").last()
+    monthly = prices.resample("M").last()
     fwd = monthly.pct_change(1).shift(-1)
     return (
         fwd.reset_index()
@@ -62,7 +63,7 @@ def build_fwd_ret_3m(prices_path: Path) -> pd.DataFrame:
     """
     prices = pd.read_parquet(prices_path)
     prices.index = pd.DatetimeIndex(prices.index)
-    monthly = prices.resample("ME").last()
+    monthly = prices.resample("M").last()
     fwd3 = monthly.pct_change(3).shift(-3)   # NaN for last 3 months by design
     return (
         fwd3.reset_index()
@@ -95,15 +96,40 @@ def load_factors(factor_path: Path, month_ends: pd.DatetimeIndex) -> pd.DataFram
     if "EarningsYield" in fp.columns:
         fp = fp[fp["EarningsYield"].abs() <= 1.0]
     if "AssetGrowth" in fp.columns:
-        fp = fp[fp["AssetGrowth"].abs() <= 10_000]
+        fp = fp[fp["AssetGrowth"].abs() <= 10.0]
+
+    # Flag split-contaminated EY: only NaN rows BEFORE the split date
+    # (yfinance retroactively adjusts prices pre-split, so pre-split
+    #  market cap = adjusted_price × raw_shares is wrong)
+    try:
+        split_hist = pd.read_parquet(SPLIT_HISTORY)
+        split_hist["date"] = pd.to_datetime(split_hist["date"], utc=True).dt.tz_localize(None)
+        major = split_hist[split_hist["ratio"] >= 2.0][["ticker", "date"]].copy()
+        # For each ticker, find the EARLIEST major split in sample period
+        earliest_split = major.groupby("ticker")["date"].min().reset_index()
+        earliest_split.columns = ["ticker", "first_split_date"]
+        if "EarningsYield" in fp.columns:
+            fp = fp.merge(earliest_split, on="ticker", how="left")
+            # Only NaN rows where signal_date is BEFORE the split
+            contaminated = (
+                fp["first_split_date"].notna()
+                & (fp["signal_date"] < fp["first_split_date"])
+            )
+            fp.loc[contaminated, "EarningsYield"] = np.nan
+            fp.drop(columns=["first_split_date"], inplace=True)
+    except FileNotFoundError:
+        pass  # No split history available
+
+    # Cross-sectional z-score: compute per signal_date, NOT pooled
+    def _cs_zscore(g):
+        mu = g.mean()
+        sigma = g.std()
+        return (g - mu) / sigma if sigma > 1e-8 else g * 0.0
 
     for raw_col in FACTOR_RAW_COLS:
         zscore_col = f"{raw_col}_zscore"
         if raw_col in fp.columns and zscore_col in fp.columns:
-            mu = fp[raw_col].mean()
-            sigma = fp[raw_col].std()
-            if sigma > 1e-8:
-                fp[zscore_col] = (fp[raw_col] - mu) / sigma
+            fp[zscore_col] = fp.groupby("signal_date")[raw_col].transform(_cs_zscore)
 
     sig_df = (
         pd.DataFrame({"signal_date": fp["signal_date"].unique()})
@@ -131,7 +157,7 @@ def load_factors(factor_path: Path, month_ends: pd.DatetimeIndex) -> pd.DataFram
 def load_macro(macro_path: Path) -> pd.DataFrame:
     macro = pd.read_parquet(macro_path)
     macro.index = pd.DatetimeIndex(macro.index)
-    return macro[MACRO_COLS].resample("ME").last().shift(1).reset_index()
+    return macro[MACRO_COLS].resample("M").last().shift(1).reset_index()
 
 
 # Panel construction helpers
@@ -219,7 +245,7 @@ def build_master_panel(save: bool = True, verbose: bool = True) -> pd.DataFrame:
         print("Loading prices...")
     prices = pd.read_parquet(PRICES_CACHE)
     prices.index = pd.DatetimeIndex(prices.index)
-    month_ends = prices.resample("ME").last().index
+    month_ends = prices.resample("M").last().index
 
     if verbose:
         print("Computing forward returns (1m)...")
@@ -251,9 +277,21 @@ def build_master_panel(save: bool = True, verbose: bool = True) -> pd.DataFrame:
     panel = panel.dropna(subset=["sector"])
     panel = pd.merge(panel, macro, on="date", how="left")
 
-    # Impute features
+    # Impute features — respect Type A missing (economically undefined)
+    # GP/A is undefined for Financials, Utilities, Real Estate
+    # NetDebt/EBITDA is undefined for Financials, Real Estate
+    TYPE_A_SECTORS = {
+        "GrossProfitability_zscore": ["Financials", "Utilities", "Real Estate"],
+        "NetDebtEBITDA_zscore": ["Financials", "Real Estate"],
+    }
     for col in FACTOR_ZSCORE_COLS:
-        panel[col] = panel[col].fillna(0.0)
+        if col in TYPE_A_SECTORS:
+            # Only fill non-Type-A rows; Type A stays NaN
+            type_a_mask = panel["sector"].isin(TYPE_A_SECTORS[col])
+            panel.loc[~type_a_mask, col] = panel.loc[~type_a_mask, col].fillna(0.0)
+            # Type A rows stay NaN — the model must handle them
+        else:
+            panel[col] = panel[col].fillna(0.0)
 
     macro_present = [c for c in MACRO_COLS if c in panel.columns]
     panel[macro_present] = panel.sort_values("date")[macro_present].ffill().fillna(0.0)

@@ -84,7 +84,7 @@ def make_tensors(
     y_ret3m may contain NaNs (last 3 months of each training window).
     The loss function masks them; callers should not dropna before passing in.
     """
-    X_raw = df[FACTOR_COLS].values.astype(np.float32)
+    X_raw = np.nan_to_num(df[FACTOR_COLS].values.astype(np.float32), nan=0.0)
 
     if x_scaler is None:
         x_scaler = StandardScaler()
