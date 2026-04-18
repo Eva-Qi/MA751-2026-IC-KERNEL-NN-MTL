@@ -33,28 +33,14 @@ from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 
-# ── Column names (must match load_data.py / main.py) ──────────────────────
+# ── Column names — imported from shared config ──────────────────────────
+from config import (
+    ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
+    TARGET_COL, DATE_COL, STOCK_COL, SECTOR_COL,
+)
 
-FACTOR_ZSCORE_COLS = [
-    "EarningsYield_zscore",
-    "GrossProfitability_zscore",
-    "AssetGrowth_zscore",
-    "Accruals_zscore",
-    "Momentum12_1_zscore",
-    "NetDebtEBITDA_zscore",
-]
-
-MACRO_COLS = [
-    "T10Y2Y", "VIXCLS", "UMCSENT", "CFNAI", "UNRATE",
-    "BAMLH0A0HYM2", "CPI_YOY", "VIX_TERM_STRUCTURE", "LEADING_COMPOSITE",
-]
-
-ALL_FEATURE_COLS = FACTOR_ZSCORE_COLS + MACRO_COLS
-
-TARGET_COL  = "fwd_ret_1m"
-DATE_COL    = "date"
-STOCK_COL   = "ticker"
-SECTOR_COL  = "sector"
+# Default to V2; overridden by --v1 flag
+ALL_FEATURE_COLS = ALL_FEATURE_COLS_V2
 
 
 # ── Walk-forward evaluation ───────────────────────────────────────────────
@@ -318,7 +304,15 @@ def main():
         "--quiet", action="store_true",
         help="Suppress fold-level logging",
     )
+    parser.add_argument(
+        "--v1", action="store_true",
+        help="Use V1 features (15) instead of V2 (25)",
+    )
     args = parser.parse_args()
+
+    global ALL_FEATURE_COLS
+    if args.v1:
+        ALL_FEATURE_COLS = ALL_FEATURE_COLS_V1
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
