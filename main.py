@@ -44,29 +44,14 @@ from torch.utils.data import DataLoader, TensorDataset
 
 warnings.filterwarnings("ignore")
 
-# 1. COLUMN NAMES
+# 1. COLUMN NAMES — imported from shared config
+from config import (
+    ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
+    TARGET_COL, RET3M_COL, VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
+)
 
-FACTOR_ZSCORE_COLS = [
-    "EarningsYield_zscore",
-    "GrossProfitability_zscore",
-    "AssetGrowth_zscore",
-    "Accruals_zscore",
-    "Momentum12_1_zscore",
-    "NetDebtEBITDA_zscore",
-]
-
-MACRO_COLS = [
-    "T10Y2Y", "VIXCLS", "UMCSENT", "CFNAI", "UNRATE",
-    "BAMLH0A0HYM2", "CPI_YOY", "VIX_TERM_STRUCTURE", "LEADING_COMPOSITE",
-]
-
-FACTOR_COLS = FACTOR_ZSCORE_COLS + MACRO_COLS
-TARGET_COL = "fwd_ret_1m"
-RET3M_COL = "fwd_ret_3m"
-VOL_COL = "realized_vol"
-SECTOR_COL = "sector"
-DATE_COL = "date"
-STOCK_COL = "ticker"
+# Default to V2; overridden by --v1 flag
+FACTOR_COLS = ALL_FEATURE_COLS_V2
 
 # 2. DATA HELPERS
 
@@ -643,7 +628,12 @@ def main():
     parser.add_argument("--device", type=str, default="cpu", help="cpu or cuda")
     parser.add_argument("--quiet", action="store_true", help="Suppress fold-level logging")
     parser.add_argument("--no_save", action="store_true", help="Do not save result files")
+    parser.add_argument("--v1", action="store_true", help="Use V1 features (15) instead of V2 (25)")
     args = parser.parse_args()
+
+    global FACTOR_COLS
+    if args.v1:
+        FACTOR_COLS = ALL_FEATURE_COLS_V1
 
     print("Loading panel...")
     df = pd.read_parquet(args.data)
