@@ -384,11 +384,31 @@ def build_master_panel_v2(save=True, verbose=True):
     # ── Merge: factors + returns (on permno+date) ──
     panel = factors.merge(returns, on=["permno", "date", "ticker"], how="inner")
 
-    # ── Merge new features (on permno+date) ──
-    panel = panel.merge(new_feat, on=["permno", "date"], how="left")
+    # ── Merge new features (fuzzy date match — NF uses calendar month-end,
+    #    panel uses last trading day; differ by 1-2 days in ~36/119 months) ──
+    panel["permno"] = panel["permno"].astype("int64")
+    new_feat["permno"] = new_feat["permno"].astype("int64")
 
-    # ── Merge realized vol (on permno+date) ──
-    panel = panel.merge(rv, on=["permno", "date"], how="left")
+    # merge_asof requires sorting by the 'on' key (date)
+    panel = panel.sort_values("date")
+    new_feat = new_feat.sort_values("date")
+    panel = pd.merge_asof(
+        panel, new_feat,
+        on="date", by="permno",
+        tolerance=pd.Timedelta("3D"),
+        direction="nearest",
+    )
+
+    # ── Merge realized vol (fuzzy date match — same issue) ──
+    rv["permno"] = rv["permno"].astype("int64")
+    rv = rv.sort_values("date")
+    panel = panel.sort_values("date")
+    panel = pd.merge_asof(
+        panel, rv,
+        on="date", by="permno",
+        tolerance=pd.Timedelta("3D"),
+        direction="nearest",
+    )
 
     # ══════════════════════════════════════════════════════════════
     # FILTER TO S&P 500 FIRST — before any z-scoring
