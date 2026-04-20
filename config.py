@@ -59,6 +59,19 @@ REGIME_COLS = [
     "mkt_trend_regime",
 ]
 
+# HMM-derived regime posteriors (used by Regime-Gated MoE)
+N_REGIMES = 3
+REGIME_HMM_COLS = [f"regime_p{k}" for k in range(N_REGIMES)]
+
+# HMM input features (market-level, monthly)
+HMM_FEATURE_COLS = [
+    "mkt_ret_1m",
+    "mkt_rv_1m",
+    "VIXCLS",
+    "T10Y2Y",
+    "BAMLH0A0HYM2",
+]
+
 # ── Composite feature sets ───────────────────────────────────────────────
 
 # V1: original 15 features (backward compatible)
