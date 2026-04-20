@@ -1,2 +1,2 @@
 model,IC_mean,IC_std,IC_t,IC_pos_frac,LS_mean_ret,LS_Sharpe,pred_std_ratio,n_months
-GAM (natural splines),-0.014,0.1396,-0.763,0.466,-0.00061,-0.062,0.1121,58
+GAM (natural splines),-0.0007,0.1562,-0.035,0.534,0.00346,0.304,0.1451,58
