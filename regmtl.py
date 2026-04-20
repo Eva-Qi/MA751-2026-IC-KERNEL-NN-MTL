@@ -11,10 +11,6 @@ from torch.utils.data import DataLoader, TensorDataset
 
 warnings.filterwarnings("ignore")
 
-# =========================================================
-# 1. COLUMN NAMES / CONFIG
-# =========================================================
-
 FACTOR_ZSCORE_COLS = [
     "EarningsYield_zscore",
     "GrossProfitability_zscore",
@@ -29,8 +25,8 @@ MACRO_COLS = [
     "BAMLH0A0HYM2", "CPI_YOY", "VIX_TERM_STRUCTURE", "LEADING_COMPOSITE",
 ]
 
-# Default regime columns from the regime-generation step
-DEFAULT_REGIME_COLS = [
+# Precomputed regime columns expected in the enriched panel
+REGIME_COLS = [
     "regime_p0",
     "regime_p1",
     "regime_p2",
@@ -55,44 +51,14 @@ ABLATION_TASKS = {
 }
 
 
-# =========================================================
-# 2. HELPERS
-# =========================================================
-
 def infer_available_regime_cols(df: pd.DataFrame, requested_cols: list[str]) -> list[str]:
     cols = [c for c in requested_cols if c in df.columns]
     if len(cols) == 0:
         raise ValueError(
-            f"No requested regime columns were found.\n"
-            f"Requested: {requested_cols}\n"
+            f"No regime columns found. Requested: {requested_cols}. "
             f"Available regime-like columns: {[c for c in df.columns if 'regime' in c.lower()]}"
         )
     return cols
-
-
-def expand_regime_features(df: pd.DataFrame, regime_cols: list[str]) -> pd.DataFrame:
-    """
-    Converts regime inputs into numeric gating features.
-
-    Numeric columns are kept as-is.
-    Categorical/object columns are one-hot encoded.
-    Missing values are retained for now and filled later.
-    """
-    blocks = []
-
-    for c in regime_cols:
-        s = df[c]
-
-        if pd.api.types.is_numeric_dtype(s):
-            arr = s.astype(float).to_frame()
-            arr.columns = [c]
-            blocks.append(arr)
-        else:
-            dummies = pd.get_dummies(s.fillna("MISSING"), prefix=c, dtype=float)
-            blocks.append(dummies)
-
-    out = pd.concat(blocks, axis=1)
-    return out
 
 
 def prepare_panel_for_training(
@@ -101,38 +67,56 @@ def prepare_panel_for_training(
     regime_cols: list[str],
 ) -> pd.DataFrame:
     """
-    Minimal preparation for training.
+    Minimal training prep.
 
-    - ensures date dtype
-    - sorts data
-    - drops rows missing core targets
-    - handles missing lagged regime values in early months
+    - enforce datetime
+    - sort rows
+    - drop rows missing core targets
+    - fill early missing lagged regime values
+    - sanitize numeric features
     """
     df = df.copy()
     df[DATE_COL] = pd.to_datetime(df[DATE_COL])
     df = df.sort_values([DATE_COL, STOCK_COL]).reset_index(drop=True)
 
-    # Core target availability
+    # Need primary return and vol targets to train/evaluate.
     df = df.dropna(subset=[TARGET_COL, VOL_COL])
 
-    # For lagged regime probabilities, the first month or two may be NaN.
-    # We do NOT want to drop the whole dataset because of that.
-    # Fill numeric regime columns with 0.0; categorical with "MISSING".
+    # Fill regime fields so earliest lagged months do not get dropped.
     for c in regime_cols:
-        if c not in df.columns:
-            continue
         if pd.api.types.is_numeric_dtype(df[c]):
-            df[c] = df[c].fillna(0.0)
+            df[c] = df[c].replace([np.inf, -np.inf], np.nan).fillna(0.0)
         else:
             df[c] = df[c].fillna("MISSING")
 
-    # Main features
+    # Sanitize feature columns
     for c in factor_cols:
-        if c in df.columns:
-            if pd.api.types.is_numeric_dtype(df[c]):
-                df[c] = df[c].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        if c in df.columns and pd.api.types.is_numeric_dtype(df[c]):
+            df[c] = df[c].replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
     return df
+
+
+def expand_regime_features(df: pd.DataFrame, regime_cols: list[str]) -> pd.DataFrame:
+    """
+    Converts regime inputs into numeric gate features.
+    Numeric columns pass through, categorical columns are one-hot encoded.
+    """
+    blocks = []
+
+    for c in regime_cols:
+        s = df[c]
+
+        if pd.api.types.is_numeric_dtype(s):
+            arr = s.astype(float).fillna(0.0).to_frame()
+            arr.columns = [c]
+            blocks.append(arr)
+        else:
+            dummies = pd.get_dummies(s.fillna("MISSING"), prefix=c, dtype=float)
+            blocks.append(dummies)
+
+    out = pd.concat(blocks, axis=1)
+    return out
 
 
 def make_tensors(
@@ -147,10 +131,9 @@ def make_tensors(
     """
     Returns:
       X, R, y_ret, y_ret3m, y_vol_std,
-      fitted_x_scaler, fitted_r_scaler, fitted_vol_mean, fitted_vol_std
+      fitted_x_scaler, fitted_r_scaler, fitted_vol_mean, fitted_vol_std,
+      regime_feature_names
     """
-
-    # -------- Main stock features --------
     X_raw = np.nan_to_num(df[feature_cols].values.astype(np.float32), nan=0.0)
 
     if x_scaler is None:
@@ -159,7 +142,6 @@ def make_tensors(
     else:
         X = x_scaler.transform(X_raw)
 
-    # -------- Regime features --------
     regime_df = expand_regime_features(df, regime_cols)
     R_raw = np.nan_to_num(regime_df.values.astype(np.float32), nan=0.0)
 
@@ -169,7 +151,6 @@ def make_tensors(
     else:
         R = r_scaler.transform(R_raw)
 
-    # -------- Targets --------
     y_ret = df[TARGET_COL].values.astype(np.float32)
     y_ret3m_raw = df[RET3M_COL].values.astype(np.float64)  # preserve NaN
     y_vol = df[VOL_COL].values.astype(np.float32)
@@ -195,10 +176,7 @@ def make_tensors(
     )
 
 
-# =========================================================
 # 3. MODEL: REGIME-GATED MIXTURE OF EXPERTS
-# =========================================================
-
 class RegimeGatedMTLMoE(nn.Module):
     """
     Shared stock encoder + regime-driven gate + expert heads per task.
@@ -252,14 +230,15 @@ class RegimeGatedMTLMoE(nn.Module):
                 [nn.Linear(hidden2, 1) for _ in range(n_experts)]
             )
 
-    def _mix_experts(self, z: torch.Tensor, gate_weights: torch.Tensor, experts: nn.ModuleList) -> torch.Tensor:
-        expert_outs = []
-        for expert in experts:
-            expert_outs.append(expert(z).squeeze(-1))  # [B]
-
+    def _mix_experts(
+        self,
+        z: torch.Tensor,
+        gate_weights: torch.Tensor,
+        experts: nn.ModuleList,
+    ) -> torch.Tensor:
+        expert_outs = [expert(z).squeeze(-1) for expert in experts]  # list of [B]
         expert_stack = torch.stack(expert_outs, dim=1)  # [B, K]
-        mixed = (gate_weights * expert_stack).sum(dim=1)
-        return mixed
+        return (gate_weights * expert_stack).sum(dim=1)
 
     def forward(self, x: torch.Tensor, r: torch.Tensor) -> dict[str, torch.Tensor]:
         z = self.shared(x)
@@ -280,11 +259,18 @@ class RegimeGatedMTLMoE(nn.Module):
         return out
 
 
-# =========================================================
 # 4. UNCERTAINTY-WEIGHTED MULTI-TASK LOSS
-# =========================================================
 
 class UncertaintyMTLLoss(nn.Module):
+    """
+    For each active task k:
+        0.5 * exp(-s_k) * L_k + 0.5 * s_k
+    where s_k = log(sigma_k^2) is trainable.
+
+    Base losses are relative MSEs normalized by train-fold variance.
+    fwd_ret_3m rows with NaN are excluded from ret3m loss.
+    """
+
     def __init__(
         self,
         active_tasks: set,
@@ -353,21 +339,13 @@ class UncertaintyMTLLoss(nn.Module):
         return total
 
     def learned_task_weights(self) -> dict[str, float]:
-        out = {}
-        for k, v in self.log_vars.items():
-            out[k] = float(torch.exp(-v.detach().cpu()).item())
-        return out
+        return {k: float(torch.exp(-v.detach().cpu()).item()) for k, v in self.log_vars.items()}
 
     def learned_log_vars(self) -> dict[str, float]:
-        out = {}
-        for k, v in self.log_vars.items():
-            out[k] = float(v.detach().cpu().item())
-        return out
+        return {k: float(v.detach().cpu().item()) for k, v in self.log_vars.items()}
 
 
-# =========================================================
 # 5. TRAIN ONE FOLD
-# =========================================================
 
 def train_one_fold(
     X_tr: torch.Tensor,
@@ -385,7 +363,7 @@ def train_one_fold(
     patience: int = 20,
     val_frac: float = 0.10,
     device: str = "cpu",
-):
+) -> tuple[RegimeGatedMTLMoE, dict[str, float], dict[str, float]]:
     n_val = max(1, int(len(X_tr) * val_frac))
 
     X_val, X_tr = X_tr[-n_val:], X_tr[:-n_val]
@@ -475,11 +453,7 @@ def train_one_fold(
 
     return model.to("cpu"), learned_weights, learned_log_vars
 
-
-# =========================================================
 # 6. WALK-FORWARD EVALUATION
-# =========================================================
-
 def walk_forward_evaluate(
     df: pd.DataFrame,
     active_tasks: set,
@@ -601,9 +575,7 @@ def walk_forward_evaluate(
     return pd.concat(results, ignore_index=True)
 
 
-# =========================================================
 # 7. METRICS / SUMMARIES
-# =========================================================
 
 def compute_monthly_ic(results: pd.DataFrame) -> pd.Series:
     monthly = results.groupby(DATE_COL).apply(
@@ -612,7 +584,11 @@ def compute_monthly_ic(results: pd.DataFrame) -> pd.Series:
     return monthly.dropna()
 
 
-def compute_long_short_sharpe(results: pd.DataFrame, top_q: float = 0.2, bottom_q: float = 0.2) -> float:
+def compute_long_short_sharpe(
+    results: pd.DataFrame,
+    top_q: float = 0.2,
+    bottom_q: float = 0.2,
+) -> float:
     monthly_rets = []
 
     for _, g in results.groupby(DATE_COL):
@@ -795,7 +771,7 @@ def main():
         "--data",
         type=str,
         default="data/master_panel_with_regimes.parquet",
-        help="Path to master panel parquet with regime columns"
+        help="Path to master panel parquet WITH precomputed regime columns"
     )
     parser.add_argument(
         "--output_dir",
@@ -828,7 +804,7 @@ def main():
     parser.add_argument(
         "--regime_cols",
         type=str,
-        default=",".join(DEFAULT_REGIME_COLS),
+        default=",".join(REGIME_COLS),
         help="Comma-separated regime columns to use"
     )
     args = parser.parse_args()
@@ -838,9 +814,21 @@ def main():
     df[DATE_COL] = pd.to_datetime(df[DATE_COL])
 
     regime_cols = [c.strip() for c in args.regime_cols.split(",") if c.strip()]
+
+    # Strict: only use precomputed regime columns.
+    missing_regimes = [c for c in regime_cols if c not in df.columns]
+    if missing_regimes:
+        raise ValueError(
+            f"Missing precomputed regime columns: {missing_regimes}\n"
+            f"Loaded file: {args.data}\n"
+            "Expected a regime-enriched panel such as "
+            "'data/master_panel_with_regimes.parquet'.\n"
+            "Run the regime-generation script first, then rerun this training script."
+        )
+
     regime_cols = infer_available_regime_cols(df, regime_cols)
 
-    needed = [DATE_COL, STOCK_COL, SECTOR_COL, TARGET_COL, RET3M_COL, VOL_COL] + FACTOR_COLS
+    needed = [DATE_COL, STOCK_COL, SECTOR_COL, TARGET_COL, RET3M_COL, VOL_COL] + FACTOR_COLS + regime_cols
     missing = [c for c in needed if c not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
