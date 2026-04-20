@@ -1,5 +1,5 @@
 """
-Rung 1-2 on V2 data: OLS + IC-weighted ensemble + LASSO
+Rung 1-2 on V2 data: OLS + IC-weighted ensemble + LASSO + Ridge
 Uses the 25-feature WRDS-based master_panel_v2.parquet
 """
 
@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from scipy.stats import spearmanr
-from sklearn.linear_model import LinearRegression, LassoCV
+from sklearn.linear_model import LinearRegression, LassoCV, RidgeCV
 from sklearn.preprocessing import StandardScaler
 
 from config import (
@@ -25,6 +25,7 @@ OUTPUT.mkdir(exist_ok=True)
 
 IC_WEIGHT_WINDOW = 12
 LASSO_ALPHAS = np.logspace(-4, 1, 50)
+RIDGE_ALPHAS = np.logspace(-4, 4, 50)
 
 
 def run_walk_forward(df, model_fn, label, features=None):
@@ -124,6 +125,12 @@ def lasso_model(X_tr, y_tr, X_te, features):
     return pred
 
 
+def ridge_model(X_tr, y_tr, X_te, features):
+    model = RidgeCV(alphas=RIDGE_ALPHAS, cv=5)
+    model.fit(X_tr, y_tr)
+    return model.predict(X_te)
+
+
 def expand_results(monthly_df):
     """Expand monthly summary into per-stock results for Sharpe computation."""
     rows = []
@@ -142,7 +149,8 @@ def main():
     models = [
         ("1a_OLS_v2", ols_model),
         ("1b_IC_Ensemble_v2", ic_ensemble_model),
-        ("2_LASSO_v2", lasso_model),
+        ("2a_LASSO_v2", lasso_model),
+        ("2b_Ridge_v2", ridge_model),
     ]
 
     all_results = {}
@@ -168,7 +176,7 @@ def main():
 
     # Summary table
     print("\n" + "=" * 80)
-    print("RUNG 1-2 SUMMARY (V2 DATA, 25 FEATURES)")
+    print("RUNG 1-2 SUMMARY (V2 DATA)")
     print("=" * 80)
     rows = []
     for label, monthly in all_results.items():
