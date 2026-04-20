@@ -1,0 +1,4 @@
+Model,n_features,features,IC_mean,IC_std,IC_IR,Hit_IC,LS_Sharpe,LS_Hit,n_months
+2c_OLS_LASSO3,3,"IVOL, GrossProfitability, Beta",0.0168,0.2169,0.0776,0.552,0.809,0.586,58
+2c_OLS_LASSO5,5,"IVOL, GrossProfitability, Beta, ShortInterestRatio, Momentum12_1",0.0152,0.2077,0.0731,0.552,0.829,0.638,58
+2c_OLS_FMB4,4,"NetDebtEBITDA, GrossProfitability, AnalystRevision, RevisionBreadth",0.004,0.1641,0.0244,0.448,0.146,0.5,58
