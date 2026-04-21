@@ -126,17 +126,17 @@ ALL_FEATURE_COLS_V2_WITH_MACRO = ALL_FEATURE_COLS_V2 + MACRO_COLS + REGIME_COLS
 ALL_FEATURE_COLS = ALL_FEATURE_COLS_V2
 FACTOR_COLS = ALL_FEATURE_COLS  # alias used by main.py / rung5
 
-# ── Enhanced Regime MoE feature set (based on LASSO/Ridge/rolling IC) ────
+# ── Enhanced Regime MoE feature set (V3-updated, data-driven) ────────────
 
-# Core: LASSO-selected (>20% selection rate) + regime-conditional signals
+# V3 LASSO top features (>20% selection rate across 58 folds on 22-feature panel)
 ENHANCED_MOE_FEATURE_COLS = [
-    "IVOL_zscore",               # 67% LASSO, within-sector alpha, Tier 1
-    "GrossProfitability_zscore", # 62% LASSO, Tier 1
-    "Beta_zscore",               # 53% LASSO, strongest regime dependence
-    "ShortInterestRatio_zscore", # 28% LASSO
-    "Momentum12_1_zscore",       # 21% LASSO
-    "AnalystDispersion_zscore",  # sign flip: pre-2020 -0.007 → post +0.016
-    "SUE_zscore",                # sign flip: pre-2020 -0.005 → post +0.007
+    "AmihudIlliquidity_zscore",  # 95% LASSO V3, Phase 2 liquidity, top rank
+    "Turnover_zscore",           # 95% LASSO V3, Phase 2 liquidity
+    "GrossProfitability_zscore", # 79% LASSO V3, Tier 1 quality
+    "Beta_zscore",               # 69% LASSO V3, regime-dependent
+    "IVOL_zscore",               # 29% LASSO V3, within-sector alpha
+    "ShortInterestRatio_zscore", # 26% LASSO V3
+    "AnalystDispersion_zscore",  # 17% LASSO V3, regime-conditional signal
 ]
 
 # Gate conditioning: regime posteriors + key macro (fed to gate, NOT encoder)
