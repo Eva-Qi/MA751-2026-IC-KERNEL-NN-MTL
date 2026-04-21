@@ -45,6 +45,28 @@ ALT_DATA_COLS = [
     "InstOwnershipChg_zscore",
 ]
 
+# ── New computed features (Phase 2) ─────────────────────────────────────
+
+LIQUIDITY_COLS = [
+    "Turnover_zscore",
+    "AmihudIlliquidity_zscore",
+]
+
+PRICE_PATTERN_COLS = [
+    "High52W_Proximity_zscore",
+    "MaxDailyReturn_zscore",
+    "ReturnSkewness_zscore",
+]
+
+GROWTH_COLS = [
+    "ImpliedEPSGrowth_zscore",
+    "QRevGrowthYoY_zscore",
+]
+
+COVERAGE_COLS = [
+    "AnalystCoverageChg_zscore",
+]
+
 # ── Macro features ───────────────────────────────────────────────────────
 
 MACRO_COLS = [
@@ -87,6 +109,16 @@ ALL_FEATURE_COLS_V2 = (
 )
 # 14 stock-level features total
 
+# V3: V2 + Phase 2 computed features (22 stock-level features total)
+ALL_FEATURE_COLS_V3 = (
+    ALL_FEATURE_COLS_V2  # original 14
+    + LIQUIDITY_COLS     # +2
+    + PRICE_PATTERN_COLS # +3
+    + GROWTH_COLS        # +2
+    + COVERAGE_COLS      # +1
+)
+# 22 stock-level features total
+
 # V2 with macro interactions (optional, for models that can use them)
 ALL_FEATURE_COLS_V2_WITH_MACRO = ALL_FEATURE_COLS_V2 + MACRO_COLS + REGIME_COLS
 
@@ -126,6 +158,18 @@ TYPE_A_SECTORS = {
     "GrossProfitability_zscore": ["Financials", "Utilities", "Real Estate"],
     "NetDebtEBITDA_zscore": ["Financials", "Real Estate"],
 }
+
+# ── Missingness indicators ───────────────────────────────────────────────
+# Binary flags (0.0/1.0) for features where NaN means "no data coverage",
+# not "zero signal". Used as auxiliary inputs to models that can exploit them.
+#   has_sue           : 1 = IBES covers this stock this month
+#   has_short_interest: 1 = Compustat has short interest data
+#   has_inst_ownership: 1 = 13F filing was reported this month (quarterly)
+MISSINGNESS_INDICATORS = [
+    "has_sue",
+    "has_short_interest",
+    "has_inst_ownership",
+]
 
 # ── Walk-forward defaults ────────────────────────────────────────────────
 

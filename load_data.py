@@ -21,6 +21,7 @@ from config import (
     TARGET_COL, DATE_COL, STOCK_COL, SECTOR_COL,
     TYPE_A_SECTORS, VOL_COL, RET3M_COL,
     ANALYST_COLS, RISK_COLS, ALT_DATA_COLS, REGIME_COLS,
+    LIQUIDITY_COLS, PRICE_PATTERN_COLS, GROWTH_COLS, COVERAGE_COLS,
 )
 
 # ── Paths ────────────────────────────────────────────────────────────────
@@ -40,6 +41,11 @@ SECTOR_MAP     = DATA_DIR / "sector_map.json"
 WRDS_FACTORS      = WRDS_DIR / "wrds_factors_monthly.parquet"
 WRDS_NEW_FEATURES = WRDS_DIR / "wrds_new_features_monthly.parquet"
 CRSP_MONTHLY      = WRDS_DIR / "crsp_monthly.parquet"
+
+# Phase 2 new feature paths
+NEW_FEATURES_COMPUTED   = WRDS_DIR / "new_features_computed.parquet"
+NEW_FEATURES_IBES       = WRDS_DIR / "new_features_ibes.parquet"
+NEW_FEATURES_QUARTERLY  = WRDS_DIR / "new_features_quarterly.parquet"
 
 OUTPUT_V1 = OUTPUT_DIR / "master_panel.parquet"
 OUTPUT_V2 = OUTPUT_DIR / "master_panel_v2.parquet"
@@ -61,6 +67,18 @@ NEW_ZSCORE_MAP = {
     "InstOwnershipChg": "InstOwnershipChg_zscore",
 }
 
+# Phase 2 raw → zscore mapping (z-scoring happens inside build_master_panel_v2)
+PHASE2_ZSCORE_MAP = {
+    "Turnover":           "Turnover_zscore",
+    "AmihudIlliquidity":  "AmihudIlliquidity_zscore",
+    "High52W_Proximity":  "High52W_Proximity_zscore",
+    "MaxDailyReturn":     "MaxDailyReturn_zscore",
+    "ReturnSkewness":     "ReturnSkewness_zscore",
+    "ImpliedEPSGrowth":   "ImpliedEPSGrowth_zscore",
+    "QRevGrowthYoY":      "QRevGrowthYoY_zscore",
+    "AnalystCoverageChg": "AnalystCoverageChg_zscore",
+}
+
 
 # ── Cross-sectional z-score ─────────────────────────────────────────────
 
@@ -68,6 +86,20 @@ def _cs_zscore(g):
     mu = g.mean()
     sigma = g.std()
     return (g - mu) / sigma if sigma > 1e-8 else g * 0.0
+
+
+def _cs_zscore_winsorized(g):
+    """Winsorize at 1st/99th percentile before z-scoring.
+
+    Prevents extreme outliers (e.g. EarningsYield for micro-caps) from
+    collapsing the z-score distribution of the rest of the cross-section.
+    """
+    lower = g.quantile(0.01)
+    upper = g.quantile(0.99)
+    g_clipped = g.clip(lower, upper)
+    mu = g_clipped.mean()
+    sigma = g_clipped.std()
+    return (g_clipped - mu) / (sigma + 1e-8) if sigma > 1e-8 else g_clipped * 0.0
 
 
 # ── V1 legacy builders (yfinance + XBRL) ────────────────────────────────
@@ -216,6 +248,118 @@ def compute_realized_vol_v2() -> pd.DataFrame:
         .drop(columns=["ym"])
     )
     return monthly_rv[["permno", "date", "realized_vol"]].dropna(subset=["realized_vol"])
+
+
+def load_new_computed_features(panel_dates: pd.Series) -> pd.DataFrame:
+    """Load Phase 2 features computed from existing WRDS data.
+
+    Merges all three new feature files onto the set of (permno, date) pairs
+    that appear in the panel.  Uses merge_asof so that small calendar offsets
+    (last-trading-day vs calendar-month-end) don't cause false NaNs.
+
+    Parameters
+    ----------
+    panel_dates : pd.Series
+        Sorted unique panel dates — used as the right-side key so that
+        new_features_computed (1M+ rows) is never expanded to panel size.
+
+    Returns
+    -------
+    pd.DataFrame with columns: permno, date, <8 raw feature columns>
+    """
+    tolerance = pd.Timedelta("3D")
+
+    # ── 1. new_features_computed (daily-granularity → 1M+ rows) ──────────
+    # Strategy: snap each raw row to the nearest panel date first (many-to-one),
+    # then group-aggregate so the merge target has at most one row per
+    # (permno, snapped_date).  This prevents panel explosion.
+    computed = pd.read_parquet(NEW_FEATURES_COMPUTED)
+    computed["date"] = pd.to_datetime(computed["date"])
+    computed["permno"] = computed["permno"].astype("int64")
+    computed = computed.sort_values(["permno", "date"])
+
+    # Snap raw dates → nearest panel date within tolerance
+    panel_dates_df = pd.DataFrame({"panel_date": panel_dates}).sort_values("panel_date")
+    computed_dates = pd.DataFrame({"date": computed["date"].unique()}).sort_values("date")
+    snapped = pd.merge_asof(
+        computed_dates, panel_dates_df,
+        left_on="date", right_on="panel_date",
+        tolerance=tolerance, direction="nearest",
+    )
+    date_to_panel = dict(zip(snapped["date"], snapped["panel_date"]))
+    computed["panel_date"] = computed["date"].map(date_to_panel)
+    computed = computed.dropna(subset=["panel_date"])
+
+    # Aggregate: take last value per (permno, panel_date) — most recent obs wins
+    computed_feat_cols = ["Turnover", "High52W_Proximity", "MaxDailyReturn",
+                          "AmihudIlliquidity", "ReturnSkewness"]
+    computed_agg = (
+        computed.sort_values("date")
+        .groupby(["permno", "panel_date"])[computed_feat_cols]
+        .last()
+        .reset_index()
+        .rename(columns={"panel_date": "date"})
+    )
+
+    # ── 2. new_features_ibes (monthly-ish, same approach) ────────────────
+    ibes = pd.read_parquet(NEW_FEATURES_IBES)
+    ibes["date"] = pd.to_datetime(ibes["date"])
+    ibes["permno"] = ibes["permno"].astype("int64")
+    ibes = ibes.sort_values(["permno", "date"])
+
+    # IBES dates are mid-month (e.g. Jan 17) while panel is month-end (Jan 30).
+    # Use backward snap: assign each IBES row to the NEXT panel date (within 31 days).
+    ibes_dates = pd.DataFrame({"date": ibes["date"].unique()}).sort_values("date")
+    ibes_snapped = pd.merge_asof(
+        ibes_dates, panel_dates_df,
+        left_on="date", right_on="panel_date",
+        tolerance=pd.Timedelta("31D"), direction="forward",
+    )
+    ibes_date_map = dict(zip(ibes_snapped["date"], ibes_snapped["panel_date"]))
+    ibes["panel_date"] = ibes["date"].map(ibes_date_map)
+    ibes = ibes.dropna(subset=["panel_date"])
+
+    ibes_feat_cols = ["ImpliedEPSGrowth", "AnalystCoverageChg"]
+    ibes_agg = (
+        ibes.sort_values("date")
+        .groupby(["permno", "panel_date"])[ibes_feat_cols]
+        .last()
+        .reset_index()
+        .rename(columns={"panel_date": "date"})
+    )
+
+    # ── 3. new_features_quarterly (avail_date = datadate + 90 days) ───────
+    # 'date' is already the point-in-time availability date.
+    # Use merge_asof backward: for each panel date, use the most recent
+    # available quarterly observation (no tolerance cap needed here).
+    quarterly = pd.read_parquet(NEW_FEATURES_QUARTERLY)
+    quarterly["date"] = pd.to_datetime(quarterly["date"])
+    quarterly["permno"] = quarterly["permno"].astype("int64")
+    quarterly = quarterly.sort_values(["permno", "date"])
+
+    # merge_asof requires the panel as left side and features as right side,
+    # both sorted by date, grouped by permno.
+    # Build a skeleton of unique (permno, panel_date) pairs to merge against.
+    permnos_in_quarterly = quarterly["permno"].unique()
+    skeleton = pd.DataFrame(
+        [(p, d) for p in permnos_in_quarterly for d in panel_dates.values],
+        columns=["permno", "date"],
+    ).sort_values("date")  # merge_asof requires left sorted by 'on' key
+
+    quarterly = quarterly.sort_values("date")  # right also must be sorted
+
+    quarterly_agg = pd.merge_asof(
+        skeleton, quarterly.drop_duplicates(subset=["permno", "date"], keep="last"),
+        on="date", by="permno",
+        direction="backward",  # most recent available (point-in-time safe)
+    )
+
+    # ── 4. Combine all three onto a single (permno, date) frame ──────────
+    result = computed_agg.merge(ibes_agg, on=["permno", "date"], how="outer")
+    result = result.merge(quarterly_agg, on=["permno", "date"], how="outer")
+    result = result.sort_values(["permno", "date"]).reset_index(drop=True)
+
+    return result
 
 
 # ── Shared helpers ───────────────────────────────────────────────────────
@@ -424,21 +568,45 @@ def build_master_panel_v2(save=True, verbose=True):
               f"{panel['date'].nunique()} months")
 
     # ══════════════════════════════════════════════════════════════
+    # MERGE PHASE 2 FEATURES (after S&P 500 filter, before z-scoring)
+    # panel is ~47K rows here; load_new_computed_features() snaps the
+    # 1M-row computed file to panel dates BEFORE merging, so no explosion.
+    # ══════════════════════════════════════════════════════════════
+    if verbose:
+        print("Loading Phase 2 computed features (liquidity, price patterns, growth)...")
+    panel_unique_dates = panel["date"].drop_duplicates().sort_values()
+    phase2_feat = load_new_computed_features(panel_unique_dates)
+    phase2_feat["permno"] = phase2_feat["permno"].astype("int64")
+
+    pre_merge_rows = len(panel)
+    panel = panel.merge(phase2_feat, on=["permno", "date"], how="left")
+    assert len(panel) == pre_merge_rows, (
+        f"Phase 2 merge exploded panel: {pre_merge_rows} -> {len(panel)}"
+    )
+    if verbose:
+        print(f"Phase 2 merge OK — panel still {len(panel):,} rows")
+
+    # ══════════════════════════════════════════════════════════════
     # Z-SCORE WITHIN S&P 500 UNIVERSE (not full CRSP)
     # ══════════════════════════════════════════════════════════════
     if verbose:
         print("Cross-sectional z-scoring within S&P 500...")
 
-    # Original 6 factors
+    # Original 6 factors — winsorized z-score (prevents outlier collapse)
     for raw_col in FACTOR_RAW_COLS:
         zscore_col = f"{raw_col}_zscore"
         if raw_col in panel.columns:
-            panel[zscore_col] = panel.groupby("date")[raw_col].transform(_cs_zscore)
+            panel[zscore_col] = panel.groupby("date")[raw_col].transform(_cs_zscore_winsorized)
 
-    # New 8 features
+    # New 8 features — winsorized z-score
     for raw_col, zscore_col in NEW_ZSCORE_MAP.items():
         if raw_col in panel.columns:
-            panel[zscore_col] = panel.groupby("date")[raw_col].transform(_cs_zscore)
+            panel[zscore_col] = panel.groupby("date")[raw_col].transform(_cs_zscore_winsorized)
+
+    # Phase 2 features — winsorized z-score
+    for raw_col, zscore_col in PHASE2_ZSCORE_MAP.items():
+        if raw_col in panel.columns:
+            panel[zscore_col] = panel.groupby("date")[raw_col].transform(_cs_zscore_winsorized)
 
     # ══════════════════════════════════════════════════════════════
     # IMPUTATION — audit-corrected
@@ -451,9 +619,24 @@ def build_master_panel_v2(save=True, verbose=True):
         "Accruals_zscore": ["Financials"],  # audit: different accrual rules
     }
 
+    # Columns that MUST NOT be zero-filled — NaN carries economic meaning:
+    #   SUE_zscore            : NaN = "IBES doesn't cover this stock" (Type D)
+    #   ShortInterestRatio_zscore : NaN = "no short interest data in Compustat" (Type D)
+    #   InstOwnershipChg_zscore   : NaN = "no new 13F filing this month" (expected quarterly)
+    # Models handle NaN at tensor-creation time via np.nan_to_num(nan=0.0),
+    # so keeping NaN here does NOT break training — it just preserves signal integrity.
+    KEEP_NAN_COLS = {
+        "SUE_zscore",
+        "ShortInterestRatio_zscore",
+        "InstOwnershipChg_zscore",
+    }
+
     all_zscore_cols = FACTOR_ZSCORE_COLS + list(NEW_ZSCORE_MAP.values())
     for col in all_zscore_cols:
         if col not in panel.columns:
+            continue
+        if col in KEEP_NAN_COLS:
+            # Do NOT zero-fill — NaN = missing coverage, not zero signal
             continue
         if col in TYPE_A_EXTENDED:
             type_a_mask = panel["sector"].isin(TYPE_A_EXTENDED[col])
@@ -461,9 +644,33 @@ def build_master_panel_v2(save=True, verbose=True):
         else:
             panel[col] = panel[col].fillna(0.0)
 
-    # SUE missingness indicator (audit: 72.9% NaN → 0 is misleading)
-    # "no analyst coverage" ≠ "zero surprise"
+    # Phase 2 z-score imputation — all are economic signals, zero-fill NaN
+    # (no Type A exceptions needed: these are price/liquidity/growth signals,
+    #  not accounting ratios with sector-specific definitional issues)
+    phase2_zscore_cols = list(PHASE2_ZSCORE_MAP.values())
+    for col in phase2_zscore_cols:
+        if col in panel.columns:
+            panel[col] = panel[col].fillna(0.0)
+
+    # ── Phase 2 coverage stats ──────────────────────────────────────────
+    if verbose:
+        print("\n[Phase 2 Feature Coverage]")
+        for raw_col, zscore_col in PHASE2_ZSCORE_MAP.items():
+            if raw_col in panel.columns:
+                n_nonnull = panel[raw_col].notna().sum()
+                pct = n_nonnull / len(panel)
+                print(f"  {raw_col:<25} {n_nonnull:>7,} / {len(panel):,}  ({pct:.1%})")
+
+    # ── Missingness indicators ──────────────────────────────────────────
+    # SUE: "no analyst coverage" ≠ "zero surprise"
     panel["has_sue"] = (~panel["SUE"].isna()).astype(float)
+
+    # ShortInterestRatio: "no Compustat short interest record" ≠ "zero short interest"
+    panel["has_short_interest"] = (~panel["ShortInterestRatio"].isna()).astype(float)
+
+    # InstOwnershipChg: only populated in 13F filing months (quarterly)
+    # NaN in non-filing months is structurally expected, not a pipeline error
+    panel["has_inst_ownership"] = (~panel["InstOwnershipChg"].isna()).astype(float)
 
     # ── Macro: keep as metadata, NOT in feature set ──
     # Audit finding: zero cross-sectional variance → useless in CS regression
@@ -506,7 +713,11 @@ def build_master_panel_v2(save=True, verbose=True):
 
     # ── Report ──
     # Model features = stock-level z-scores only (no macro/regime)
-    stock_features = FACTOR_ZSCORE_COLS + list(NEW_ZSCORE_MAP.values())
+    stock_features = (
+        FACTOR_ZSCORE_COLS
+        + list(NEW_ZSCORE_MAP.values())
+        + list(PHASE2_ZSCORE_MAP.values())
+    )
     if verbose:
         print_data_report(panel, stock_features)
 
