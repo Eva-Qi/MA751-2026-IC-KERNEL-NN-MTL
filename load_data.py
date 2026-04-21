@@ -493,6 +493,10 @@ def build_master_panel_v2(save=True, verbose=True):
     panel = winsorise(panel, col="fwd_ret_1m")
     panel = panel.sort_values(["date", "ticker"]).reset_index(drop=True)
 
+    # ── Sector-adjusted return: removes sector-level effects ──
+    sector_mean = panel.groupby(["date", "sector"])["fwd_ret_1m"].transform("mean")
+    panel["fwd_ret_1m_secadj"] = panel["fwd_ret_1m"] - sector_mean
+
     # ── Convert nullable dtypes to standard numpy (sklearn/torch compatibility) ──
     for col in panel.columns:
         if str(panel[col].dtype) in ("Float64", "Float32"):
