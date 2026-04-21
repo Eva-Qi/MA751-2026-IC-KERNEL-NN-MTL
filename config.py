@@ -115,3 +115,6 @@ TYPE_A_SECTORS = {
 
 DEFAULT_MIN_TRAIN_MONTHS = 60
 DEFAULT_PURGE_MONTHS = 1
+
+# ── Sector-adjusted return target ────────────────────────────────────────
+SECADJ_TARGET_COL = "fwd_ret_1m_secadj"

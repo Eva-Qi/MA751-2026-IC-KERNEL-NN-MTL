@@ -1,0 +1,4 @@
+variant,n_features,n_months,IC_mean,IC_std,IC_IR,hit_rate,LS_Sharpe
+baseline,14,58,0.0172,0.2039,0.0842,0.569,0.789
+baseline+ixn,19,58,0.0146,0.1869,0.0782,0.586,0.739
+ixn_only,5,58,-0.0075,0.0744,-0.1007,0.466,0.523
