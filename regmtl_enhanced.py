@@ -49,8 +49,10 @@ from regime import (
 STOCK_FEATURES = ENHANCED_MOE_FEATURE_COLS  # 7 features
 
 INTERACTION_FEATURES = [
-    ("IVOL_zscore", "Beta_zscore", "IVOL_x_Beta"),         # 90% LASSO selection
-    ("IVOL_zscore", "GrossProfitability_zscore", "IVOL_x_GP"),  # 78% LASSO selection
+    ("IVOL_zscore", "Beta_zscore", "IVOL_x_Beta"),                      # risk clustering
+    ("IVOL_zscore", "GrossProfitability_zscore", "IVOL_x_GP"),           # quality vol
+    ("AmihudIlliquidity_zscore", "Turnover_zscore", "Amihud_x_Turnover"),# liquidity dual
+    ("AmihudIlliquidity_zscore", "GrossProfitability_zscore", "Amihud_x_GP"),  # illiquid quality
 ]
 
 DEFAULT_N_EXPERTS = 3
