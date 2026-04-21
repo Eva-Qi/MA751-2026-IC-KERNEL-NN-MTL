@@ -208,8 +208,47 @@ def run_lasso_walkforward(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Section 2: Load Rung 4-5 Results
+# Section 2: Load Rung Results from Saved Parquets
 # ═══════════════════════════════════════════════════════════════════════════
+
+def load_v2_monthly(filename: str) -> pd.DataFrame:
+    """
+    Load a V2 results parquet (Rung 1-2 walk-forward pre-computed by Alan)
+    and compute per-month IC and RMSE.
+
+    Parameters
+    ----------
+    filename : parquet filename (relative to OUTPUT_DIR), e.g. 'results_1a_OLS_v2.parquet'
+
+    Returns
+    -------
+    DataFrame with columns: date, IC, RMSE, mean_se
+    Same schema as load_rung5_monthly().
+    """
+    path = OUTPUT_DIR / filename
+    if not path.exists():
+        print(f"  WARNING: {filename} not found at {path}")
+        return pd.DataFrame()
+
+    df = pd.read_parquet(path)
+    records = []
+
+    for date_val, g in df.groupby("date"):
+        g = g.dropna(subset=["y_true", "y_pred"])
+        if len(g) < 5:
+            continue
+        ic = spearmanr(g["y_true"], g["y_pred"]).statistic
+        se = (g["y_true"] - g["y_pred"]) ** 2
+        rmse = np.sqrt(se.mean())
+        records.append({
+            "date": pd.Timestamp(date_val),
+            "IC": ic,
+            "RMSE": rmse,
+            "mean_se": float(se.mean()),
+        })
+
+    return pd.DataFrame(records)
+
 
 def load_rung5_monthly(variant: str) -> pd.DataFrame:
     """
@@ -561,10 +600,11 @@ SECONDARY_COMPARISONS = [
 
 EXPLORATORY_COMPARISONS = [
     # Cross-rung pairs: report raw p only, no BH correction
-    ("2_LASSO",  "1a_OLS"),
-    ("2_LASSO",  "1b_IC_Ensemble"),
-    ("5a_MLP_ret", "2_LASSO"),
-    ("5d_MTL_ret_ret3m_vol", "2_LASSO"),
+    ("2a_LASSO",  "1a_OLS"),
+    ("2a_LASSO",  "1b_IC_Ensemble"),
+    ("2b_Ridge",  "1a_OLS"),
+    ("5a_MLP_ret", "2a_LASSO"),
+    ("5d_MTL_ret_ret3m_vol", "2a_LASSO"),
 ]
 
 
@@ -614,12 +654,10 @@ def compute_summary_row(label: str, rung: str, monthly: pd.DataFrame) -> dict:
 def _target_group(label: str) -> str:
     """
     Models using different target columns have incomparable squared errors.
-    Rung 1-2 predict target_forward_return_21d_zscore (z-scored, RMSE ~1.0).
-    Rung 5 predicts fwd_ret_1m (raw returns, RMSE ~0.11).
-    DM test on squared errors is only valid within the same target group.
+    All V2 Rung 1-2-5 models predict fwd_ret_1m (raw returns) — DM tests are
+    valid across all pairs once Rung 1-2 are loaded from V2 parquets.
     """
-    if label.startswith("1") or label.startswith("2"):
-        return "zscore"
+    # All models now use V2 data (raw returns) — same target group.
     return "raw"
 
 
@@ -739,22 +777,42 @@ def main():
 
     all_monthly: dict[str, pd.DataFrame] = {}
 
-    # ── Rung 1-2: Run walk-forward from baseline data ────────────────────
-    if BASELINE_DATA.exists():
-        print("Loading baseline data for Rung 1-2...")
-        df_base = pd.read_parquet(BASELINE_DATA)
-        df_base = df_base.sort_values("signal_date").reset_index(drop=True)
+    # ── Rung 1-2: Load V2 pre-computed results (same data as Rung 5) ────────
+    # NOTE: Old V1 walk-forward (run_ols_walkforward / run_lasso_walkforward)
+    # used 4 features, ~83 months, z-scored target — incomparable with Rung 5.
+    # Alan re-ran Rung 1-2 on V2 WRDS data (14 features, ~58 months, raw returns).
+    # We load those saved parquets so all rungs share the same data universe.
+    print("Loading V2 Rung 1-2 results from parquets...")
+    v2_models = {
+        "1a_OLS":        "results_1a_OLS_v2.parquet",
+        "1b_IC_Ensemble": "results_1b_IC_Ensemble_v2.parquet",
+        "2a_LASSO":      "results_2a_LASSO_v2.parquet",
+        "2b_Ridge":      "results_2b_Ridge_v2.parquet",
+    }
+    for label, fname in v2_models.items():
+        monthly = load_v2_monthly(fname)
+        if not monthly.empty:
+            all_monthly[label] = monthly
+            print(f"  Loaded {label}: {len(monthly)} months")
 
-        print("  Running Rung 1a (OLS)...")
-        all_monthly["1a_OLS"] = run_ols_walkforward(df_base)
+    # Post-LASSO OLS variants (Rung 2c)
+    v2c_models = {
+        "2c_OLS_LASSO3": "results_2c_OLS_LASSO3.parquet",
+        "2c_OLS_LASSO5": "results_2c_OLS_LASSO5.parquet",
+    }
+    for label, fname in v2c_models.items():
+        monthly = load_v2_monthly(fname)
+        if not monthly.empty:
+            all_monthly[label] = monthly
+            print(f"  Loaded {label}: {len(monthly)} months")
 
-        print("  Running Rung 1b (IC-weighted ensemble)...")
-        all_monthly["1b_IC_Ensemble"] = run_ic_ensemble_walkforward(df_base)
-
-        print("  Running Rung 2 (LASSO)...")
-        all_monthly["2_LASSO"] = run_lasso_walkforward(df_base)
-    else:
-        print(f"WARNING: Baseline data not found at {BASELINE_DATA}")
+    # ── (Kept for reference) Old V1 walk-forward — NOT called in main ────
+    # To reproduce V1 results for comparison:
+    #   if BASELINE_DATA.exists():
+    #       df_base = pd.read_parquet(BASELINE_DATA).sort_values("signal_date")
+    #       all_monthly["1a_OLS_v1"]   = run_ols_walkforward(df_base)
+    #       all_monthly["1b_Ens_v1"]   = run_ic_ensemble_walkforward(df_base)
+    #       all_monthly["2_LASSO_v1"]  = run_lasso_walkforward(df_base)
 
     # ── Rung 4-5: Load from saved parquets ───────────────────────────────
     for variant in ["5a", "5b", "5c", "5d"]:
@@ -806,13 +864,16 @@ def main():
     print("=" * 80)
 
     rung_map = {
-        "1a_OLS": "1",
-        "1b_IC_Ensemble": "1",
-        "2_LASSO": "2",
-        "5a_MLP_ret": "4-5",
-        "5b_MTL_ret_ret3m": "4-5",
-        "5c_MTL_ret_vol": "4-5",
-        "5d_MTL_ret_ret3m_vol": "4-5",
+        "1a_OLS":              "1",
+        "1b_IC_Ensemble":      "1",
+        "2a_LASSO":            "2",
+        "2b_Ridge":            "2",
+        "2c_OLS_LASSO3":       "2",
+        "2c_OLS_LASSO5":       "2",
+        "5a_MLP_ret":          "4-5",
+        "5b_MTL_ret_ret3m":    "4-5",
+        "5c_MTL_ret_vol":      "4-5",
+        "5d_MTL_ret_ret3m_vol":"4-5",
     }
 
     summary_rows = []
@@ -976,8 +1037,9 @@ def main():
     print(f"\nBest RMSE    : {best_rmse['Model']} ({best_rmse['Mean_RMSE']:.4f})")
 
     # Date range note
-    print("\nNOTE: Rung 1-2 models have ~83 test months (2016-01 to 2022-11).")
-    print("      Rung 5 models have ~34 test months (2020-02 to 2022-11).")
+    print("\nNOTE: All models (Rung 1-2 and Rung 5) use V2 WRDS data (~58 test months).")
+    print("      Rung 1-2 loaded from pre-computed V2 parquets (14 features, raw returns).")
+    print("      Rung 5 models have ~34 test months (subset of V2 date range).")
     print("      Pairwise tests use only overlapping months for fair comparison.")
 
     n_sig = len(sig_ic) + len(sig_dm)

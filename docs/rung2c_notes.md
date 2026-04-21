@@ -59,9 +59,31 @@ LASSO5 is the strongest linear model in the ladder.
   (`data/master_panel_v2.parquet`) before this experiment; earlier saved
   summaries were stale.
 
+## Look-Ahead Fix: 2c_OLS_LASSO_WF (added 2026-04-19)
+
+The original LASSO3 and LASSO5 feature sets were chosen by computing LASSO
+selection frequency over the **entire** walk-forward sample, including test
+folds. This is look-ahead: the test-period data influenced which features
+were used to generate predictions on those same months.
+
+To eliminate the bias, a new variant `2c_OLS_LASSO_WF` was added to
+`run_rung2c_selected_ols.py`. It uses `walk_forward_lasso_selected_ols()`,
+which performs feature selection **inside** each fold's training window only:
+
+1. Fit `LassoCV` (cv=5) on the training data (all 14 `ALL_FEATURE_COLS_V2`).
+2. Identify non-zero coefficients.
+3. Fall back to top-3 by |coef| if fewer than 3 survive.
+4. Cap at 5 features (those with largest |coef| among survivors).
+5. Refit OLS on the selected subset; predict on test month.
+
+The original LASSO3/LASSO5/FMB4 variants are retained for comparison (now
+annotated with `# LOOK-AHEAD` comments in the code), but `2c_OLS_LASSO_WF`
+is the methodologically clean reference going forward.
+
 ## Artifacts
 
 - `output/results_2c_OLS_LASSO3.parquet`
 - `output/results_2c_OLS_LASSO5.parquet`
 - `output/results_2c_OLS_FMB4.parquet`
+- `output/results_2c_OLS_LASSO_WF.parquet`
 - `output/rung2c_selected_ols_summary.csv`

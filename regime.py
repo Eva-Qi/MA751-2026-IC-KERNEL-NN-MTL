@@ -152,16 +152,38 @@ def fit_and_predict_regime(
     )
     hmm.fit(X_train)
 
-    # Predict on ALL months (train + test) using train-fitted model
-    X_all = scaler.transform(df[feature_cols].values)
-    hidden_states = hmm.predict(X_all)
-    state_probs = hmm.predict_proba(X_all)
+    # ── Decode TRAIN sequence only (forward-backward within train) ──
+    # This avoids the smoother using future test months to revise
+    # train months' posteriors — the key look-ahead fix.
+    train_states = hmm.predict(X_train)
+    train_probs = hmm.predict_proba(X_train)
 
-    # Build output
-    out = df[["date"]].copy()
-    out["raw_state"] = hidden_states
+    out_train = df_train[["date"]].copy().reset_index(drop=True)
+    out_train["raw_state"] = train_states
     for k in range(n_regimes):
-        out[f"raw_p{k}"] = state_probs[:, k]
+        out_train[f"raw_p{k}"] = train_probs[:, k]
+
+    # ── For months AFTER train_end: 1-step transition from last state ──
+    # Use HMM transition matrix to predict forward without future data.
+    df_future = df[~train_mask].copy().reset_index(drop=True)
+    if len(df_future) > 0:
+        last_probs = train_probs[-1]  # posterior at train_end
+        T = hmm.transmat_             # T[i,j] = P(s_{t+1}=j | s_t=i)
+        future_entries = []
+        current_probs = last_probs
+        for idx in range(len(df_future)):
+            # 1-step forward: marginalize over current state
+            next_probs = current_probs @ T
+            entry = {"date": df_future.loc[idx, "date"],
+                     "raw_state": int(np.argmax(next_probs))}
+            for k in range(n_regimes):
+                entry[f"raw_p{k}"] = next_probs[k]
+            future_entries.append(entry)
+            current_probs = next_probs  # iterate forward
+        out_future = pd.DataFrame(future_entries)
+        out = pd.concat([out_train, out_future], ignore_index=True)
+    else:
+        out = out_train
 
     # Reorder states: regime 0 = calm (low vol), regime 2 = stressed (high vol)
     out = _reorder_states_by_risk(out, df, n_regimes)

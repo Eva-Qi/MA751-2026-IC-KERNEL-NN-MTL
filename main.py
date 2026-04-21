@@ -47,7 +47,7 @@ warnings.filterwarnings("ignore")
 # 1. COLUMN NAMES — imported from shared config
 from config import (
     ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
-    TARGET_COL, RET3M_COL, VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
+    TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
 )
 
 # Default to V2; overridden by --v1 flag
@@ -79,14 +79,21 @@ def make_tensors(
 
     y_ret = df[TARGET_COL].values.astype(np.float32)
     y_ret3m_raw = df[RET3M_COL].values.astype(np.float64)  # preserve NaN
-    y_vol = df[VOL_COL].values.astype(np.float32)
+
+    # vol target: NEXT month's realized vol (FWD_VOL_COL); may contain NaN for
+    # the last observation of each ticker — masked in UncertaintyMTLLoss.
+    # Standardize using current-period realized_vol statistics (VOL_COL) so that
+    # vol_mean/vol_std are stable and not contaminated by NaN shift.
+    y_vol_ref = df[VOL_COL].values.astype(np.float32)          # for fitting scaler
+    y_vol_raw = df[FWD_VOL_COL].values.astype(np.float64)      # actual target (NaN ok)
 
     if vol_mean is None or vol_std is None:
-        vol_mean = float(np.mean(y_vol))
-        vol_std = float(np.std(y_vol))
+        vol_mean = float(np.nanmean(y_vol_ref))
+        vol_std = float(np.nanstd(y_vol_ref))
         vol_std = max(vol_std, 1e-8)
 
-    y_vol_std = ((y_vol - vol_mean) / vol_std).astype(np.float32)
+    # Standardize fwd vol; NaN rows stay NaN (masked by loss)
+    y_vol_std = ((y_vol_raw - vol_mean) / vol_std).astype(np.float32)
 
     return (
         torch.tensor(X, dtype=torch.float32),
@@ -189,11 +196,14 @@ class UncertaintyMTLLoss(nn.Module):
         valid_3m = y_ret3m[~torch.isnan(y_ret3m)]
         var_ret3m = float(valid_3m.var()) if len(valid_3m) > 1 else 1.0
 
+        valid_vol = y_vol_std[~torch.isnan(y_vol_std)]
+        var_vol = float(valid_vol.var()) if len(valid_vol) > 1 else 1.0
+
         return UncertaintyMTLLoss(
             active_tasks=active_tasks,
             var_ret=float(y_ret.var()),
             var_ret3m=var_ret3m,
-            var_vol=float(y_vol_std.var()),
+            var_vol=var_vol,
         )
 
     def forward(
@@ -218,9 +228,11 @@ class UncertaintyMTLLoss(nn.Module):
                 total = total + 0.5 * torch.exp(-s) * base_ret3m + 0.5 * s
 
         if "vol" in preds:
-            base_vol = ((preds["vol"] - y_vol_std) ** 2).mean() / self.var_vol
-            s = self.log_vars["vol"].squeeze()
-            total = total + 0.5 * torch.exp(-s) * base_vol + 0.5 * s
+            valid_vol = ~torch.isnan(y_vol_std)
+            if valid_vol.sum() > 0:
+                base_vol = ((preds["vol"][valid_vol] - y_vol_std[valid_vol]) ** 2).mean() / self.var_vol
+                s = self.log_vars["vol"].squeeze()
+                total = total + 0.5 * torch.exp(-s) * base_vol + 0.5 * s
 
         return total
 
@@ -420,7 +432,8 @@ def walk_forward_evaluate(
             "y_true": y_ret_te.numpy(),
             "y_pred": y_pred_ret,
             "fold": i,
-            "realized_vol_true": df_te[VOL_COL].values.astype(float),
+            "realized_vol_true": df_te[FWD_VOL_COL].values.astype(float),  # next-month vol (true target)
+            "current_realized_vol": df_te[VOL_COL].values.astype(float),    # current-month vol (reference)
             "fwd_ret_3m_true": df_te[RET3M_COL].values.astype(float),
         })
 
@@ -639,7 +652,7 @@ def main():
     df = pd.read_parquet(args.data)
 
     # minimal sanity check
-    needed = [DATE_COL, STOCK_COL, SECTOR_COL, TARGET_COL, RET3M_COL, VOL_COL] + FACTOR_COLS
+    needed = [DATE_COL, STOCK_COL, SECTOR_COL, TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL] + FACTOR_COLS
     missing = [c for c in needed if c not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns: {missing}")

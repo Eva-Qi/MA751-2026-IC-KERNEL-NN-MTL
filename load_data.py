@@ -483,6 +483,12 @@ def build_master_panel_v2(save=True, verbose=True):
     rv_median = panel.groupby("date")["realized_vol"].transform("median")
     panel["realized_vol"] = panel["realized_vol"].fillna(rv_median)
 
+    # ── Forward realized vol (MTL auxiliary target: NEXT month's vol) ──
+    # shift(-1) within each ticker so fwd_realized_vol[t] = realized_vol[t+1]
+    # Last month per ticker will be NaN — handled by NaN masking in the loss
+    panel = panel.sort_values(["ticker", "date"]).reset_index(drop=True)
+    panel["fwd_realized_vol"] = panel.groupby("ticker")["realized_vol"].shift(-1)
+
     # ── Winsorise primary target ──
     panel = winsorise(panel, col="fwd_ret_1m")
     panel = panel.sort_values(["date", "ticker"]).reset_index(drop=True)
