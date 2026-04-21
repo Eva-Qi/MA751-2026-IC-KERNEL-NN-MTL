@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore")
 
 from config import (
     ALL_FEATURE_COLS_V2, REGIME_HMM_COLS, N_REGIMES,
-    TARGET_COL, RET3M_COL, VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
+    TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
     DEFAULT_MIN_TRAIN_MONTHS, DEFAULT_PURGE_MONTHS,
 )
 from main import (
@@ -167,14 +167,21 @@ def make_tensors_with_regime(
 
     y_ret = df[TARGET_COL].values.astype(np.float32)
     y_ret3m_raw = df[RET3M_COL].values.astype(np.float64)
-    y_vol = df[VOL_COL].values.astype(np.float32)
+
+    # vol target: NEXT month's realized vol (FWD_VOL_COL); may contain NaN for
+    # the last observation of each ticker — masked in UncertaintyMTLLoss.
+    # Standardize using current-period realized_vol statistics (VOL_COL) so that
+    # vol_mean/vol_std are stable and not contaminated by NaN shift.
+    y_vol_ref = df[VOL_COL].values.astype(np.float32)          # for fitting scaler
+    y_vol_raw = df[FWD_VOL_COL].values.astype(np.float64)      # actual target (NaN ok)
 
     if vol_mean is None or vol_std is None:
-        vol_mean = float(np.mean(y_vol))
-        vol_std = float(np.std(y_vol))
+        vol_mean = float(np.nanmean(y_vol_ref))
+        vol_std = float(np.nanstd(y_vol_ref))
         vol_std = max(vol_std, 1e-8)
 
-    y_vol_std = ((y_vol - vol_mean) / vol_std).astype(np.float32)
+    # Standardize fwd vol; NaN rows stay NaN (masked by loss)
+    y_vol_std = ((y_vol_raw - vol_mean) / vol_std).astype(np.float32)
 
     return (
         torch.tensor(X, dtype=torch.float32),
@@ -392,7 +399,8 @@ def walk_forward_evaluate(
             "y_true": y_ret_te.numpy(),
             "y_pred": y_pred_ret,
             "fold": i,
-            "realized_vol_true": df_te_raw[VOL_COL].values.astype(float),
+            "realized_vol_true": df_te_raw[FWD_VOL_COL].values.astype(float),  # next-month vol (true target)
+            "current_realized_vol": df_te_raw[VOL_COL].values.astype(float),    # current-month vol (reference)
             "fwd_ret_3m_true": df_te_raw[RET3M_COL].values.astype(float),
         })
 
@@ -527,7 +535,7 @@ def main():
     df[DATE_COL] = pd.to_datetime(df[DATE_COL])
 
     # Sanity check: need V2 features
-    needed = [DATE_COL, STOCK_COL, SECTOR_COL, TARGET_COL, RET3M_COL, VOL_COL] + FACTOR_COLS
+    needed = [DATE_COL, STOCK_COL, SECTOR_COL, TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL] + FACTOR_COLS
     missing = [c for c in needed if c not in df.columns]
     if missing:
         raise ValueError(f"Missing columns: {missing}. Are you using master_panel_v2?")

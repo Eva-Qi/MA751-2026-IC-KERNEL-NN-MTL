@@ -101,6 +101,7 @@ DATE_COL = "date"
 STOCK_COL = "ticker"
 SECTOR_COL = "sector"
 VOL_COL = "realized_vol"
+FWD_VOL_COL = "fwd_realized_vol"   # next-month vol — MTL auxiliary target
 RET3M_COL = "fwd_ret_3m"
 
 # ── Type A imputation: sectors where factors are economically undefined ──
