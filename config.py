@@ -94,6 +94,22 @@ ALL_FEATURE_COLS_V2_WITH_MACRO = ALL_FEATURE_COLS_V2 + MACRO_COLS + REGIME_COLS
 ALL_FEATURE_COLS = ALL_FEATURE_COLS_V2
 FACTOR_COLS = ALL_FEATURE_COLS  # alias used by main.py / rung5
 
+# ── Enhanced Regime MoE feature set (based on LASSO/Ridge/rolling IC) ────
+
+# Core: LASSO-selected (>20% selection rate) + regime-conditional signals
+ENHANCED_MOE_FEATURE_COLS = [
+    "IVOL_zscore",               # 67% LASSO, within-sector alpha, Tier 1
+    "GrossProfitability_zscore", # 62% LASSO, Tier 1
+    "Beta_zscore",               # 53% LASSO, strongest regime dependence
+    "ShortInterestRatio_zscore", # 28% LASSO
+    "Momentum12_1_zscore",       # 21% LASSO
+    "AnalystDispersion_zscore",  # sign flip: pre-2020 -0.007 → post +0.016
+    "SUE_zscore",                # sign flip: pre-2020 -0.005 → post +0.007
+]
+
+# Gate conditioning: regime posteriors + key macro (fed to gate, NOT encoder)
+GATE_MACRO_COLS = ["VIXCLS", "T10Y2Y", "BAMLH0A0HYM2"]
+
 # ── Column name constants ────────────────────────────────────────────────
 
 TARGET_COL = "fwd_ret_1m"
