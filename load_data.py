@@ -630,6 +630,25 @@ def build_master_panel_v2(save=True, verbose=True):
         "ShortInterestRatio_zscore",
         "InstOwnershipChg_zscore",
     }
+    # NOTE: has_analyst_consensus and has_positive_earnings are flag columns
+    # (not feature z-scores) and are constructed later in this function.
+    # They do NOT belong in KEEP_NAN_COLS — they have no NaN by construction
+    # (notna() and > 0 both produce boolean → 0.0/1.0 with no NaN).
+
+    # Beta/IVOL: sector-cross-sectional median (not zero — new IPOs are typically high-beta)
+    # Small volume: 0.45% / 0.28% of panel; empirically 39 / 38 tickers, ~5-6 months each (post-IPO window)
+    for risk_col in ["Beta_zscore", "IVOL_zscore"]:
+        if risk_col in panel.columns:
+            panel[risk_col] = panel.groupby(["date", "sector"])[risk_col].transform(
+                lambda x: x.fillna(x.median())
+            )
+            # Fallback: if sector median is also NaN (all-NaN sector-month), fall back to cross-sectional median
+            panel[risk_col] = panel.groupby("date")[risk_col].transform(
+                lambda x: x.fillna(x.median())
+            )
+
+    # Columns handled by sector-median above — exclude from generic zero-fill
+    SECTOR_MEDIAN_FILLED_COLS = {"Beta_zscore", "IVOL_zscore"}
 
     all_zscore_cols = FACTOR_ZSCORE_COLS + list(NEW_ZSCORE_MAP.values())
     for col in all_zscore_cols:
@@ -637,6 +656,9 @@ def build_master_panel_v2(save=True, verbose=True):
             continue
         if col in KEEP_NAN_COLS:
             # Do NOT zero-fill — NaN = missing coverage, not zero signal
+            continue
+        if col in SECTOR_MEDIAN_FILLED_COLS:
+            # Already filled by sector-median block above — skip zero-fill
             continue
         if col in TYPE_A_EXTENDED:
             type_a_mask = panel["sector"].isin(TYPE_A_EXTENDED[col])
@@ -671,6 +693,23 @@ def build_master_panel_v2(save=True, verbose=True):
     # InstOwnershipChg: only populated in 13F filing months (quarterly)
     # NaN in non-filing months is structurally expected, not a pipeline error
     panel["has_inst_ownership"] = (~panel["InstOwnershipChg"].isna()).astype(float)
+
+    # AnalystRevision/Dispersion/Breadth: unified IBES coverage indicator
+    # NaN in any of the three = missing IBES consensus row this month
+    # Empirically <1.1% NaN in S&P 500 panel but inconsistency with SUE flagged by audit
+    panel["has_analyst_consensus"] = (
+        panel["AnalystRevision"].notna()
+        & panel["AnalystDispersion"].notna()
+        & panel["RevisionBreadth"].notna()
+    ).astype(float)
+
+    # Compustat net income sign: firms in profit vs loss regime
+    # NOTE: raw `ib` column is not carried into the panel (wrds_factor_builder.py
+    # uses it to compute EarningsYield then drops it in output_cols).
+    # EarningsYield = ib / mktcap; mktcap is always positive, so
+    # sign(EarningsYield) == sign(ib) — use it as an exact proxy.
+    # EY NaN → profit regime unknown → flag resolves to 0.0 (conservative)
+    panel["has_positive_earnings"] = (panel["EarningsYield"] > 0).astype(float)
 
     # ── Macro: keep as metadata, NOT in feature set ──
     # Audit finding: zero cross-sectional variance → useless in CS regression

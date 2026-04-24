@@ -38,6 +38,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F  # audit 2026-04-24: for smooth_l1_loss (Huber)
 from scipy.stats import spearmanr
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
@@ -170,6 +171,11 @@ class UncertaintyMTLLoss(nn.Module):
         var_ret: float = 1.0,
         var_ret3m: float = 1.0,
         var_vol: float = 1.0,
+        # audit 2026-04-24: Huber β per task, auto-scaled to ~0.5 × std(y)
+        # Fixes previous β=0.01 which made Huber degenerate to MAE for return std≈0.08
+        huber_beta_ret: float = 0.04,
+        huber_beta_ret3m: float = 0.08,
+        huber_beta_vol: float = 0.5,  # vol is z-scored internally, unit-variance
     ):
         super().__init__()
 
@@ -177,6 +183,9 @@ class UncertaintyMTLLoss(nn.Module):
         self.var_ret = max(var_ret, 1e-8)
         self.var_ret3m = max(var_ret3m, 1e-8)
         self.var_vol = max(var_vol, 1e-8)
+        self.huber_beta_ret = huber_beta_ret
+        self.huber_beta_ret3m = huber_beta_ret3m
+        self.huber_beta_vol = huber_beta_vol
 
         self.log_vars = nn.ParameterDict()
         if "ret" in self.active_tasks:
@@ -199,11 +208,20 @@ class UncertaintyMTLLoss(nn.Module):
         valid_vol = y_vol_std[~torch.isnan(y_vol_std)]
         var_vol = float(valid_vol.var()) if len(valid_vol) > 1 else 1.0
 
+        # audit 2026-04-24: Huber β auto-scaled to 0.5 × std(y)
+        # Covers ~1 std deviation; keeps bulk of observations in quadratic region
+        std_ret = float(y_ret.std())
+        std_3m = float(valid_3m.std()) if len(valid_3m) > 1 else 1.0
+        std_vol = float(valid_vol.std()) if len(valid_vol) > 1 else 1.0
+
         return UncertaintyMTLLoss(
             active_tasks=active_tasks,
             var_ret=float(y_ret.var()),
             var_ret3m=var_ret3m,
             var_vol=var_vol,
+            huber_beta_ret=max(0.01, 0.5 * std_ret),
+            huber_beta_ret3m=max(0.01, 0.5 * std_3m),
+            huber_beta_vol=max(0.1, 0.5 * std_vol),
         )
 
     def forward(
@@ -215,22 +233,24 @@ class UncertaintyMTLLoss(nn.Module):
     ) -> torch.Tensor:
         total = torch.zeros(1, device=y_ret.device).squeeze()
 
+        # audit 2026-04-24: Huber β is per-task, auto-scaled via from_train_data
+        # (fixed previous mis-scaling at β=0.01 → retained signal magnitude learning)
         if "ret" in preds:
-            base_ret = ((preds["ret"] - y_ret) ** 2).mean() / self.var_ret
+            base_ret = F.smooth_l1_loss(preds["ret"], y_ret, beta=self.huber_beta_ret) / self.var_ret
             s = self.log_vars["ret"].squeeze()
             total = total + 0.5 * torch.exp(-s) * base_ret + 0.5 * s
 
         if "ret3m" in preds:
             valid = ~torch.isnan(y_ret3m)
             if valid.sum() > 0:
-                base_ret3m = ((preds["ret3m"][valid] - y_ret3m[valid]) ** 2).mean() / self.var_ret3m
+                base_ret3m = F.smooth_l1_loss(preds["ret3m"][valid], y_ret3m[valid], beta=self.huber_beta_ret3m) / self.var_ret3m
                 s = self.log_vars["ret3m"].squeeze()
                 total = total + 0.5 * torch.exp(-s) * base_ret3m + 0.5 * s
 
         if "vol" in preds:
             valid_vol = ~torch.isnan(y_vol_std)
             if valid_vol.sum() > 0:
-                base_vol = ((preds["vol"][valid_vol] - y_vol_std[valid_vol]) ** 2).mean() / self.var_vol
+                base_vol = F.smooth_l1_loss(preds["vol"][valid_vol], y_vol_std[valid_vol], beta=self.huber_beta_vol) / self.var_vol
                 s = self.log_vars["vol"].squeeze()
                 total = total + 0.5 * torch.exp(-s) * base_vol + 0.5 * s
 
@@ -267,7 +287,13 @@ def train_one_fold(
     patience: int = 20,
     val_frac: float = 0.10,
     device: str = "cpu",
+    fold_idx: int = 0,  # audit 2026-04-24: per-fold seed for reproducibility
 ) -> tuple[MTLNet, dict[str, float], dict[str, float]]:
+    # audit 2026-04-24: set seeds per fold for reproducibility (across-runs)
+    # while preserving cross-fold variation for diagnostics
+    torch.manual_seed(fold_idx)
+    np.random.seed(fold_idx)
+
     n_val = max(1, int(len(X_tr) * val_frac))
 
     X_val, X_tr = X_tr[-n_val:], X_tr[:-n_val]
@@ -356,7 +382,7 @@ def train_one_fold(
 # 6. WALK-FORWARD
 
 ABLATION_TASKS = {
-    "5a": {"ret"},
+    "rung4": {"ret"},  # audit-fix 2026-04-22: was "5a"; architecturally pure single-task MLP = Rung 4 of ladder
     "5b": {"ret", "ret3m"},
     "5c": {"ret", "vol"},
     "5d": {"ret", "ret3m", "vol"},
@@ -417,6 +443,7 @@ def walk_forward_evaluate(
             dropout=dropout,
             patience=patience,
             device=device,
+            fold_idx=i,  # audit 2026-04-24: seed per fold for reproducibility
         )
 
         model.eval()
@@ -636,7 +663,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Rung 5 MTL MLP with uncertainty weighting")
-    parser.add_argument("--data", type=str, default="data/master_panel.parquet", help="Path to master panel parquet")
+    parser.add_argument("--data", type=str, default="data/master_panel_v2.parquet", help="Path to master panel parquet. Default is V2 (CRSP-based panel). V1 (master_panel.parquet) has known dei-namespace gaps for V/BRK-B/STZ — use only for legacy comparison.")
     parser.add_argument("--output_dir", type=str, default="output", help="Directory to save outputs")
     parser.add_argument("--device", type=str, default="cpu", help="cpu or cuda")
     parser.add_argument("--quiet", action="store_true", help="Suppress fold-level logging")

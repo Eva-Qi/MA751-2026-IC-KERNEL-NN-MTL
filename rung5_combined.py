@@ -847,8 +847,8 @@ def main():
         description="Rung 5 Combined MTL — Best auxiliary target combinations"
     )
     parser.add_argument(
-        "--data", type=str, default="data/master_panel.parquet",
-        help="Path to master panel parquet",
+        "--data", type=str, default="data/master_panel_v2.parquet",
+        help="Path to master panel parquet. Default is V2 (CRSP-based panel). V1 (master_panel.parquet) has known dei-namespace gaps for V/BRK-B/STZ — use only for legacy comparison.",
     )
     parser.add_argument(
         "--output_dir", type=str, default="output",

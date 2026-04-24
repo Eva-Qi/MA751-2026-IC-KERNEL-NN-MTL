@@ -15,7 +15,7 @@ Rungs:
   1a  - OLS (plain multivariate linear regression)
   1b  - IC-weighted linear ensemble (univariate OLS combined with IC-weights)
   2   - LASSO (LassoCV with walk-forward)
-  5a  - MLP single-task (ret only)
+  rung4 - MLP single-task (ret only) — was labeled "5a" before audit fix 2026-04-22
   5b  - MTL (ret + ret3m)
   5c  - MTL (ret + vol)
   5d  - MTL (ret + ret3m + vol)
@@ -587,13 +587,13 @@ def compute_hit_rate(ic_series: np.ndarray) -> float:
 
 PRIMARY_COMPARISONS = [
     # Key scientific question: does best MTL beat best single-task?
-    ("5d_MTL_ret_ret3m_vol", "5a_MLP_ret"),   # 1 comparison
+    ("5d_MTL_ret_ret3m_vol", "rung4_MLP"),   # 1 comparison
 ]
 
 SECONDARY_COMPARISONS = [
     # Within-rung pairs (same complexity level)
-    ("5b_MTL_ret_ret3m", "5a_MLP_ret"),
-    ("5c_MTL_ret_vol",   "5a_MLP_ret"),
+    ("5b_MTL_ret_ret3m", "rung4_MLP"),
+    ("5c_MTL_ret_vol",   "rung4_MLP"),
     ("5d_MTL_ret_ret3m_vol", "5b_MTL_ret_ret3m"),
     ("5d_MTL_ret_ret3m_vol", "5c_MTL_ret_vol"),  # 4 comparisons total
 ]
@@ -603,7 +603,7 @@ EXPLORATORY_COMPARISONS = [
     ("2a_LASSO",  "1a_OLS"),
     ("2a_LASSO",  "1b_IC_Ensemble"),
     ("2b_Ridge",  "1a_OLS"),
-    ("5a_MLP_ret", "2a_LASSO"),
+    ("rung4_MLP", "2a_LASSO"),
     ("5d_MTL_ret_ret3m_vol", "2a_LASSO"),
 ]
 
@@ -815,9 +815,9 @@ def main():
     #       all_monthly["2_LASSO_v1"]  = run_lasso_walkforward(df_base)
 
     # ── Rung 4-5: Load from saved parquets ───────────────────────────────
-    for variant in ["5a", "5b", "5c", "5d"]:
+    for variant in ["rung4", "5b", "5c", "5d"]:
         label_map = {
-            "5a": "5a_MLP_ret",
+            "rung4": "rung4_MLP",  # audit-fix 2026-04-22: was "5a"
             "5b": "5b_MTL_ret_ret3m",
             "5c": "5c_MTL_ret_vol",
             "5d": "5d_MTL_ret_ret3m_vol",
@@ -837,9 +837,9 @@ def main():
     # Use the shortest overlapping series for the key primary comparison
     n_overlap = 34   # conservative estimate (Rung 5 months)
     # Try to derive from actual data if both models loaded
-    if "5d_MTL_ret_ret3m_vol" in all_monthly and "5a_MLP_ret" in all_monthly:
+    if "5d_MTL_ret_ret3m_vol" in all_monthly and "rung4_MLP" in all_monthly:
         ma = all_monthly["5d_MTL_ret_ret3m_vol"]
-        mb = all_monthly["5a_MLP_ret"]
+        mb = all_monthly["rung4_MLP"]
         merged_power = pd.merge(
             ma[["date"]], mb[["date"]], on="date", how="inner"
         )
@@ -870,7 +870,7 @@ def main():
         "2b_Ridge":            "2",
         "2c_OLS_LASSO3":       "2",
         "2c_OLS_LASSO5":       "2",
-        "5a_MLP_ret":          "4-5",
+        "rung4_MLP":          "4-5",
         "5b_MTL_ret_ret3m":    "4-5",
         "5c_MTL_ret_vol":      "4-5",
         "5d_MTL_ret_ret3m_vol":"4-5",
