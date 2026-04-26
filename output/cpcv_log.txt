@@ -1,0 +1,404 @@
+======================================================================
+CPCV ALL MODELS — Lopez de Prado ch.12
+Config: N_blocks=6, k_test=2, C(6,2)=15 paths, embargo=1mo
+======================================================================
+
+Loading panel...
+  46,811 rows, 119 months, 27 features
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 1a_OLS
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0691 Sharpe=1.697 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0222 Sharpe=0.139 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0737 Sharpe=1.685 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0162 Sharpe=0.486 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0387 Sharpe=1.008 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0372 Sharpe=1.033 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0555 Sharpe=2.517 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0307 Sharpe=0.988 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0239 Sharpe=1.379 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0317 Sharpe=1.122 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0037 Sharpe=0.337 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0104 Sharpe=0.483 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0383 Sharpe=1.131 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0209 Sharpe=1.052 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0077 Sharpe=0.536 n_obs=39
+
+======================================================================
+Model: 1a_OLS  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+1.040  std=0.618
+    5th=+0.278  25th=+0.511  50th=+1.033  75th=+1.255  95th=+1.943
+  P(Sharpe < 0)  = 0.0%
+  15-path IC:    mean=+0.0315  std=0.0218
+  Walk-forward Sharpe (reference): 0.924
+  CPCV mean vs WF delta: +0.116
+  [time: 7.5s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 1b_IC_Ensemble
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0610 Sharpe=1.189 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0098 Sharpe=0.070 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0663 Sharpe=1.190 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=-0.0007 Sharpe=0.166 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0329 Sharpe=1.029 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0315 Sharpe=0.758 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0752 Sharpe=2.007 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0220 Sharpe=0.784 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0297 Sharpe=1.352 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0304 Sharpe=0.798 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0200 Sharpe=0.118 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=-0.0050 Sharpe=0.252 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0226 Sharpe=0.929 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0333 Sharpe=1.478 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0054 Sharpe=0.477 n_obs=39
+
+======================================================================
+Model: 1b_IC_Ensemble  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+0.840  std=0.559
+    5th=+0.103  25th=+0.364  50th=+0.798  75th=+1.189  95th=+1.637
+  P(Sharpe < 0)  = 0.0%
+  15-path IC:    mean=+0.0263  std=0.0266
+  Walk-forward Sharpe (reference): 0.844
+  CPCV mean vs WF delta: -0.004
+  [time: 9.5s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 1c_FamaMacBeth
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0725 Sharpe=1.674 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0273 Sharpe=0.254 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0614 Sharpe=1.472 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0175 Sharpe=0.540 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0475 Sharpe=1.047 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0409 Sharpe=1.193 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0471 Sharpe=1.690 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0418 Sharpe=1.264 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0385 Sharpe=1.562 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0307 Sharpe=1.356 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0008 Sharpe=0.376 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0197 Sharpe=0.503 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0438 Sharpe=1.547 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0185 Sharpe=0.765 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0136 Sharpe=0.824 n_obs=39
+
+======================================================================
+Model: 1c_FamaMacBeth  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+1.071  std=0.494
+    5th=+0.339  25th=+0.653  50th=+1.193  75th=+1.510  95th=+1.679
+  P(Sharpe < 0)  = 0.0%
+  15-path IC:    mean=+0.0347  std=0.0193
+  Walk-forward Sharpe (reference): 0.959
+  CPCV mean vs WF delta: +0.112
+  [time: 13.9s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 1d_Barra
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0401 Sharpe=1.309 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0014 Sharpe=0.233 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0257 Sharpe=1.287 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0055 Sharpe=0.370 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=-0.0078 Sharpe=-0.023 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0171 Sharpe=0.826 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0346 Sharpe=1.453 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0218 Sharpe=0.792 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0013 Sharpe=0.397 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0052 Sharpe=0.715 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0118 Sharpe=0.178 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0126 Sharpe=0.658 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0040 Sharpe=0.647 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0118 Sharpe=0.650 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0157 Sharpe=0.572 n_obs=39
+
+======================================================================
+Model: 1d_Barra  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+0.671  std=0.425
+    5th=+0.118  25th=+0.384  50th=+0.650  75th=+0.809  95th=+1.352
+  P(Sharpe < 0)  = 6.7%
+  15-path IC:    mean=+0.0118  std=0.0145
+  Walk-forward Sharpe (reference): 0.746
+  CPCV mean vs WF delta: -0.075
+  [time: 9.1s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 2a_LASSO
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0691 Sharpe=1.697 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0222 Sharpe=0.139 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0737 Sharpe=1.685 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0162 Sharpe=0.486 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0289 Sharpe=0.964 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0372 Sharpe=1.033 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0555 Sharpe=2.517 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0307 Sharpe=0.988 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0239 Sharpe=1.379 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0317 Sharpe=1.122 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0037 Sharpe=0.337 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0104 Sharpe=0.483 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0383 Sharpe=1.131 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0209 Sharpe=1.052 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0077 Sharpe=0.536 n_obs=39
+
+======================================================================
+Model: 2a_LASSO  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+1.037  std=0.618
+    5th=+0.278  25th=+0.511  50th=+1.033  75th=+1.255  95th=+1.943
+  P(Sharpe < 0)  = 0.0%
+  15-path IC:    mean=+0.0308  std=0.0217
+  Walk-forward Sharpe (reference): 1.000
+  CPCV mean vs WF delta: +0.037
+  [time: 38.5s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 2b_Ridge
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0691 Sharpe=1.595 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0190 Sharpe=0.161 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0736 Sharpe=1.685 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0125 Sharpe=0.316 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0386 Sharpe=0.986 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0367 Sharpe=0.983 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0622 Sharpe=2.422 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0304 Sharpe=0.976 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0297 Sharpe=1.555 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0317 Sharpe=1.122 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0103 Sharpe=0.216 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0087 Sharpe=0.443 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0365 Sharpe=0.994 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0209 Sharpe=1.052 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0058 Sharpe=0.611 n_obs=39
+
+======================================================================
+Model: 2b_Ridge  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+1.008  std=0.622
+    5th=+0.199  25th=+0.527  50th=+0.986  75th=+1.338  95th=+1.906
+  P(Sharpe < 0)  = 0.0%
+  15-path IC:    mean=+0.0310  std=0.0236
+  Walk-forward Sharpe (reference): 0.966
+  CPCV mean vs WF delta: +0.042
+  [time: 447.4s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 2d_ElasticNet
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0691 Sharpe=1.697 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0222 Sharpe=0.139 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0570 Sharpe=1.118 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0162 Sharpe=0.486 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0310 Sharpe=0.935 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0372 Sharpe=1.033 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0555 Sharpe=2.517 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0307 Sharpe=0.988 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0239 Sharpe=1.379 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0317 Sharpe=1.122 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0037 Sharpe=0.337 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0104 Sharpe=0.483 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0383 Sharpe=1.131 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0209 Sharpe=1.052 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=+0.0077 Sharpe=0.536 n_obs=39
+
+======================================================================
+Model: 2d_ElasticNet  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+0.997  std=0.592
+    5th=+0.278  25th=+0.511  50th=+1.033  75th=+1.127  95th=+1.943
+  P(Sharpe < 0)  = 0.0%
+  15-path IC:    mean=+0.0299  std=0.0197
+  Walk-forward Sharpe (reference): 0.997
+  CPCV mean vs WF delta: -0.000
+  [time: 202.6s]
+
+──────────────────────────────────────────────────────────────────────
+Running CPCV: 3b_XGB_GKX
+  [CPCV] 119 months → 6 blocks, k_test=2, C(6,2)=15 paths, embargo=1mo
+  [CPCV] block sizes: [20, 20, 20, 20, 20, 19]
+  [CPCV] path  0/14 | test_blocks=(0, 1) train_blocks=(2, 3, 4, 5) | train=78mo test=40mo
+    → IC=+0.0627 Sharpe=2.043 n_obs=40
+  [CPCV] path  1/14 | test_blocks=(0, 2) train_blocks=(1, 3, 4, 5) | train=76mo test=40mo
+    → IC=+0.0253 Sharpe=0.288 n_obs=40
+  [CPCV] path  2/14 | test_blocks=(0, 3) train_blocks=(1, 2, 4, 5) | train=76mo test=40mo
+    → IC=+0.0634 Sharpe=1.971 n_obs=40
+  [CPCV] path  3/14 | test_blocks=(0, 4) train_blocks=(1, 2, 3, 5) | train=76mo test=40mo
+    → IC=+0.0110 Sharpe=0.118 n_obs=40
+  [CPCV] path  4/14 | test_blocks=(0, 5) train_blocks=(1, 2, 3, 4) | train=78mo test=39mo
+    → IC=+0.0463 Sharpe=1.293 n_obs=39
+  [CPCV] path  5/14 | test_blocks=(1, 2) train_blocks=(0, 3, 4, 5) | train=77mo test=40mo
+    → IC=+0.0304 Sharpe=1.176 n_obs=40
+  [CPCV] path  6/14 | test_blocks=(1, 3) train_blocks=(0, 2, 4, 5) | train=75mo test=40mo
+    → IC=+0.0445 Sharpe=2.401 n_obs=40
+  [CPCV] path  7/14 | test_blocks=(1, 4) train_blocks=(0, 2, 3, 5) | train=75mo test=40mo
+    → IC=+0.0056 Sharpe=0.343 n_obs=40
+  [CPCV] path  8/14 | test_blocks=(1, 5) train_blocks=(0, 2, 3, 4) | train=77mo test=39mo
+    → IC=+0.0343 Sharpe=1.463 n_obs=39
+  [CPCV] path  9/14 | test_blocks=(2, 3) train_blocks=(0, 1, 4, 5) | train=77mo test=40mo
+    → IC=+0.0412 Sharpe=1.507 n_obs=40
+  [CPCV] path 10/14 | test_blocks=(2, 4) train_blocks=(0, 1, 3, 5) | train=75mo test=40mo
+    → IC=-0.0148 Sharpe=-0.108 n_obs=40
+  [CPCV] path 11/14 | test_blocks=(2, 5) train_blocks=(0, 1, 3, 4) | train=77mo test=39mo
+    → IC=+0.0156 Sharpe=0.705 n_obs=39
+  [CPCV] path 12/14 | test_blocks=(3, 4) train_blocks=(0, 1, 2, 5) | train=77mo test=40mo
+    → IC=+0.0336 Sharpe=1.128 n_obs=40
+  [CPCV] path 13/14 | test_blocks=(3, 5) train_blocks=(0, 1, 2, 4) | train=77mo test=39mo
+    → IC=+0.0323 Sharpe=1.574 n_obs=39
+  [CPCV] path 14/14 | test_blocks=(4, 5) train_blocks=(0, 1, 2, 3) | train=79mo test=39mo
+    → IC=-0.0115 Sharpe=0.395 n_obs=39
+
+======================================================================
+Model: 3b_XGB_GKX  (n_valid_paths=15/15)
+======================================================================
+  15-path Sharpe:
+    mean=+1.086  std=0.766
+    5th=+0.050  25th=+0.369  50th=+1.176  75th=+1.540  95th=+2.150
+  P(Sharpe < 0)  = 6.7%
+  15-path IC:    mean=+0.0280  std=0.0234
+  [time: 424.3s]
+
+======================================================================
+SAVING OUTPUTS
+======================================================================
+  Saved: /Users/evanolott/Desktop/MA751-Project/output/cpcv_results.parquet  (120 rows)
+  Saved: /Users/evanolott/Desktop/MA751-Project/output/cpcv_summary.csv
+
+======================================================================
+CROSS-MODEL COMPARISON  (ranked by 15-path mean Sharpe)
+======================================================================
+Rank  Model                   Sharpe_mean  Sharpe_std        [5th, 95th]   P(neg)   WF_ref   IC_mean
+------------------------------------------------------------------------------------------------
+1     3b_XGB_GKX                   +1.086      +0.766   [+0.050, +2.150]    6.7%      n/a   +0.0280
+2     1c_FamaMacBeth               +1.071      +0.494   [+0.339, +1.679]    0.0%    0.959   +0.0347
+3     1a_OLS                       +1.040      +0.618   [+0.278, +1.943]    0.0%    0.924   +0.0315
+4     2a_LASSO                     +1.037      +0.618   [+0.278, +1.943]    0.0%    1.000   +0.0308
+5     2b_Ridge                     +1.008      +0.622   [+0.199, +1.906]    0.0%    0.966   +0.0310
+6     2d_ElasticNet                +0.997      +0.592   [+0.278, +1.943]    0.0%    0.997   +0.0299
+7     1b_IC_Ensemble               +0.840      +0.559   [+0.103, +1.637]    0.0%    0.844   +0.0263
+8     1d_Barra                     +0.671      +0.425   [+0.118, +1.352]    6.7%    0.746   +0.0118
+
+Total time: 19.2 min
+DONE.
