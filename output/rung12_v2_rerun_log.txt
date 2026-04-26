@@ -1,0 +1,82 @@
+Loading V2 panel...
+  46,811 rows, 119 months, 19 features
+
+Running 1a_OLS_v2...
+  1a_OLS_v2 fold 72 | 2021-01 | IC=+0.1289
+  1a_OLS_v2 fold 84 | 2022-01 | IC=-0.0221
+  1a_OLS_v2 fold 96 | 2023-01 | IC=+0.0781
+  1a_OLS_v2 fold 108 | 2024-01 | IC=+0.2601
+  1a_OLS_v2: IC=+0.0118 (std=0.1674), IC_IR=0.0705, Hit=56.9%, Sharpe=0.810, n_months=58
+
+Running 1b_IC_Ensemble_v2...
+  1b_IC_Ensemble_v2 fold 72 | 2021-01 | IC=+0.2514
+  1b_IC_Ensemble_v2 fold 84 | 2022-01 | IC=+0.1087
+  1b_IC_Ensemble_v2 fold 96 | 2023-01 | IC=+0.0553
+  1b_IC_Ensemble_v2 fold 108 | 2024-01 | IC=+0.2495
+  1b_IC_Ensemble_v2: IC=+0.0159 (std=0.2085), IC_IR=0.0760, Hit=55.2%, Sharpe=0.771, n_months=58
+
+Running 1c_FamaMacBeth_v2...
+  1c_FamaMacBeth_v2 fold 72 | 2021-01 | IC=+0.0945
+  1c_FamaMacBeth_v2 fold 84 | 2022-01 | IC=+0.0111
+  1c_FamaMacBeth_v2 fold 96 | 2023-01 | IC=+0.0989
+  1c_FamaMacBeth_v2 fold 108 | 2024-01 | IC=+0.3132
+  1c_FamaMacBeth_v2: IC=+0.0244 (std=0.1753), IC_IR=0.1393, Hit=62.1%, Sharpe=1.008, n_months=58
+
+Running 1d_Barra_v2...
+  1d_Barra_v2 fold 72 | 2021-01 | IC=+0.0010
+  1d_Barra_v2 fold 84 | 2022-01 | IC=+0.0170
+  1d_Barra_v2 fold 96 | 2023-01 | IC=+0.0564
+  1d_Barra_v2 fold 108 | 2024-01 | IC=+0.2536
+  1d_Barra_v2: IC=+0.0144 (std=0.1233), IC_IR=0.1167, Hit=51.7%, Sharpe=0.982, n_months=58
+
+Running 2a_LASSO_v2...
+  2a_LASSO_v2 fold 72 | 2021-01 | IC=+0.1289
+  2a_LASSO_v2 fold 84 | 2022-01 | IC=-0.0221
+  2a_LASSO_v2 fold 96 | 2023-01 | IC=+0.0781
+  2a_LASSO_v2 fold 108 | 2024-01 | IC=+0.2601
+  2a_LASSO_v2: IC=+0.0118 (std=0.1674), IC_IR=0.0705, Hit=56.9%, Sharpe=0.810, n_months=58
+
+Running 2b_Ridge_v2...
+  2b_Ridge_v2 fold 72 | 2021-01 | IC=+0.1388
+  2b_Ridge_v2 fold 84 | 2022-01 | IC=-0.0016
+  2b_Ridge_v2 fold 96 | 2023-01 | IC=+0.0781
+  2b_Ridge_v2 fold 108 | 2024-01 | IC=+0.2695
+  2b_Ridge_v2: IC=+0.0126 (std=0.1758), IC_IR=0.0714, Hit=55.2%, Sharpe=0.800, n_months=58
+
+Running 2d_ElasticNet_v2...
+  2d_ElasticNet_v2 fold 72 | 2021-01 | IC=+0.1289
+  2d_ElasticNet_v2 fold 84 | 2022-01 | IC=-0.0221
+  2d_ElasticNet_v2 fold 96 | 2023-01 | IC=+0.0781
+  2d_ElasticNet_v2 fold 108 | 2024-01 | IC=+0.2601
+  2d_ElasticNet_v2: IC=+0.0118 (std=0.1674), IC_IR=0.0705, Hit=56.9%, Sharpe=0.810, n_months=58
+
+Running 2e_AdaptiveLASSO_v2...
+  2e_AdaptiveLASSO_v2 fold 72 | 2021-01 | IC=+0.1289
+  2e_AdaptiveLASSO_v2 fold 84 | 2022-01 | IC=-0.0221
+  2e_AdaptiveLASSO_v2 fold 96 | 2023-01 | IC=+0.0781
+  2e_AdaptiveLASSO_v2 fold 108 | 2024-01 | IC=+0.2601
+  2e_AdaptiveLASSO_v2: IC=+0.0118 (std=0.1674), IC_IR=0.0705, Hit=56.9%, Sharpe=0.810, n_months=58
+
+================================================================================
+RUNG 1-2 SUMMARY (V2 DATA — TimeSeriesSplit + winsorized y_tr)
+================================================================================
+              Model  IC_mean  IC_std  IC_IR  Hit_Rate  LS_Sharpe  n_months
+          1a_OLS_v2   0.0118  0.1674 0.0705     0.569      0.810        58
+  1b_IC_Ensemble_v2   0.0159  0.2085 0.0760     0.552      0.771        58
+  1c_FamaMacBeth_v2   0.0244  0.1753 0.1393     0.621      1.008        58
+        1d_Barra_v2   0.0144  0.1233 0.1167     0.517      0.982        58
+        2a_LASSO_v2   0.0118  0.1674 0.0705     0.569      0.810        58
+        2b_Ridge_v2   0.0126  0.1758 0.0714     0.552      0.800        58
+   2d_ElasticNet_v2   0.0118  0.1674 0.0705     0.569      0.810        58
+2e_AdaptiveLASSO_v2   0.0118  0.1674 0.0705     0.569      0.810        58
+
+ElasticNet diagnostics (58 folds):
+  l1_ratio mean=0.01
+  alpha mean=10.0000
+  n_nonzero mean=0.0
+
+Fama-MacBeth diagnostics (58 folds):
+  avg monthly regressions per fold: 88.5
+  avg beta L2 norm: 0.0069
+
+Saved to output

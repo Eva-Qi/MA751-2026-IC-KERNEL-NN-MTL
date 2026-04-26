@@ -38,6 +38,7 @@ from config import (
     ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
     TARGET_COL, DATE_COL, STOCK_COL, SECTOR_COL,
 )
+from metrics import compute_long_short_sharpe  # Category B consolidation
 
 # Default to V2; overridden by --v1 flag
 ALL_FEATURE_COLS = ALL_FEATURE_COLS_V2
@@ -158,15 +159,9 @@ def compute_long_short_returns(
     return np.asarray(monthly_rets, dtype=float)
 
 
-def compute_long_short_sharpe(results: pd.DataFrame) -> float:
-    monthly_rets = compute_long_short_returns(results)
-    if len(monthly_rets) < 2:
-        return np.nan
-    mean_ret = monthly_rets.mean()
-    std_ret  = monthly_rets.std(ddof=1)
-    if std_ret < 1e-8:
-        return np.nan
-    return float(np.sqrt(12.0) * mean_ret / std_ret)
+# compute_long_short_sharpe removed — imported from metrics.py (Category B consolidation)
+# NOTE: rung3_gam uses compute_long_short_returns locally; compute_long_short_sharpe still
+# accepts results DataFrame with top_q=0.2, bottom_q=0.2 defaults — identical behavior.
 
 
 def summarise(results: pd.DataFrame) -> dict:

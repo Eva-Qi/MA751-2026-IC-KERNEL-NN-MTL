@@ -44,6 +44,7 @@ import torch.nn as nn
 from scipy.stats import spearmanr
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
+from metrics import compute_long_short_sharpe  # Category B consolidation
 
 warnings.filterwarnings("ignore")
 
@@ -502,43 +503,7 @@ def compute_monthly_ic(results: pd.DataFrame) -> pd.Series:
     return monthly.dropna()
 
 
-def compute_long_short_sharpe(
-    results: pd.DataFrame,
-    top_q: float = 0.2,
-    bottom_q: float = 0.2,
-) -> float:
-    """
-    Simple equal-weight long-short portfolio formed within each month:
-      long  = top q by predicted return
-      short = bottom q by predicted return
-    """
-    monthly_rets = []
-
-    for _, g in results.groupby(DATE_COL):
-        g = g.dropna(subset=["y_pred", "y_true"]).copy()
-        if len(g) < 10:
-            continue
-
-        n_long = max(1, int(len(g) * top_q))
-        n_short = max(1, int(len(g) * bottom_q))
-
-        g = g.sort_values("y_pred", ascending=False)
-        long_ret = g.head(n_long)["y_true"].mean()
-        short_ret = g.tail(n_short)["y_true"].mean()
-
-        monthly_rets.append(long_ret - short_ret)
-
-    if len(monthly_rets) < 2:
-        return np.nan
-
-    monthly_rets = np.asarray(monthly_rets, dtype=float)
-    mean_ret = monthly_rets.mean()
-    std_ret = monthly_rets.std(ddof=1)
-
-    if std_ret < 1e-8:
-        return np.nan
-
-    return float(np.sqrt(12.0) * mean_ret / std_ret)
+# compute_long_short_sharpe removed — imported from metrics.py (Category B consolidation)
 
 
 def compute_rank_auxiliary_ic(results: pd.DataFrame) -> dict:

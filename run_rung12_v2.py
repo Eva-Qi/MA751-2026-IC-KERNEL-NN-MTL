@@ -365,51 +365,6 @@ def corr_adj_ic_ensemble_model(X_tr, y_tr, X_te, features, train_dates=None, **k
     return X_te @ w_star
 
 
-def corr_adj_ic_ensemble_model(X_tr, y_tr, X_te, features, **kwargs):
-    """1d: Barra-style Correlation-Adjusted IC Ensemble.
-
-    Instead of wⱼ = |ICⱼ| / Σ|IC| (double-counts correlated features),
-    use wⱼ = (Corr(X) + ε·I)⁻¹ · IC_vec. Shrinks redundant features.
-    """
-    n_features = X_tr.shape[1]
-    n_recent = min(len(X_tr), IC_WEIGHT_WINDOW * 400)
-    X_recent = X_tr[-n_recent:]
-    y_recent = y_tr[-n_recent:]
-
-    # Signed IC per feature (use sign, not |IC|, so decorrelation preserves direction)
-    ics = []
-    preds_per_feature = []
-    for j in range(n_features):
-        model = LinearRegression()
-        model.fit(X_tr[:, j:j+1], y_tr)
-        preds_per_feature.append(model.predict(X_te[:, j:j+1]))
-        ic_j = np.corrcoef(X_recent[:, j], y_recent)[0, 1]
-        ics.append(0.0 if np.isnan(ic_j) else ic_j)
-
-    ics = np.array(ics)
-
-    # Feature correlation matrix (use recent window for stability)
-    corr = np.corrcoef(X_recent.T)
-    corr = np.nan_to_num(corr, nan=0.0)
-    corr_reg = corr + 1e-3 * np.eye(n_features)
-
-    # Decorrelated weights
-    try:
-        w = np.linalg.solve(corr_reg, ics)
-    except np.linalg.LinAlgError:
-        w = ics
-
-    # Normalize by L1 (preserves relative magnitudes including sign)
-    total = np.sum(np.abs(w))
-    if total < 1e-8:
-        w = np.ones(n_features) / n_features
-    else:
-        w = w / total
-
-    # Note: using signed weights; predictions can add or subtract
-    return sum(w[j] * preds_per_feature[j] for j in range(n_features))
-
-
 def adaptive_lasso_model(X_tr, y_tr, X_te, features, train_dates=None, **kwargs):
     """[CAVEAT-unreliable_SNR] 2e Adaptive LASSO (Zou 2006). Same L1 failure mode at IC~0.01.
 
