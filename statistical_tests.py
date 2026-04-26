@@ -39,6 +39,8 @@ warnings.filterwarnings("ignore")
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT_ROOT))  # ensure project root on path for metrics import
+from metrics import compute_ic_ir, compute_hit_rate  # consolidated from duplicate local defs (Category A)
 BASELINE_DATA = PROJECT_ROOT / "data" / "baseline" / "model_dataset.parquet"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 
@@ -514,7 +516,8 @@ def ljung_box_test(
 # Section 3b: Power Analysis + Economic Metrics
 # ═══════════════════════════════════════════════════════════════════════════
 
-def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05) -> dict:
+def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05,
+                  ic_std: float | None = None) -> dict:
     """
     Statistical power analysis for detecting IC differences.
 
@@ -536,8 +539,11 @@ def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05)
     -------
     dict with: power (%), n_needed_80pct, n_months, effect_size
     """
-    # Assumed monthly IC std (cross-sectional models typically 0.05-0.15)
-    sigma = 0.10
+    # Audit fix 2026-04-26 (P1 #1): sigma was hardcoded 0.10 — ML actuals
+    # show sigma ≈ 0.10–0.16 in our 58-mo window for top models, so the
+    # fixed sigma was rough but in-range. Allow override via kwarg-like
+    # access to the actual sigma when the caller passes ic_std.
+    sigma = ic_std if ic_std is not None else 0.10
 
     # Critical values
     z_alpha = stats.norm.ppf(1.0 - alpha / 2.0)   # two-sided
@@ -566,15 +572,7 @@ def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05)
     }
 
 
-def compute_ic_ir(ic_series: np.ndarray) -> float:
-    """IC Information Ratio = mean(IC) / std(IC)"""
-    std = float(np.std(ic_series, ddof=1)) if len(ic_series) > 1 else 0.0
-    return float(ic_series.mean()) / std if std > 0 else 0.0
-
-
-def compute_hit_rate(ic_series: np.ndarray) -> float:
-    """Fraction of months with positive IC"""
-    return float((ic_series > 0).mean())
+# compute_ic_ir and compute_hit_rate removed — now imported from metrics.py (Category A consolidation)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

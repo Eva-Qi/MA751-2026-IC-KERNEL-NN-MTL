@@ -1,0 +1,97 @@
+Loading panel (V3 features)...
+  46,811 rows, 119 months
+  V3 features (27): ['EarningsYield_zscore', 'GrossProfitability_zscore', 'AssetGrowth_zscore', 'Accruals_zscore', 'Momentum12_1_zscore', 'NetDebtEBITDA_zscore', 'SUE_zscore', 'AnalystRevision_zscore', 'AnalystDispersion_zscore', 'RevisionBreadth_zscore', 'Beta_zscore', 'IVOL_zscore', 'ShortInterestRatio_zscore', 'InstOwnershipChg_zscore', 'Turnover_zscore', 'AmihudIlliquidity_zscore', 'High52W_Proximity_zscore', 'MaxDailyReturn_zscore', 'ReturnSkewness_zscore', 'ImpliedEPSGrowth_zscore', 'QRevGrowthYoY_zscore', 'AnalystCoverageChg_zscore', 'has_sue', 'has_short_interest', 'has_inst_ownership', 'has_analyst_consensus', 'has_positive_earnings']
+
+Running 1a_OLS_v3...
+  1a_OLS_v3 fold 72 | 2021-01 | IC=+0.1394
+  1a_OLS_v3 fold 84 | 2022-01 | IC=-0.0058
+  1a_OLS_v3 fold 96 | 2023-01 | IC=+0.1211
+  1a_OLS_v3 fold 108 | 2024-01 | IC=+0.2183
+  1a_OLS_v3: IC=+0.0164 (std=0.1540), IC_IR=0.1063, Hit=53.4%, Sharpe=0.924, n_months=58
+
+Running 1b_IC_Ensemble_v3...
+  1b_IC_Ensemble_v3 fold 72 | 2021-01 | IC=+0.3113
+  1b_IC_Ensemble_v3 fold 84 | 2022-01 | IC=+0.1144
+  1b_IC_Ensemble_v3 fold 96 | 2023-01 | IC=+0.0730
+  1b_IC_Ensemble_v3 fold 108 | 2024-01 | IC=+0.2040
+  1b_IC_Ensemble_v3: IC=+0.0208 (std=0.2207), IC_IR=0.0944, Hit=50.0%, Sharpe=0.844, n_months=58
+
+Running 1c_FamaMacBeth_v3...
+  1c_FamaMacBeth_v3 fold 72 | 2021-01 | IC=+0.0392
+  1c_FamaMacBeth_v3 fold 84 | 2022-01 | IC=+0.0294
+  1c_FamaMacBeth_v3 fold 96 | 2023-01 | IC=+0.1480
+  1c_FamaMacBeth_v3 fold 108 | 2024-01 | IC=+0.2625
+  1c_FamaMacBeth_v3: IC=+0.0259 (std=0.1569), IC_IR=0.1648, Hit=63.8%, Sharpe=0.959, n_months=58
+
+Running 1d_Barra_v3...
+  1d_Barra_v3 fold 72 | 2021-01 | IC=+0.1138
+  1d_Barra_v3 fold 84 | 2022-01 | IC=-0.0098
+  1d_Barra_v3 fold 96 | 2023-01 | IC=+0.1000
+  1d_Barra_v3 fold 108 | 2024-01 | IC=+0.1910
+  1d_Barra_v3: IC=+0.0283 (std=0.1240), IC_IR=0.2286, Hit=60.3%, Sharpe=1.134, n_months=58
+
+Running 2a_LASSO_v3...
+  2a_LASSO_v3 fold 72 | 2021-01 | IC=+0.1394
+  2a_LASSO_v3 fold 84 | 2022-01 | IC=-0.0058
+  2a_LASSO_v3 fold 96 | 2023-01 | IC=+0.1211
+  2a_LASSO_v3 fold 108 | 2024-01 | IC=+0.2183
+  2a_LASSO_v3: IC=+0.0183 (std=0.1550), IC_IR=0.1181, Hit=53.4%, Sharpe=1.000, n_months=58
+
+Running 2b_Ridge_v3...
+  2b_Ridge_v3 fold 72 | 2021-01 | IC=+0.1394
+  2b_Ridge_v3 fold 84 | 2022-01 | IC=+0.0080
+  2b_Ridge_v3 fold 96 | 2023-01 | IC=+0.1211
+  2b_Ridge_v3 fold 108 | 2024-01 | IC=+0.2327
+  2b_Ridge_v3: IC=+0.0177 (std=0.1679), IC_IR=0.1054, Hit=55.2%, Sharpe=0.966, n_months=58
+
+Running 2d_ElasticNet_v3...
+  2d_ElasticNet_v3 fold 72 | 2021-01 | IC=+0.1394
+  2d_ElasticNet_v3 fold 84 | 2022-01 | IC=-0.0058
+  2d_ElasticNet_v3 fold 96 | 2023-01 | IC=+0.1211
+  2d_ElasticNet_v3 fold 108 | 2024-01 | IC=+0.2183
+  2d_ElasticNet_v3: IC=+0.0179 (std=0.1546), IC_IR=0.1159, Hit=53.4%, Sharpe=0.997, n_months=58
+
+Running 2e_AdaptiveLASSO_v3...
+  2e_AdaptiveLASSO_v3 fold 72 | 2021-01 | IC=+0.1394
+  2e_AdaptiveLASSO_v3 fold 84 | 2022-01 | IC=-0.0058
+  2e_AdaptiveLASSO_v3 fold 96 | 2023-01 | IC=+0.1211
+  2e_AdaptiveLASSO_v3 fold 108 | 2024-01 | IC=+0.2183
+  2e_AdaptiveLASSO_v3: IC=+0.0164 (std=0.1540), IC_IR=0.1063, Hit=53.4%, Sharpe=0.924, n_months=58
+
+================================================================================
+RUNG 1-2 SUMMARY (V3 DATA — 27 features)
+================================================================================
+              Model  IC_mean  IC_std  IC_IR  Hit_Rate  LS_Sharpe  n_months
+          1a_OLS_v3   0.0164  0.1540 0.1063     0.534      0.924        58
+  1b_IC_Ensemble_v3   0.0208  0.2207 0.0944     0.500      0.844        58
+  1c_FamaMacBeth_v3   0.0259  0.1569 0.1648     0.638      0.959        58
+        1d_Barra_v3   0.0283  0.1240 0.2286     0.603      1.134        58
+        2a_LASSO_v3   0.0183  0.1550 0.1181     0.534      1.000        58
+        2b_Ridge_v3   0.0177  0.1679 0.1054     0.552      0.966        58
+   2d_ElasticNet_v3   0.0179  0.1546 0.1159     0.534      0.997        58
+2e_AdaptiveLASSO_v3   0.0164  0.1540 0.1063     0.534      0.924        58
+
+================================================================================
+V2 vs V3 COMPARISON
+================================================================================
+Model                     V2 IC    V3 IC  V2 Sharpe  V3 Sharpe   ΔSharpe
+----------------------------------------------------------------------
+1a_OLS                  +0.0118  +0.0164      0.810      0.924    +0.114
+1b_IC_Ensemble          +0.0159  +0.0208      0.771      0.844    +0.073
+1c_FamaMacBeth          +0.0244  +0.0259      1.008      0.959    -0.049
+1d_Barra                +0.0070  +0.0283      0.497      1.134    +0.637
+2a_LASSO                +0.0118  +0.0183      0.810      1.000    +0.190
+2b_Ridge                +0.0126  +0.0177      0.800      0.966    +0.166
+2d_ElasticNet           +0.0118  +0.0179      0.810      0.997    +0.187
+2e_AdaptiveLASSO        +0.0118  +0.0164      0.810      0.924    +0.114
+
+ElasticNet V3 diagnostics (58 folds):
+  l1_ratio mean=0.01
+  alpha mean=8.2928
+  n_nonzero mean=1.5
+
+Fama-MacBeth V3 diagnostics (58 folds):
+  avg monthly regressions per fold: 88.5
+  avg beta L2 norm: 0.0090
+
+All outputs saved to /Users/evanolott/Desktop/MA751-Project/output/

@@ -50,6 +50,7 @@ from config import (
     ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
     TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
 )
+from metrics import compute_long_short_sharpe  # Category B consolidation
 
 # Default to V2; overridden by --v1 flag
 FACTOR_COLS = ALL_FEATURE_COLS_V2
@@ -272,6 +273,14 @@ class UncertaintyMTLLoss(nn.Module):
         return out
 
 # 5. TRAIN ONE FOLD
+# Category D audit note: NOT consolidated with regmtl.py / regmtl_enhanced.py /
+# rung5_planned.py / rung5_combined.py — each uses a different model class:
+#   main.py          → MTLNet(active_tasks),        inputs: (X, y_ret, y_ret3m, y_vol)
+#   regmtl.py        → RegimeGatedMTLMoE(n_experts), inputs: (X, R, y_ret, y_ret3m, y_vol)
+#   regmtl_enhanced.py → EnhancedRegimeMoE,          inputs: (X, G, y_ret, y_ret3m, y_vol)
+#   rung5_planned.py → MTLNet(active_tasks),         inputs: (X, y_ret, y_rank, y_sector_rel)
+#   rung5_combined.py → MTLNet(active_tasks),        inputs: (X, train_targets: dict)
+# Consolidation would require a model-factory pattern — unsafe 1 day from submission.
 
 def train_one_fold(
     X_tr: torch.Tensor,
@@ -389,6 +398,14 @@ ABLATION_TASKS = {
 }
 
 
+# Category E audit note: walk_forward_evaluate NOT consolidated across files.
+# Each version is coupled to a different train_one_fold / model class:
+#   main.py          → calls local train_one_fold (MTLNet, 3 positional targets)
+#   regmtl.py        → calls local train_one_fold (RegimeGatedMoE, HMM per fold)
+#   regmtl_enhanced.py → calls local train_one_fold (EnhancedRegimeMoE, gate features)
+#   rung5_planned.py → calls local train_one_fold (MTLNet, rank/sector_rel heads)
+#   rung5_combined.py → calls local train_one_fold (MTLNet, dict-based targets)
+# A harness abstraction would require model-factory + callable injection — unsafe pre-submission.
 def walk_forward_evaluate(
     df: pd.DataFrame,
     active_tasks: set,
@@ -504,39 +521,7 @@ def compute_monthly_ic(results: pd.DataFrame) -> pd.Series:
     return monthly.dropna()
 
 
-def compute_long_short_sharpe(results: pd.DataFrame, top_q: float = 0.2, bottom_q: float = 0.2) -> float:
-    """
-    Simple equal-weight long-short portfolio formed within each month:
-      long = top q by predicted return
-      short = bottom q by predicted return
-    """
-    monthly_rets = []
-
-    for _, g in results.groupby(DATE_COL):
-        g = g.dropna(subset=["y_pred", "y_true"]).copy()
-        if len(g) < 10:
-            continue
-
-        n_long = max(1, int(len(g) * top_q))
-        n_short = max(1, int(len(g) * bottom_q))
-
-        g = g.sort_values("y_pred", ascending=False)
-        long_ret = g.head(n_long)["y_true"].mean()
-        short_ret = g.tail(n_short)["y_true"].mean()
-
-        monthly_rets.append(long_ret - short_ret)
-
-    if len(monthly_rets) < 2:
-        return np.nan
-
-    monthly_rets = np.asarray(monthly_rets, dtype=float)
-    mean_ret = monthly_rets.mean()
-    std_ret = monthly_rets.std(ddof=1)
-
-    if std_ret < 1e-8:
-        return np.nan
-
-    return float(np.sqrt(12.0) * mean_ret / std_ret)
+# compute_long_short_sharpe removed — imported from metrics.py (Category B consolidation)
 
 
 def compute_ret3m_auxiliary_ic(results: pd.DataFrame) -> dict:

@@ -41,75 +41,15 @@ from config import (
     DEFAULT_MIN_TRAIN_MONTHS, DEFAULT_PURGE_MONTHS,
 )
 from metrics import compute_long_short_sharpe, compute_ic_ir, compute_hit_rate
+from src.models.mlp_audit import MLP, train_mlp_fold  # Category C + D(Group2) consolidation
 
 FEATURES = ALL_FEATURE_COLS_V3_WITH_MISS
 DATA = Path("data/master_panel_v2.parquet")
 OUTPUT = Path("output")
 OUTPUT.mkdir(exist_ok=True)
 
-
-class MLP(nn.Module):
-    """Match main.py rung4 arch: n_in → hidden → hidden//2 → 1, ReLU + dropout 0.10."""
-    def __init__(self, n_in, hidden=64):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(n_in, hidden), nn.ReLU(), nn.Dropout(0.10),
-            nn.Linear(hidden, hidden // 2), nn.ReLU(), nn.Dropout(0.10),
-            nn.Linear(hidden // 2, 1),
-        )
-
-    def forward(self, x):
-        return self.net(x).squeeze(-1)
-
-
-def train_mlp_fold(X_tr, y_tr, X_val, y_val, X_te, hidden, seed,
-                   epochs=100, patience=20, lr=1e-3, batch=256):
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    model = MLP(X_tr.shape[1], hidden=hidden)
-    opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
-    X_tr_t = torch.FloatTensor(X_tr)
-    y_tr_t = torch.FloatTensor(y_tr)
-    X_val_t = torch.FloatTensor(X_val)
-    y_val_t = torch.FloatTensor(y_val)
-    X_te_t = torch.FloatTensor(X_te)
-    y_std = max(1e-6, float(np.std(y_tr)))
-    huber_beta = max(0.01, 0.5 * y_std)
-
-    best_val = float("inf")
-    patience_left = patience
-    best_state = None
-    n_tr = len(X_tr_t)
-
-    for ep in range(epochs):
-        model.train()
-        perm = torch.randperm(n_tr)
-        for i in range(0, n_tr, batch):
-            idx = perm[i:i + batch]
-            opt.zero_grad()
-            pred = model(X_tr_t[idx])
-            loss = F.smooth_l1_loss(pred, y_tr_t[idx], beta=huber_beta)
-            loss.backward()
-            opt.step()
-
-        model.eval()
-        with torch.no_grad():
-            vpred = model(X_val_t)
-            vloss = F.smooth_l1_loss(vpred, y_val_t, beta=huber_beta).item()
-        if vloss < best_val:
-            best_val = vloss
-            best_state = {k: v.clone() for k, v in model.state_dict().items()}
-            patience_left = patience
-        else:
-            patience_left -= 1
-            if patience_left <= 0:
-                break
-
-    if best_state is not None:
-        model.load_state_dict(best_state)
-    model.eval()
-    with torch.no_grad():
-        return model(X_te_t).numpy()
+# MLP class and train_mlp_fold removed — imported from src.models.mlp_audit (Category C + D consolidation)
+# dropout=0.10 default in canonical version produces IDENTICAL results to original hardcoded Dropout(0.10)
 
 
 def _wf_common_prep(df):
