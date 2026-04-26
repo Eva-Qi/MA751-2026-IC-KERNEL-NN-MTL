@@ -1,0 +1,356 @@
+================================================================================
+RUNG 3A GAM FINE-TUNE — n_splines fine-grained sweep [4, 6, 7, 8, 9]
+Coarse sweep: n=5 Sharpe=0.79 >> n=10 Sharpe=0.55
+Goal: find true peak between n=3 and n=10
+================================================================================
+Loading panel: data/master_panel_v2.parquet
+  46,811 rows, 119 months, 442 tickers, 27 features
+
+================================================================================
+n_splines = 4
+================================================================================
+  [gam_ns4] fold   1/58 | 2020-02 | n_train=22,025 | n_test= 401 | IC=-0.0580 | elapsed=7.3s
+  [gam_ns4] fold   2/58 | 2020-03 | n_train=22,426 | n_test= 401 | IC=+0.1815 | elapsed=14.4s
+  [gam_ns4] fold   3/58 | 2020-04 | n_train=22,827 | n_test= 408 | IC=+0.1630 | elapsed=21.6s
+  [gam_ns4] fold   4/58 | 2020-05 | n_train=23,228 | n_test= 408 | IC=+0.2581 | elapsed=28.7s
+  [gam_ns4] fold   5/58 | 2020-06 | n_train=23,636 | n_test= 408 | IC=+0.0676 | elapsed=35.6s
+  [gam_ns4] fold   6/58 | 2020-07 | n_train=24,044 | n_test= 409 | IC=+0.0966 | elapsed=42.7s
+  [gam_ns4] fold   7/58 | 2020-08 | n_train=24,452 | n_test= 409 | IC=-0.0326 | elapsed=49.9s
+  [gam_ns4] fold   8/58 | 2020-09 | n_train=24,861 | n_test= 410 | IC=-0.0332 | elapsed=57.4s
+  [gam_ns4] fold   9/58 | 2020-10 | n_train=25,270 | n_test= 409 | IC=-0.0016 | elapsed=64.8s
+  [gam_ns4] fold  10/58 | 2020-11 | n_train=25,680 | n_test= 411 | IC=+0.1200 | elapsed=72.4s
+  [gam_ns4] fold  11/58 | 2020-12 | n_train=26,089 | n_test= 414 | IC=+0.0175 | elapsed=80.2s
+  [gam_ns4] fold  12/58 | 2021-01 | n_train=26,500 | n_test= 416 | IC=+0.0741 | elapsed=88.3s
+  [gam_ns4] fold  13/58 | 2021-02 | n_train=26,914 | n_test= 414 | IC=-0.1685 | elapsed=96.5s
+  [gam_ns4] fold  14/58 | 2021-03 | n_train=27,330 | n_test= 414 | IC=+0.0202 | elapsed=104.6s
+  [gam_ns4] fold  15/58 | 2021-04 | n_train=27,744 | n_test= 416 | IC=-0.0185 | elapsed=112.8s
+  [gam_ns4] fold  16/58 | 2021-05 | n_train=28,158 | n_test= 416 | IC=+0.1968 | elapsed=121.3s
+  [gam_ns4] fold  17/58 | 2021-06 | n_train=28,574 | n_test= 416 | IC=-0.0472 | elapsed=129.6s
+  [gam_ns4] fold  18/58 | 2021-07 | n_train=28,990 | n_test= 417 | IC=-0.0786 | elapsed=138.2s
+  [gam_ns4] fold  19/58 | 2021-08 | n_train=29,406 | n_test= 417 | IC=-0.0425 | elapsed=147.0s
+  [gam_ns4] fold  20/58 | 2021-09 | n_train=29,823 | n_test= 417 | IC=+0.1031 | elapsed=155.7s
+  [gam_ns4] fold  21/58 | 2021-10 | n_train=30,240 | n_test= 418 | IC=+0.1485 | elapsed=164.6s
+  [gam_ns4] fold  22/58 | 2021-11 | n_train=30,657 | n_test= 418 | IC=-0.0186 | elapsed=173.7s
+  [gam_ns4] fold  23/58 | 2021-12 | n_train=31,075 | n_test= 418 | IC=-0.3128 | elapsed=183.1s
+  [gam_ns4] fold  24/58 | 2022-01 | n_train=31,493 | n_test= 418 | IC=-0.0557 | elapsed=192.4s
+  [gam_ns4] fold  25/58 | 2022-02 | n_train=31,911 | n_test= 418 | IC=-0.1032 | elapsed=202.0s
+  [gam_ns4] fold  26/58 | 2022-03 | n_train=32,329 | n_test= 418 | IC=-0.1474 | elapsed=211.9s
+  [gam_ns4] fold  27/58 | 2022-04 | n_train=32,747 | n_test= 419 | IC=-0.1178 | elapsed=221.9s
+  [gam_ns4] fold  28/58 | 2022-05 | n_train=33,165 | n_test= 420 | IC=-0.0748 | elapsed=231.9s
+  [gam_ns4] fold  29/58 | 2022-06 | n_train=33,584 | n_test= 422 | IC=+0.2198 | elapsed=241.9s
+  [gam_ns4] fold  30/58 | 2022-07 | n_train=34,004 | n_test= 422 | IC=+0.0072 | elapsed=252.1s
+  [gam_ns4] fold  31/58 | 2022-08 | n_train=34,426 | n_test= 422 | IC=+0.0184 | elapsed=262.3s
+  [gam_ns4] fold  32/58 | 2022-09 | n_train=34,848 | n_test= 422 | IC=+0.0349 | elapsed=272.9s
+  [gam_ns4] fold  33/58 | 2022-10 | n_train=35,270 | n_test= 422 | IC=-0.0470 | elapsed=283.3s
+  [gam_ns4] fold  34/58 | 2022-11 | n_train=35,692 | n_test= 423 | IC=-0.1427 | elapsed=294.1s
+  [gam_ns4] fold  35/58 | 2022-12 | n_train=36,114 | n_test= 423 | IC=+0.2147 | elapsed=305.2s
+  [gam_ns4] fold  36/58 | 2023-01 | n_train=36,537 | n_test= 424 | IC=+0.1273 | elapsed=316.1s
+  [gam_ns4] fold  37/58 | 2023-02 | n_train=36,960 | n_test= 424 | IC=-0.0632 | elapsed=327.3s
+  [gam_ns4] fold  38/58 | 2023-03 | n_train=37,384 | n_test= 424 | IC=-0.0655 | elapsed=338.8s
+  [gam_ns4] fold  39/58 | 2023-04 | n_train=37,808 | n_test= 424 | IC=+0.2386 | elapsed=350.5s
+  [gam_ns4] fold  40/58 | 2023-05 | n_train=38,232 | n_test= 425 | IC=+0.1275 | elapsed=362.0s
+  [gam_ns4] fold  41/58 | 2023-06 | n_train=38,656 | n_test= 425 | IC=+0.0881 | elapsed=374.0s
+  [gam_ns4] fold  42/58 | 2023-07 | n_train=39,081 | n_test= 425 | IC=+0.0158 | elapsed=386.0s
+  [gam_ns4] fold  43/58 | 2023-08 | n_train=39,506 | n_test= 426 | IC=-0.0607 | elapsed=398.3s
+  [gam_ns4] fold  44/58 | 2023-09 | n_train=39,931 | n_test= 427 | IC=-0.2640 | elapsed=410.6s
+  [gam_ns4] fold  45/58 | 2023-10 | n_train=40,357 | n_test= 428 | IC=+0.0982 | elapsed=423.1s
+  [gam_ns4] fold  46/58 | 2023-11 | n_train=40,784 | n_test= 428 | IC=+0.2380 | elapsed=435.9s
+  [gam_ns4] fold  47/58 | 2023-12 | n_train=41,212 | n_test= 428 | IC=-0.1321 | elapsed=448.4s
+  [gam_ns4] fold  48/58 | 2024-01 | n_train=41,640 | n_test= 428 | IC=+0.1950 | elapsed=461.1s
+  [gam_ns4] fold  49/58 | 2024-02 | n_train=42,068 | n_test= 428 | IC=+0.0834 | elapsed=474.2s
+  [gam_ns4] fold  50/58 | 2024-03 | n_train=42,496 | n_test= 429 | IC=-0.1252 | elapsed=487.0s
+  [gam_ns4] fold  51/58 | 2024-04 | n_train=42,924 | n_test= 432 | IC=+0.0249 | elapsed=500.5s
+  [gam_ns4] fold  52/58 | 2024-05 | n_train=43,353 | n_test= 432 | IC=-0.0783 | elapsed=513.9s
+  [gam_ns4] fold  53/58 | 2024-06 | n_train=43,785 | n_test= 432 | IC=+0.0388 | elapsed=527.3s
+  [gam_ns4] fold  54/58 | 2024-07 | n_train=44,217 | n_test= 432 | IC=-0.1075 | elapsed=541.0s
+  [gam_ns4] fold  55/58 | 2024-08 | n_train=44,649 | n_test= 432 | IC=+0.0858 | elapsed=554.8s
+  [gam_ns4] fold  56/58 | 2024-09 | n_train=45,081 | n_test= 432 | IC=-0.1279 | elapsed=569.1s
+  [gam_ns4] fold  57/58 | 2024-10 | n_train=45,513 | n_test= 433 | IC=+0.0663 | elapsed=583.2s
+  [gam_ns4] fold  58/58 | 2024-11 | n_train=45,945 | n_test= 433 | IC=-0.0287 | elapsed=597.8s
+
+  DONE n_splines=4: IC=+0.0141, IC_IR=0.1114, Sharpe=0.828, Hit=51.7%, elapsed=597.9s
+
+================================================================================
+n_splines = 6
+================================================================================
+  [gam_ns6] fold   1/58 | 2020-02 | n_train=22,025 | n_test= 401 | IC=+0.0197 | elapsed=8.7s
+  [gam_ns6] fold   2/58 | 2020-03 | n_train=22,426 | n_test= 401 | IC=+0.1271 | elapsed=17.4s
+  [gam_ns6] fold   3/58 | 2020-04 | n_train=22,827 | n_test= 408 | IC=+0.1128 | elapsed=26.4s
+  [gam_ns6] fold   4/58 | 2020-05 | n_train=23,228 | n_test= 408 | IC=+0.2369 | elapsed=35.4s
+  [gam_ns6] fold   5/58 | 2020-06 | n_train=23,636 | n_test= 408 | IC=+0.0439 | elapsed=44.7s
+  [gam_ns6] fold   6/58 | 2020-07 | n_train=24,044 | n_test= 409 | IC=+0.1041 | elapsed=54.0s
+  [gam_ns6] fold   7/58 | 2020-08 | n_train=24,452 | n_test= 409 | IC=-0.0110 | elapsed=63.7s
+  [gam_ns6] fold   8/58 | 2020-09 | n_train=24,861 | n_test= 410 | IC=-0.0364 | elapsed=73.6s
+  [gam_ns6] fold   9/58 | 2020-10 | n_train=25,270 | n_test= 409 | IC=-0.0098 | elapsed=83.6s
+  [gam_ns6] fold  10/58 | 2020-11 | n_train=25,680 | n_test= 411 | IC=+0.1067 | elapsed=93.7s
+  [gam_ns6] fold  11/58 | 2020-12 | n_train=26,089 | n_test= 414 | IC=+0.0366 | elapsed=103.8s
+  [gam_ns6] fold  12/58 | 2021-01 | n_train=26,500 | n_test= 416 | IC=+0.0520 | elapsed=113.9s
+  [gam_ns6] fold  13/58 | 2021-02 | n_train=26,914 | n_test= 414 | IC=-0.1505 | elapsed=204.5s
+  [gam_ns6] fold  14/58 | 2021-03 | n_train=27,330 | n_test= 414 | IC=+0.0164 | elapsed=215.2s
+  [gam_ns6] fold  15/58 | 2021-04 | n_train=27,744 | n_test= 416 | IC=+0.0108 | elapsed=226.4s
+  [gam_ns6] fold  16/58 | 2021-05 | n_train=28,158 | n_test= 416 | IC=+0.2274 | elapsed=237.5s
+  [gam_ns6] fold  17/58 | 2021-06 | n_train=28,574 | n_test= 416 | IC=-0.0468 | elapsed=248.7s
+  [gam_ns6] fold  18/58 | 2021-07 | n_train=28,990 | n_test= 417 | IC=-0.0536 | elapsed=260.1s
+  [gam_ns6] fold  19/58 | 2021-08 | n_train=29,406 | n_test= 417 | IC=-0.0636 | elapsed=271.6s
+  [gam_ns6] fold  20/58 | 2021-09 | n_train=29,823 | n_test= 417 | IC=+0.1163 | elapsed=283.2s
+  [gam_ns6] fold  21/58 | 2021-10 | n_train=30,240 | n_test= 418 | IC=+0.1030 | elapsed=294.7s
+  [gam_ns6] fold  22/58 | 2021-11 | n_train=30,657 | n_test= 418 | IC=+0.0177 | elapsed=306.7s
+  [gam_ns6] fold  23/58 | 2021-12 | n_train=31,075 | n_test= 418 | IC=-0.2787 | elapsed=318.6s
+  [gam_ns6] fold  24/58 | 2022-01 | n_train=31,493 | n_test= 418 | IC=-0.0458 | elapsed=330.7s
+  [gam_ns6] fold  25/58 | 2022-02 | n_train=31,911 | n_test= 418 | IC=-0.1241 | elapsed=343.3s
+  [gam_ns6] fold  26/58 | 2022-03 | n_train=32,329 | n_test= 418 | IC=-0.0860 | elapsed=355.9s
+  [gam_ns6] fold  27/58 | 2022-04 | n_train=32,747 | n_test= 419 | IC=-0.1252 | elapsed=368.7s
+  [gam_ns6] fold  28/58 | 2022-05 | n_train=33,165 | n_test= 420 | IC=-0.0565 | elapsed=382.0s
+  [gam_ns6] fold  29/58 | 2022-06 | n_train=33,584 | n_test= 422 | IC=+0.0355 | elapsed=395.5s
+  [gam_ns6] fold  30/58 | 2022-07 | n_train=34,004 | n_test= 422 | IC=-0.0113 | elapsed=409.0s
+  [gam_ns6] fold  31/58 | 2022-08 | n_train=34,426 | n_test= 422 | IC=+0.0204 | elapsed=422.7s
+  [gam_ns6] fold  32/58 | 2022-09 | n_train=34,848 | n_test= 422 | IC=+0.0685 | elapsed=437.3s
+  [gam_ns6] fold  33/58 | 2022-10 | n_train=35,270 | n_test= 422 | IC=-0.0925 | elapsed=451.2s
+  [gam_ns6] fold  34/58 | 2022-11 | n_train=35,692 | n_test= 423 | IC=-0.1356 | elapsed=465.7s
+  [gam_ns6] fold  35/58 | 2022-12 | n_train=36,114 | n_test= 423 | IC=+0.1999 | elapsed=480.5s
+  [gam_ns6] fold  36/58 | 2023-01 | n_train=36,537 | n_test= 424 | IC=+0.1126 | elapsed=495.5s
+  [gam_ns6] fold  37/58 | 2023-02 | n_train=36,960 | n_test= 424 | IC=-0.0732 | elapsed=510.2s
+  [gam_ns6] fold  38/58 | 2023-03 | n_train=37,384 | n_test= 424 | IC=-0.0809 | elapsed=525.5s
+  [gam_ns6] fold  39/58 | 2023-04 | n_train=37,808 | n_test= 424 | IC=+0.1930 | elapsed=540.6s
+  [gam_ns6] fold  40/58 | 2023-05 | n_train=38,232 | n_test= 425 | IC=+0.1436 | elapsed=556.2s
+  [gam_ns6] fold  41/58 | 2023-06 | n_train=38,656 | n_test= 425 | IC=+0.0766 | elapsed=572.1s
+  [gam_ns6] fold  42/58 | 2023-07 | n_train=39,081 | n_test= 425 | IC=+0.0346 | elapsed=588.1s
+  [gam_ns6] fold  43/58 | 2023-08 | n_train=39,506 | n_test= 426 | IC=-0.0089 | elapsed=603.8s
+  [gam_ns6] fold  44/58 | 2023-09 | n_train=39,931 | n_test= 427 | IC=-0.2687 | elapsed=620.6s
+  [gam_ns6] fold  45/58 | 2023-10 | n_train=40,357 | n_test= 428 | IC=+0.0670 | elapsed=637.1s
+  [gam_ns6] fold  46/58 | 2023-11 | n_train=40,784 | n_test= 428 | IC=+0.2492 | elapsed=654.7s
+  [gam_ns6] fold  47/58 | 2023-12 | n_train=41,212 | n_test= 428 | IC=-0.1368 | elapsed=672.7s
+  [gam_ns6] fold  48/58 | 2024-01 | n_train=41,640 | n_test= 428 | IC=+0.1954 | elapsed=690.5s
+  [gam_ns6] fold  49/58 | 2024-02 | n_train=42,068 | n_test= 428 | IC=+0.0603 | elapsed=708.2s
+  [gam_ns6] fold  50/58 | 2024-03 | n_train=42,496 | n_test= 429 | IC=-0.1138 | elapsed=726.0s
+  [gam_ns6] fold  51/58 | 2024-04 | n_train=42,924 | n_test= 432 | IC=+0.0326 | elapsed=743.9s
+  [gam_ns6] fold  52/58 | 2024-05 | n_train=43,353 | n_test= 432 | IC=-0.0164 | elapsed=762.3s
+  [gam_ns6] fold  53/58 | 2024-06 | n_train=43,785 | n_test= 432 | IC=-0.0179 | elapsed=780.7s
+  [gam_ns6] fold  54/58 | 2024-07 | n_train=44,217 | n_test= 432 | IC=-0.0975 | elapsed=799.8s
+  [gam_ns6] fold  55/58 | 2024-08 | n_train=44,649 | n_test= 432 | IC=+0.0596 | elapsed=818.6s
+  [gam_ns6] fold  56/58 | 2024-09 | n_train=45,081 | n_test= 432 | IC=-0.1074 | elapsed=837.1s
+  [gam_ns6] fold  57/58 | 2024-10 | n_train=45,513 | n_test= 433 | IC=+0.0339 | elapsed=855.4s
+  [gam_ns6] fold  58/58 | 2024-11 | n_train=45,945 | n_test= 433 | IC=+0.0011 | elapsed=874.1s
+
+  DONE n_splines=6: IC=+0.0115, IC_IR=0.1009, Sharpe=0.654, Hit=55.2%, elapsed=874.1s
+
+================================================================================
+n_splines = 7
+================================================================================
+  [gam_ns7] fold   1/58 | 2020-02 | n_train=22,025 | n_test= 401 | IC=+0.0362 | elapsed=10.9s
+  [gam_ns7] fold   2/58 | 2020-03 | n_train=22,426 | n_test= 401 | IC=+0.0869 | elapsed=22.0s
+  [gam_ns7] fold   3/58 | 2020-04 | n_train=22,827 | n_test= 408 | IC=+0.1171 | elapsed=33.4s
+  [gam_ns7] fold   4/58 | 2020-05 | n_train=23,228 | n_test= 408 | IC=+0.2286 | elapsed=45.1s
+  [gam_ns7] fold   5/58 | 2020-06 | n_train=23,636 | n_test= 408 | IC=+0.0303 | elapsed=56.8s
+  [gam_ns7] fold   6/58 | 2020-07 | n_train=24,044 | n_test= 409 | IC=+0.0911 | elapsed=68.9s
+  [gam_ns7] fold   7/58 | 2020-08 | n_train=24,452 | n_test= 409 | IC=+0.0118 | elapsed=81.2s
+  [gam_ns7] fold   8/58 | 2020-09 | n_train=24,861 | n_test= 410 | IC=-0.0307 | elapsed=93.6s
+  [gam_ns7] fold   9/58 | 2020-10 | n_train=25,270 | n_test= 409 | IC=+0.0039 | elapsed=106.2s
+  [gam_ns7] fold  10/58 | 2020-11 | n_train=25,680 | n_test= 411 | IC=+0.1121 | elapsed=118.7s
+  [gam_ns7] fold  11/58 | 2020-12 | n_train=26,089 | n_test= 414 | IC=+0.0502 | elapsed=131.9s
+  [gam_ns7] fold  12/58 | 2021-01 | n_train=26,500 | n_test= 416 | IC=+0.0443 | elapsed=144.9s
+  [gam_ns7] fold  13/58 | 2021-02 | n_train=26,914 | n_test= 414 | IC=-0.1472 | elapsed=158.6s
+  [gam_ns7] fold  14/58 | 2021-03 | n_train=27,330 | n_test= 414 | IC=+0.0075 | elapsed=171.8s
+  [gam_ns7] fold  15/58 | 2021-04 | n_train=27,744 | n_test= 416 | IC=+0.0554 | elapsed=185.8s
+  [gam_ns7] fold  16/58 | 2021-05 | n_train=28,158 | n_test= 416 | IC=+0.2319 | elapsed=199.7s
+  [gam_ns7] fold  17/58 | 2021-06 | n_train=28,574 | n_test= 416 | IC=-0.1187 | elapsed=214.2s
+  [gam_ns7] fold  18/58 | 2021-07 | n_train=28,990 | n_test= 417 | IC=-0.0466 | elapsed=228.9s
+  [gam_ns7] fold  19/58 | 2021-08 | n_train=29,406 | n_test= 417 | IC=-0.0245 | elapsed=243.6s
+  [gam_ns7] fold  20/58 | 2021-09 | n_train=29,823 | n_test= 417 | IC=+0.0889 | elapsed=258.6s
+  [gam_ns7] fold  21/58 | 2021-10 | n_train=30,240 | n_test= 418 | IC=+0.0878 | elapsed=273.7s
+  [gam_ns7] fold  22/58 | 2021-11 | n_train=30,657 | n_test= 418 | IC=-0.0159 | elapsed=289.2s
+  [gam_ns7] fold  23/58 | 2021-12 | n_train=31,075 | n_test= 418 | IC=-0.2175 | elapsed=304.7s
+  [gam_ns7] fold  24/58 | 2022-01 | n_train=31,493 | n_test= 418 | IC=-0.0192 | elapsed=320.5s
+  [gam_ns7] fold  25/58 | 2022-02 | n_train=31,911 | n_test= 418 | IC=-0.0979 | elapsed=336.1s
+  [gam_ns7] fold  26/58 | 2022-03 | n_train=32,329 | n_test= 418 | IC=-0.0998 | elapsed=352.4s
+  [gam_ns7] fold  27/58 | 2022-04 | n_train=32,747 | n_test= 419 | IC=-0.1424 | elapsed=368.5s
+  [gam_ns7] fold  28/58 | 2022-05 | n_train=33,165 | n_test= 420 | IC=-0.0610 | elapsed=385.1s
+  [gam_ns7] fold  29/58 | 2022-06 | n_train=33,584 | n_test= 422 | IC=-0.0194 | elapsed=401.4s
+  [gam_ns7] fold  30/58 | 2022-07 | n_train=34,004 | n_test= 422 | IC=+0.0041 | elapsed=418.0s
+  [gam_ns7] fold  31/58 | 2022-08 | n_train=34,426 | n_test= 422 | IC=+0.0260 | elapsed=434.9s
+  [gam_ns7] fold  32/58 | 2022-09 | n_train=34,848 | n_test= 422 | IC=+0.0575 | elapsed=452.1s
+  [gam_ns7] fold  33/58 | 2022-10 | n_train=35,270 | n_test= 422 | IC=-0.1090 | elapsed=469.5s
+  [gam_ns7] fold  34/58 | 2022-11 | n_train=35,692 | n_test= 423 | IC=-0.1199 | elapsed=486.8s
+  [gam_ns7] fold  35/58 | 2022-12 | n_train=36,114 | n_test= 423 | IC=+0.1337 | elapsed=504.6s
+  [gam_ns7] fold  36/58 | 2023-01 | n_train=36,537 | n_test= 424 | IC=+0.1130 | elapsed=522.4s
+  [gam_ns7] fold  37/58 | 2023-02 | n_train=36,960 | n_test= 424 | IC=-0.0699 | elapsed=540.7s
+  [gam_ns7] fold  38/58 | 2023-03 | n_train=37,384 | n_test= 424 | IC=-0.0909 | elapsed=558.8s
+  [gam_ns7] fold  39/58 | 2023-04 | n_train=37,808 | n_test= 424 | IC=+0.2042 | elapsed=577.1s
+  [gam_ns7] fold  40/58 | 2023-05 | n_train=38,232 | n_test= 425 | IC=+0.1075 | elapsed=595.9s
+  [gam_ns7] fold  41/58 | 2023-06 | n_train=38,656 | n_test= 425 | IC=+0.0904 | elapsed=614.8s
+  [gam_ns7] fold  42/58 | 2023-07 | n_train=39,081 | n_test= 425 | IC=+0.0284 | elapsed=634.2s
+  [gam_ns7] fold  43/58 | 2023-08 | n_train=39,506 | n_test= 426 | IC=-0.0062 | elapsed=652.8s
+  [gam_ns7] fold  44/58 | 2023-09 | n_train=39,931 | n_test= 427 | IC=-0.2804 | elapsed=1443.3s
+  [gam_ns7] fold  45/58 | 2023-10 | n_train=40,357 | n_test= 428 | IC=+0.0892 | elapsed=1461.1s
+  [gam_ns7] fold  46/58 | 2023-11 | n_train=40,784 | n_test= 428 | IC=+0.2384 | elapsed=1479.1s
+  [gam_ns7] fold  47/58 | 2023-12 | n_train=41,212 | n_test= 428 | IC=-0.1592 | elapsed=1497.3s
+  [gam_ns7] fold  48/58 | 2024-01 | n_train=41,640 | n_test= 428 | IC=+0.1561 | elapsed=1515.3s
+  [gam_ns7] fold  49/58 | 2024-02 | n_train=42,068 | n_test= 428 | IC=+0.1069 | elapsed=1533.3s
+  [gam_ns7] fold  50/58 | 2024-03 | n_train=42,496 | n_test= 429 | IC=-0.1069 | elapsed=1551.8s
+  [gam_ns7] fold  51/58 | 2024-04 | n_train=42,924 | n_test= 432 | IC=+0.0499 | elapsed=1617.3s
+  [gam_ns7] fold  52/58 | 2024-05 | n_train=43,353 | n_test= 432 | IC=-0.0137 | elapsed=1636.3s
+  [gam_ns7] fold  53/58 | 2024-06 | n_train=43,785 | n_test= 432 | IC=-0.0017 | elapsed=1655.2s
+  [gam_ns7] fold  54/58 | 2024-07 | n_train=44,217 | n_test= 432 | IC=-0.0863 | elapsed=1674.4s
+  [gam_ns7] fold  55/58 | 2024-08 | n_train=44,649 | n_test= 432 | IC=+0.0535 | elapsed=3329.1s
+  [gam_ns7] fold  56/58 | 2024-09 | n_train=45,081 | n_test= 432 | IC=-0.1094 | elapsed=3348.9s
+  [gam_ns7] fold  57/58 | 2024-10 | n_train=45,513 | n_test= 433 | IC=-0.0143 | elapsed=3368.7s
+  [gam_ns7] fold  58/58 | 2024-11 | n_train=45,945 | n_test= 433 | IC=+0.0181 | elapsed=3388.7s
+
+  DONE n_splines=7: IC=+0.0095, IC_IR=0.0874, Sharpe=0.561, Hit=55.2%, elapsed=3388.8s
+
+================================================================================
+n_splines = 8
+================================================================================
+  [gam_ns8] fold   1/58 | 2020-02 | n_train=22,025 | n_test= 401 | IC=+0.0041 | elapsed=10.6s
+  [gam_ns8] fold   2/58 | 2020-03 | n_train=22,426 | n_test= 401 | IC=+0.1634 | elapsed=21.2s
+  [gam_ns8] fold   3/58 | 2020-04 | n_train=22,827 | n_test= 408 | IC=+0.1033 | elapsed=32.2s
+  [gam_ns8] fold   4/58 | 2020-05 | n_train=23,228 | n_test= 408 | IC=+0.2049 | elapsed=43.3s
+  [gam_ns8] fold   5/58 | 2020-06 | n_train=23,636 | n_test= 408 | IC=-0.0050 | elapsed=195.5s
+  [gam_ns8] fold   6/58 | 2020-07 | n_train=24,044 | n_test= 409 | IC=+0.0784 | elapsed=207.2s
+  [gam_ns8] fold   7/58 | 2020-08 | n_train=24,452 | n_test= 409 | IC=-0.0410 | elapsed=218.8s
+  [gam_ns8] fold   8/58 | 2020-09 | n_train=24,861 | n_test= 410 | IC=-0.0062 | elapsed=230.7s
+  [gam_ns8] fold   9/58 | 2020-10 | n_train=25,270 | n_test= 409 | IC=-0.0149 | elapsed=242.7s
+  [gam_ns8] fold  10/58 | 2020-11 | n_train=25,680 | n_test= 411 | IC=+0.1061 | elapsed=255.0s
+  [gam_ns8] fold  11/58 | 2020-12 | n_train=26,089 | n_test= 414 | IC=+0.0470 | elapsed=267.4s
+  [gam_ns8] fold  12/58 | 2021-01 | n_train=26,500 | n_test= 416 | IC=+0.0331 | elapsed=280.4s
+  [gam_ns8] fold  13/58 | 2021-02 | n_train=26,914 | n_test= 414 | IC=-0.1283 | elapsed=293.2s
+  [gam_ns8] fold  14/58 | 2021-03 | n_train=27,330 | n_test= 414 | IC=+0.0128 | elapsed=1208.2s
+  [gam_ns8] fold  15/58 | 2021-04 | n_train=27,744 | n_test= 416 | IC=+0.0503 | elapsed=1222.1s
+  [gam_ns8] fold  16/58 | 2021-05 | n_train=28,158 | n_test= 416 | IC=+0.2227 | elapsed=1240.0s
+  [gam_ns8] fold  17/58 | 2021-06 | n_train=28,574 | n_test= 416 | IC=-0.0787 | elapsed=2424.7s
+  [gam_ns8] fold  18/58 | 2021-07 | n_train=28,990 | n_test= 417 | IC=-0.0567 | elapsed=3354.1s
+  [gam_ns8] fold  19/58 | 2021-08 | n_train=29,406 | n_test= 417 | IC=+0.0147 | elapsed=5289.4s
+  [gam_ns8] fold  20/58 | 2021-09 | n_train=29,823 | n_test= 417 | IC=+0.0822 | elapsed=5431.9s
+  [gam_ns8] fold  21/58 | 2021-10 | n_train=30,240 | n_test= 418 | IC=+0.0702 | elapsed=7468.2s
+  [gam_ns8] fold  22/58 | 2021-11 | n_train=30,657 | n_test= 418 | IC=-0.0233 | elapsed=10345.6s
+  [gam_ns8] fold  23/58 | 2021-12 | n_train=31,075 | n_test= 418 | IC=-0.2241 | elapsed=12197.4s
+  [gam_ns8] fold  24/58 | 2022-01 | n_train=31,493 | n_test= 418 | IC=-0.0289 | elapsed=13503.9s
+  [gam_ns8] fold  25/58 | 2022-02 | n_train=31,911 | n_test= 418 | IC=-0.1124 | elapsed=14501.5s
+  [gam_ns8] fold  26/58 | 2022-03 | n_train=32,329 | n_test= 418 | IC=-0.1004 | elapsed=14517.1s
+  [gam_ns8] fold  27/58 | 2022-04 | n_train=32,747 | n_test= 419 | IC=-0.1305 | elapsed=14664.1s
+  [gam_ns8] fold  28/58 | 2022-05 | n_train=33,165 | n_test= 420 | IC=-0.0596 | elapsed=16719.5s
+  [gam_ns8] fold  29/58 | 2022-06 | n_train=33,584 | n_test= 422 | IC=-0.0147 | elapsed=18454.0s
+  [gam_ns8] fold  30/58 | 2022-07 | n_train=34,004 | n_test= 422 | IC=-0.0138 | elapsed=18880.8s
+  [gam_ns8] fold  31/58 | 2022-08 | n_train=34,426 | n_test= 422 | IC=+0.0086 | elapsed=19189.4s
+  [gam_ns8] fold  32/58 | 2022-09 | n_train=34,848 | n_test= 422 | IC=+0.0333 | elapsed=20049.9s
+  [gam_ns8] fold  33/58 | 2022-10 | n_train=35,270 | n_test= 422 | IC=-0.1404 | elapsed=20066.8s
+  [gam_ns8] fold  34/58 | 2022-11 | n_train=35,692 | n_test= 423 | IC=-0.1203 | elapsed=20083.8s
+  [gam_ns8] fold  35/58 | 2022-12 | n_train=36,114 | n_test= 423 | IC=+0.1399 | elapsed=20101.0s
+  [gam_ns8] fold  36/58 | 2023-01 | n_train=36,537 | n_test= 424 | IC=+0.0727 | elapsed=21387.5s
+  [gam_ns8] fold  37/58 | 2023-02 | n_train=36,960 | n_test= 424 | IC=-0.0934 | elapsed=22174.1s
+  [gam_ns8] fold  38/58 | 2023-03 | n_train=37,384 | n_test= 424 | IC=-0.0892 | elapsed=22192.0s
+  [gam_ns8] fold  39/58 | 2023-04 | n_train=37,808 | n_test= 424 | IC=+0.1942 | elapsed=22210.1s
+  [gam_ns8] fold  40/58 | 2023-05 | n_train=38,232 | n_test= 425 | IC=+0.1124 | elapsed=22228.4s
+  [gam_ns8] fold  41/58 | 2023-06 | n_train=38,656 | n_test= 425 | IC=+0.0936 | elapsed=22246.9s
+  [gam_ns8] fold  42/58 | 2023-07 | n_train=39,081 | n_test= 425 | IC=-0.0054 | elapsed=22265.7s
+  [gam_ns8] fold  43/58 | 2023-08 | n_train=39,506 | n_test= 426 | IC=-0.0021 | elapsed=22284.7s
+  [gam_ns8] fold  44/58 | 2023-09 | n_train=39,931 | n_test= 427 | IC=-0.2654 | elapsed=25263.0s
+  [gam_ns8] fold  45/58 | 2023-10 | n_train=40,357 | n_test= 428 | IC=+0.0919 | elapsed=27230.1s
+  [gam_ns8] fold  46/58 | 2023-11 | n_train=40,784 | n_test= 428 | IC=+0.2501 | elapsed=30456.0s
+  [gam_ns8] fold  47/58 | 2023-12 | n_train=41,212 | n_test= 428 | IC=-0.1626 | elapsed=33180.6s
+  [gam_ns8] fold  48/58 | 2024-01 | n_train=41,640 | n_test= 428 | IC=+0.1573 | elapsed=35268.2s
+  [gam_ns8] fold  49/58 | 2024-02 | n_train=42,068 | n_test= 428 | IC=+0.0817 | elapsed=36363.7s
+  [gam_ns8] fold  50/58 | 2024-03 | n_train=42,496 | n_test= 429 | IC=-0.1114 | elapsed=38798.1s
+  [gam_ns8] fold  51/58 | 2024-04 | n_train=42,924 | n_test= 432 | IC=+0.0368 | elapsed=40709.5s
+  [gam_ns8] fold  52/58 | 2024-05 | n_train=43,353 | n_test= 432 | IC=-0.0073 | elapsed=40856.5s
+  [gam_ns8] fold  53/58 | 2024-06 | n_train=43,785 | n_test= 432 | IC=-0.0080 | elapsed=40877.6s
+  [gam_ns8] fold  54/58 | 2024-07 | n_train=44,217 | n_test= 432 | IC=-0.0707 | elapsed=42807.4s
+  [gam_ns8] fold  55/58 | 2024-08 | n_train=44,649 | n_test= 432 | IC=+0.0787 | elapsed=42828.7s
+  [gam_ns8] fold  56/58 | 2024-09 | n_train=45,081 | n_test= 432 | IC=-0.1049 | elapsed=42856.8s
+  [gam_ns8] fold  57/58 | 2024-10 | n_train=45,513 | n_test= 433 | IC=-0.0151 | elapsed=42904.6s
+  [gam_ns8] fold  58/58 | 2024-11 | n_train=45,945 | n_test= 433 | IC=+0.0200 | elapsed=42940.1s
+
+  DONE n_splines=8: IC=+0.0057, IC_IR=0.0529, Sharpe=0.464, Hit=48.3%, elapsed=42940.2s
+
+================================================================================
+n_splines = 9
+================================================================================
+  [gam_ns9] fold   1/58 | 2020-02 | n_train=22,025 | n_test= 401 | IC=-0.0148 | elapsed=425.1s
+  [gam_ns9] fold   2/58 | 2020-03 | n_train=22,426 | n_test= 401 | IC=+0.1401 | elapsed=439.8s
+  [gam_ns9] fold   3/58 | 2020-04 | n_train=22,827 | n_test= 408 | IC=+0.1192 | elapsed=646.0s
+  [gam_ns9] fold   4/58 | 2020-05 | n_train=23,228 | n_test= 408 | IC=+0.2232 | elapsed=1079.2s
+  [gam_ns9] fold   5/58 | 2020-06 | n_train=23,636 | n_test= 408 | IC=-0.0315 | elapsed=1094.6s
+  [gam_ns9] fold   6/58 | 2020-07 | n_train=24,044 | n_test= 409 | IC=+0.0739 | elapsed=1219.4s
+  [gam_ns9] fold   7/58 | 2020-08 | n_train=24,452 | n_test= 409 | IC=-0.0001 | elapsed=1253.0s
+  [gam_ns9] fold   8/58 | 2020-09 | n_train=24,861 | n_test= 410 | IC=-0.0263 | elapsed=2223.4s
+  [gam_ns9] fold   9/58 | 2020-10 | n_train=25,270 | n_test= 409 | IC=-0.0087 | elapsed=2661.1s
+  [gam_ns9] fold  10/58 | 2020-11 | n_train=25,680 | n_test= 411 | IC=+0.0586 | elapsed=2720.4s
+  [gam_ns9] fold  11/58 | 2020-12 | n_train=26,089 | n_test= 414 | IC=+0.0135 | elapsed=2744.3s
+  [gam_ns9] fold  12/58 | 2021-01 | n_train=26,500 | n_test= 416 | IC=+0.0597 | elapsed=3660.2s
+  [gam_ns9] fold  13/58 | 2021-02 | n_train=26,914 | n_test= 414 | IC=-0.1291 | elapsed=3674.4s
+  [gam_ns9] fold  14/58 | 2021-03 | n_train=27,330 | n_test= 414 | IC=-0.0209 | elapsed=4590.7s
+  [gam_ns9] fold  15/58 | 2021-04 | n_train=27,744 | n_test= 416 | IC=+0.0239 | elapsed=4605.5s
+  [gam_ns9] fold  16/58 | 2021-05 | n_train=28,158 | n_test= 416 | IC=+0.1990 | elapsed=6784.3s
+  [gam_ns9] fold  17/58 | 2021-06 | n_train=28,574 | n_test= 416 | IC=-0.1000 | elapsed=6799.4s
+  [gam_ns9] fold  18/58 | 2021-07 | n_train=28,990 | n_test= 417 | IC=-0.0559 | elapsed=7065.5s
+  [gam_ns9] fold  19/58 | 2021-08 | n_train=29,406 | n_test= 417 | IC=+0.0228 | elapsed=7126.0s
+  [gam_ns9] fold  20/58 | 2021-09 | n_train=29,823 | n_test= 417 | IC=+0.0850 | elapsed=7544.7s
+  [gam_ns9] fold  21/58 | 2021-10 | n_train=30,240 | n_test= 418 | IC=+0.0671 | elapsed=8465.5s
+  [gam_ns9] fold  22/58 | 2021-11 | n_train=30,657 | n_test= 418 | IC=-0.0208 | elapsed=8481.6s
+  [gam_ns9] fold  23/58 | 2021-12 | n_train=31,075 | n_test= 418 | IC=-0.2017 | elapsed=8930.5s
+  [gam_ns9] fold  24/58 | 2022-01 | n_train=31,493 | n_test= 418 | IC=-0.0586 | elapsed=9850.9s
+  [gam_ns9] fold  25/58 | 2022-02 | n_train=31,911 | n_test= 418 | IC=-0.1154 | elapsed=9867.8s
+  [gam_ns9] fold  26/58 | 2022-03 | n_train=32,329 | n_test= 418 | IC=-0.0998 | elapsed=11206.2s
+  [gam_ns9] fold  27/58 | 2022-04 | n_train=32,747 | n_test= 419 | IC=-0.1200 | elapsed=11310.9s
+  [gam_ns9] fold  28/58 | 2022-05 | n_train=33,165 | n_test= 420 | IC=-0.0563 | elapsed=11695.7s
+  [gam_ns9] fold  29/58 | 2022-06 | n_train=33,584 | n_test= 422 | IC=-0.0091 | elapsed=11917.8s
+  [gam_ns9] fold  30/58 | 2022-07 | n_train=34,004 | n_test= 422 | IC=-0.0262 | elapsed=12138.8s
+  [gam_ns9] fold  31/58 | 2022-08 | n_train=34,426 | n_test= 422 | IC=+0.0144 | elapsed=12567.3s
+  [gam_ns9] fold  32/58 | 2022-09 | n_train=34,848 | n_test= 422 | IC=+0.0141 | elapsed=13820.2s
+  [gam_ns9] fold  33/58 | 2022-10 | n_train=35,270 | n_test= 422 | IC=-0.1166 | elapsed=15896.9s
+  [gam_ns9] fold  34/58 | 2022-11 | n_train=35,692 | n_test= 423 | IC=-0.1224 | elapsed=17739.2s
+  [gam_ns9] fold  35/58 | 2022-12 | n_train=36,114 | n_test= 423 | IC=+0.1537 | elapsed=19709.1s
+  [gam_ns9] fold  36/58 | 2023-01 | n_train=36,537 | n_test= 424 | IC=+0.0967 | elapsed=20980.6s
+  [gam_ns9] fold  37/58 | 2023-02 | n_train=36,960 | n_test= 424 | IC=-0.0557 | elapsed=23837.4s
+  [gam_ns9] fold  38/58 | 2023-03 | n_train=37,384 | n_test= 424 | IC=-0.0838 | elapsed=27494.6s
+  [gam_ns9] fold  39/58 | 2023-04 | n_train=37,808 | n_test= 424 | IC=+0.1875 | elapsed=30285.3s
+  [gam_ns9] fold  40/58 | 2023-05 | n_train=38,232 | n_test= 425 | IC=+0.0914 | elapsed=33187.0s
+  [gam_ns9] fold  41/58 | 2023-06 | n_train=38,656 | n_test= 425 | IC=+0.0709 | elapsed=34852.5s
+  [gam_ns9] fold  42/58 | 2023-07 | n_train=39,081 | n_test= 425 | IC=-0.0022 | elapsed=36907.8s
+  [gam_ns9] fold  43/58 | 2023-08 | n_train=39,506 | n_test= 426 | IC=-0.0094 | elapsed=38475.6s
+  [gam_ns9] fold  44/58 | 2023-09 | n_train=39,931 | n_test= 427 | IC=-0.2638 | elapsed=40490.9s
+  [gam_ns9] fold  45/58 | 2023-10 | n_train=40,357 | n_test= 428 | IC=+0.0991 | elapsed=41047.1s
+  [gam_ns9] fold  46/58 | 2023-11 | n_train=40,784 | n_test= 428 | IC=+0.2504 | elapsed=42132.9s
+  [gam_ns9] fold  47/58 | 2023-12 | n_train=41,212 | n_test= 428 | IC=-0.1380 | elapsed=44395.0s
+  [gam_ns9] fold  48/58 | 2024-01 | n_train=41,640 | n_test= 428 | IC=+0.1692 | elapsed=44417.5s
+  [gam_ns9] fold  49/58 | 2024-02 | n_train=42,068 | n_test= 428 | IC=+0.0583 | elapsed=44439.7s
+  [gam_ns9] fold  50/58 | 2024-03 | n_train=42,496 | n_test= 429 | IC=-0.1115 | elapsed=44462.9s
+  [gam_ns9] fold  51/58 | 2024-04 | n_train=42,924 | n_test= 432 | IC=+0.0354 | elapsed=44485.4s
+  [gam_ns9] fold  52/58 | 2024-05 | n_train=43,353 | n_test= 432 | IC=+0.0270 | elapsed=45124.7s
+  [gam_ns9] fold  53/58 | 2024-06 | n_train=43,785 | n_test= 432 | IC=-0.0115 | elapsed=45148.7s
+  [gam_ns9] fold  54/58 | 2024-07 | n_train=44,217 | n_test= 432 | IC=-0.0498 | elapsed=45172.6s
+  [gam_ns9] fold  55/58 | 2024-08 | n_train=44,649 | n_test= 432 | IC=+0.0276 | elapsed=45196.3s
+  [gam_ns9] fold  56/58 | 2024-09 | n_train=45,081 | n_test= 432 | IC=-0.0774 | elapsed=45220.3s
+  [gam_ns9] fold  57/58 | 2024-10 | n_train=45,513 | n_test= 433 | IC=-0.0060 | elapsed=45247.1s
+  [gam_ns9] fold  58/58 | 2024-11 | n_train=45,945 | n_test= 433 | IC=+0.0365 | elapsed=45274.2s
+
+  DONE n_splines=9: IC=+0.0047, IC_IR=0.0460, Sharpe=0.468, Hit=46.6%, elapsed=45274.3s
+
+Saved results -> output/rung3a_n_splines_finetune.csv
+
+================================================================================
+FINE-TUNE SUMMARY TABLE
+================================================================================
+ n_splines  IC_mean  IC_std  IC_IR  Hit_Rate  LS_Sharpe  n_months  wall_sec
+         4   0.0141  0.1263 0.1114     0.517      0.828        58     597.9
+         6   0.0115  0.1139 0.1009     0.552      0.654        58     874.1
+         7   0.0095  0.1090 0.0874     0.552      0.561        58    3388.8
+         8   0.0057  0.1074 0.0529     0.483      0.464        58   42940.2
+         9   0.0047  0.1030 0.0460     0.466      0.468        58   45274.3
+
+================================================================================
+VERDICT (vs coarse sweep reference: n=5 Sharpe=0.79, n=10 Sharpe=0.55)
+================================================================================
+  Best n_splines by LS_Sharpe: 4 (Sharpe=0.828, IC=+0.0141)
+  Best n_splines by IC_mean:   4 (IC=+0.0141, Sharpe=0.828)
+
+  n=4 BEATS coarse n=5 by ΔSharpe=+0.038 — NEW OPTIMUM FOUND
+
+  IC range across fine-tune configs: +0.0047 to +0.0141 (Δ=0.0094)
+  Sharpe range across fine-tune configs: 0.464 to 0.828 (Δ=0.364)
+
+  RECOMMENDATION: Use n_splines=5 (coarse sweep winner) unless fine-tune shows ΔSharpe > 0.05 for another value.
+================================================================================
+Outputs: output/rung3a_n_splines_finetune.csv
+Log:     output/rung3a_n_splines_finetune_log.txt
+================================================================================

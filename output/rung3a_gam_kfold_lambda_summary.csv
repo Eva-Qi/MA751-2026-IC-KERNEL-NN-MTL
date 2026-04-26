@@ -1,0 +1,2 @@
+model,n_splines,IC_mean,IC_std,IC_IR,Hit_Rate,LS_Sharpe,n_months,wall_sec,flags
+GAM_kfold_lambda,5,0.0126,0.132,0.0953,0.517,0.763,58,13005.5,OK

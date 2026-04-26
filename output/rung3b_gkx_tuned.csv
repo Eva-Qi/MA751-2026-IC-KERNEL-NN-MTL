@@ -1,0 +1,2 @@
+label,objective,n_estimators,max_depth,learning_rate,IC_mean,IC_std,IC_IR,Hit_Rate,LS_Sharpe,n_months
+gkx_tuned,reg:squarederror,1000,1,0.01,0.017741307161697698,0.12163947389750673,0.1458515611194315,0.6206896551724138,0.9844735623334043,58

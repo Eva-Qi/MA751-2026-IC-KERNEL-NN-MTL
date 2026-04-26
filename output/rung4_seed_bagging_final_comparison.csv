@@ -1,0 +1,8 @@
+model,IC_mean,LS_Sharpe,type
+MLP_h64_seed0,0.021,0.648,single-seed (prior audit)
+MLP_h64_seed1,0.002,0.097,single-seed (prior audit)
+MLP_h64_seed2,0.013,0.414,single-seed (prior audit)
+MLP_h64_seed42,0.0007,0.347,single-seed (prior audit)
+MLP_h64_seed123,0.0176,0.556,single-seed (prior audit)
+MLP_h64_K5_bagged,0.007581605387432164,0.39386563940552877,seed-bagged (this run)
+Ridge_alpha1,,0.925,linear baseline

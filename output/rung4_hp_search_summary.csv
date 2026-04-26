@@ -1,0 +1,2 @@
+label,inner_K,inner_gap_months,outer_seed,hp_grid_size,IC_mean,IC_std,IC_IR,Hit_Rate,LS_Sharpe,n_months,most_common_hidden,most_common_lr,most_common_dropout,baseline_ic_s42,baseline_sharpe_s42,ridge_sharpe,ic_delta_vs_s42,sharpe_delta_vs_s42
+rung4_hp_tuned_inner_cv,3,1,42,27,0.0015803356501068178,0.12750709370069613,0.012394099843702969,0.48214285714285715,0.11053073208969924,56,64,0.01,0.0,0.0007,0.347,0.925,0.0008803356501068178,-0.23646926791030073
