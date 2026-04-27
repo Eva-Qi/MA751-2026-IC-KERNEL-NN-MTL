@@ -25,7 +25,15 @@
 
 ## 🔁 Pivots & milestones (newest first)
 
-### 2026-04-27 (today): Repo cleanup + paper finalization
+### 2026-04-27 (today): Paper Rung 5 fill + repo move + slides outline
+- **Rung 5 added to paper body**: Tab 1 extended with 5b/5c/5d MTL rows (V2 panel, footnoted); new §5.6 "Rung 5 Negative Findings" documents negative transfer, expert collapse, HMM under-identification; §7 Discussion paragraph links Rung 5 failures to sample-size constraint; Limitations note for CPCV exclusion reconciled
+- **Figure callouts strengthened**: `fig_cumret`, `fig_cpcv_sharpe`, `fig_pareto_with_bounds` now have interpretive body text instead of navigational refs
+- **Bibliography**: added `yu_pcgrad` (NeurIPS 2020) and `shazeer_moe` (ICLR 2017)
+- **Repo move**: `paper/MA751-paper/` → `MA751-paper/` at repo root; `paper/` stays gitignored (private scratch); LaTeX build-artifact ignores added for `MA751-paper/*` to keep `pdflatex` runs out of git status
+- **Slides outline**: 22-slide deck (`MA751-paper/slides_outline.md`) with action-title format + 3-5 sentence speaker notes per slide, ready for Google Slides import
+- **Pushed to GitHub origin/main** for teammate access (commit 55529f5)
+
+### 2026-04-27 (earlier): Repo cleanup + paper finalization
 - Codebase 30+ → 16 active `.py` (audits/, src/ consolidated; 5,000+ LOC dead-code purged)
 - Docs 10 scattered MDs → 1 master `PROJECT_STORY.md` + `RESULTS.md` + `FIGURES_TODO.md` + `archive/`
 - Output: 130 → 96 active files; 2 outdated summaries archived (`gam_summary.csv` for default n=10; `rung2c_selected_ols_summary.csv` for look-ahead variants)

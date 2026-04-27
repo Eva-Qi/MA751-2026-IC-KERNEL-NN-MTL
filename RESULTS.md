@@ -46,6 +46,11 @@ Source: `output/rung12_v3_summary.csv`
 | 3b | XGBoost (default) | +0.0018 | 0.018 | 50.0 | 0.335 | depth=4, lr=0.05, n=200 |
 | 4 | MLP single-task (seed=42) | +0.0007 | 0.007 | 51.7 | 0.347 | hidden=64, lr=1e-3 |
 | 4 | MLP 5-seed mean | +0.0109 | — | — | 0.412 | bagging across 5 seeds |
+| 5b† | MTL (ret + ret_3m) | −0.0036 | −0.028 | 50.0 | 0.229 | UW loss, neg-transfer sign-flip |
+| 5c† | MTL (ret + vol) | +0.0061 | +0.043 | 48.3 | 0.391 | UW loss, vol head corr 0.50 |
+| 5d† | MTL (ret + ret_3m + vol) | +0.0173 | +0.117 | 58.6 | 0.664 | UW loss, best Rung 5 |
+
+†Rung 5 numbers are V2 14-feature panel; not retuned for V3 (paper §5.6 + Tab 1 footnote). Source: `output/ablation_summary_uncertainty.csv`. Regime-Gated MoE and Enhanced MoE follow the same dominated pattern; not summarized here.
 
 ---
 
