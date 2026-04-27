@@ -1,0 +1,6 @@
+n_splines,label,IC_mean,IC_std,IC_IR,Hit_Rate,LS_Sharpe,n_months,wall_sec,flags
+3,gam_ns3,,,,,,0,0.0,ERROR: n_splines must be > spline_order. found: n_splines = 3 and spline_order = 3
+5,gam_ns5,0.0146,0.1159,0.1259,0.5,0.792,58,648.9,OK
+10,gam_ns10,0.0068,0.1033,0.0662,0.534,0.555,58,1224.0,OK
+15,gam_ns15,0.0062,0.0955,0.0652,0.534,0.505,58,2131.0,OK
+20,gam_ns20,0.0071,0.079,0.0893,0.552,0.406,58,7248.5,OK

@@ -200,15 +200,30 @@ def build_returns_v2() -> pd.DataFrame:
 
 def load_factors_v2_raw() -> pd.DataFrame:
     """Load WRDS-built factors with plausibility filters. NO z-scoring here —
-    z-scoring happens AFTER filtering to S&P 500 universe."""
+    z-scoring happens AFTER filtering to S&P 500 universe.
+
+    Audit fix (2026-04-26, P0 #2): preserve sign(EY) BEFORE the |EY|≤1
+    plausibility filter. Old code dropped extreme-EY rows entirely, which
+    biased `has_positive_earnings` downstream toward profitable firms
+    (deeply-loss-making rows were deleted, never contributing 0 to the flag).
+    Fix: the filter now sets out-of-range EY to NaN instead of dropping the
+    row, preserving sign info via `EarningsYield_sign_raw`.
+    """
     factors = pd.read_parquet(WRDS_FACTORS)
     factors["date"] = pd.to_datetime(factors["date"])
 
-    # Plausibility caps (same as V1)
+    # Capture sign BEFORE clipping to NaN (preserves "unprofitable" info
+    # for firms with |EY| > 1 that would otherwise be lost)
     if "EarningsYield" in factors.columns:
-        factors = factors[factors["EarningsYield"].abs() <= 1.0]
+        factors["EarningsYield_sign_raw"] = np.sign(factors["EarningsYield"]).astype(float)
+        # Clip-to-NaN instead of dropping rows: preserves all other features
+        # for the row, only marks EY itself as non-usable
+        ey_extreme = factors["EarningsYield"].abs() > 1.0
+        factors.loc[ey_extreme, "EarningsYield"] = np.nan
     if "AssetGrowth" in factors.columns:
-        factors = factors[factors["AssetGrowth"].abs() <= 10.0]
+        # Same treatment for AssetGrowth: clip extreme to NaN, preserve row
+        ag_extreme = factors["AssetGrowth"].abs() > 10.0
+        factors.loc[ag_extreme, "AssetGrowth"] = np.nan
 
     return factors
 
@@ -630,6 +645,25 @@ def build_master_panel_v2(save=True, verbose=True):
         "ShortInterestRatio_zscore",
         "InstOwnershipChg_zscore",
     }
+    # NOTE: has_analyst_consensus and has_positive_earnings are flag columns
+    # (not feature z-scores) and are constructed later in this function.
+    # They do NOT belong in KEEP_NAN_COLS — they have no NaN by construction
+    # (notna() and > 0 both produce boolean → 0.0/1.0 with no NaN).
+
+    # Beta/IVOL: sector-cross-sectional median (not zero — new IPOs are typically high-beta)
+    # Small volume: 0.45% / 0.28% of panel; empirically 39 / 38 tickers, ~5-6 months each (post-IPO window)
+    for risk_col in ["Beta_zscore", "IVOL_zscore"]:
+        if risk_col in panel.columns:
+            panel[risk_col] = panel.groupby(["date", "sector"])[risk_col].transform(
+                lambda x: x.fillna(x.median())
+            )
+            # Fallback: if sector median is also NaN (all-NaN sector-month), fall back to cross-sectional median
+            panel[risk_col] = panel.groupby("date")[risk_col].transform(
+                lambda x: x.fillna(x.median())
+            )
+
+    # Columns handled by sector-median above — exclude from generic zero-fill
+    SECTOR_MEDIAN_FILLED_COLS = {"Beta_zscore", "IVOL_zscore"}
 
     all_zscore_cols = FACTOR_ZSCORE_COLS + list(NEW_ZSCORE_MAP.values())
     for col in all_zscore_cols:
@@ -637,6 +671,9 @@ def build_master_panel_v2(save=True, verbose=True):
             continue
         if col in KEEP_NAN_COLS:
             # Do NOT zero-fill — NaN = missing coverage, not zero signal
+            continue
+        if col in SECTOR_MEDIAN_FILLED_COLS:
+            # Already filled by sector-median block above — skip zero-fill
             continue
         if col in TYPE_A_EXTENDED:
             type_a_mask = panel["sector"].isin(TYPE_A_EXTENDED[col])
@@ -671,6 +708,28 @@ def build_master_panel_v2(save=True, verbose=True):
     # InstOwnershipChg: only populated in 13F filing months (quarterly)
     # NaN in non-filing months is structurally expected, not a pipeline error
     panel["has_inst_ownership"] = (~panel["InstOwnershipChg"].isna()).astype(float)
+
+    # AnalystRevision/Dispersion/Breadth: unified IBES coverage indicator
+    # NaN in any of the three = missing IBES consensus row this month
+    # Empirically <1.1% NaN in S&P 500 panel but inconsistency with SUE flagged by audit
+    panel["has_analyst_consensus"] = (
+        panel["AnalystRevision"].notna()
+        & panel["AnalystDispersion"].notna()
+        & panel["RevisionBreadth"].notna()
+    ).astype(float)
+
+    # Compustat net income sign: firms in profit vs loss regime
+    # AUDIT FIX 2026-04-26 (P0 #2): use EarningsYield_sign_raw (captured
+    # BEFORE the |EY|≤1 clip in load_factors_v2_raw) to avoid biasing the
+    # flag toward profitable firms. Old code (`EY > 0`) was computed on
+    # post-filter EY, which had extreme-loss rows dropped — systematically
+    # under-counted unprofitable firms.
+    if "EarningsYield_sign_raw" in panel.columns:
+        # +1 → profit, -1 → loss, 0 → exactly zero, NaN → no fundamental data
+        panel["has_positive_earnings"] = (panel["EarningsYield_sign_raw"] > 0).astype(float)
+    else:
+        # Fallback path (V1 or panels without raw-sign column)
+        panel["has_positive_earnings"] = (panel["EarningsYield"] > 0).astype(float)
 
     # ── Macro: keep as metadata, NOT in feature set ──
     # Audit finding: zero cross-sectional variance → useless in CS regression

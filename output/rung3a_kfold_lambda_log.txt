@@ -1,0 +1,120 @@
+================================================================================
+RUNG 3A GAM — K-fold λ selection (inner TimeSeriesSplit CV)
+  n_splines = 5  |  K_inner = 5  |  gap = 1 month
+  λ grid: 1.0e-03 … 1.0e+03  (11 candidates)
+================================================================================
+
+Loading panel: data/master_panel_v2.parquet
+  46,811 rows | 119 months | 442 tickers | 27 features
+  fold   1/58 | 2020-02 | n_train=22,025 | n_test= 401 | λ=3.981 | IC=-0.0652 | elapsed=21.7s
+  fold   2/58 | 2020-03 | n_train=22,426 | n_test= 401 | λ=3.981 | IC=+0.1790 | elapsed=43.1s
+  fold   3/58 | 2020-04 | n_train=22,827 | n_test= 408 | λ=3.981 | IC=+0.1867 | elapsed=63.7s
+  fold   4/58 | 2020-05 | n_train=23,228 | n_test= 408 | λ=3.981 | IC=+0.2954 | elapsed=84.3s
+  fold   5/58 | 2020-06 | n_train=23,636 | n_test= 408 | λ=3.981 | IC=+0.0394 | elapsed=105.0s
+  fold   6/58 | 2020-07 | n_train=24,044 | n_test= 409 | λ=3.981 | IC=+0.1091 | elapsed=125.4s
+  fold   7/58 | 2020-08 | n_train=24,452 | n_test= 409 | λ=0.01585 | IC=-0.0041 | elapsed=148.1s
+  fold   8/58 | 2020-09 | n_train=24,861 | n_test= 410 | λ=0.01585 | IC=-0.0269 | elapsed=171.3s
+  fold   9/58 | 2020-10 | n_train=25,270 | n_test= 409 | λ=0.01585 | IC=-0.0102 | elapsed=194.2s
+  fold  10/58 | 2020-11 | n_train=25,680 | n_test= 411 | λ=0.01585 | IC=+0.1185 | elapsed=232.4s
+  fold  11/58 | 2020-12 | n_train=26,089 | n_test= 414 | λ=0.01585 | IC=+0.0457 | elapsed=1967.4s
+  fold  12/58 | 2021-01 | n_train=26,500 | n_test= 416 | λ=0.01585 | IC=+0.0567 | elapsed=5777.4s
+  fold  13/58 | 2021-02 | n_train=26,914 | n_test= 414 | λ=0.01585 | IC=-0.1475 | elapsed=8378.0s
+  fold  14/58 | 2021-03 | n_train=27,330 | n_test= 414 | λ=0.01585 | IC=+0.0285 | elapsed=9116.4s
+  fold  15/58 | 2021-04 | n_train=27,744 | n_test= 416 | λ=0.01585 | IC=-0.0040 | elapsed=9142.9s
+  fold  16/58 | 2021-05 | n_train=28,158 | n_test= 416 | λ=0.01585 | IC=+0.2104 | elapsed=9169.8s
+  fold  17/58 | 2021-06 | n_train=28,574 | n_test= 416 | λ=0.01585 | IC=-0.0155 | elapsed=9196.8s
+  fold  18/58 | 2021-07 | n_train=28,990 | n_test= 417 | λ=0.01585 | IC=-0.0475 | elapsed=9223.5s
+  fold  19/58 | 2021-08 | n_train=29,406 | n_test= 417 | λ=0.2512 | IC=-0.0685 | elapsed=9252.9s
+  fold  20/58 | 2021-09 | n_train=29,823 | n_test= 417 | λ=0.2512 | IC=+0.1209 | elapsed=9283.6s
+  fold  21/58 | 2021-10 | n_train=30,240 | n_test= 418 | λ=0.2512 | IC=+0.1115 | elapsed=9314.2s
+  fold  22/58 | 2021-11 | n_train=30,657 | n_test= 418 | λ=0.2512 | IC=-0.0226 | elapsed=9345.0s
+  fold  23/58 | 2021-12 | n_train=31,075 | n_test= 418 | λ=0.2512 | IC=-0.2816 | elapsed=9375.2s
+  fold  24/58 | 2022-01 | n_train=31,493 | n_test= 418 | λ=0.2512 | IC=-0.0545 | elapsed=9405.9s
+  fold  25/58 | 2022-02 | n_train=31,911 | n_test= 418 | λ=1 | IC=-0.1225 | elapsed=9436.6s
+  fold  26/58 | 2022-03 | n_train=32,329 | n_test= 418 | λ=1 | IC=-0.1682 | elapsed=9466.9s
+  fold  27/58 | 2022-04 | n_train=32,747 | n_test= 419 | λ=1 | IC=-0.1209 | elapsed=9497.5s
+  fold  28/58 | 2022-05 | n_train=33,165 | n_test= 420 | λ=1 | IC=-0.1036 | elapsed=9527.9s
+  fold  29/58 | 2022-06 | n_train=33,584 | n_test= 422 | λ=1 | IC=+0.1850 | elapsed=9558.3s
+  fold  30/58 | 2022-07 | n_train=34,004 | n_test= 422 | λ=1 | IC=+0.0202 | elapsed=9589.7s
+  fold  31/58 | 2022-08 | n_train=34,426 | n_test= 422 | λ=0.2512 | IC=+0.0287 | elapsed=9624.0s
+  fold  32/58 | 2022-09 | n_train=34,848 | n_test= 422 | λ=0.2512 | IC=+0.0523 | elapsed=9656.1s
+  fold  33/58 | 2022-10 | n_train=35,270 | n_test= 422 | λ=0.2512 | IC=-0.0797 | elapsed=11779.4s
+  fold  34/58 | 2022-11 | n_train=35,692 | n_test= 423 | λ=0.2512 | IC=-0.1394 | elapsed=12093.8s
+  fold  35/58 | 2022-12 | n_train=36,114 | n_test= 423 | λ=0.2512 | IC=+0.1868 | elapsed=12125.6s
+  fold  36/58 | 2023-01 | n_train=36,537 | n_test= 424 | λ=0.2512 | IC=+0.1103 | elapsed=12157.4s
+  fold  37/58 | 2023-02 | n_train=36,960 | n_test= 424 | λ=0.0631 | IC=-0.0510 | elapsed=12192.2s
+  fold  38/58 | 2023-03 | n_train=37,384 | n_test= 424 | λ=0.0631 | IC=-0.0659 | elapsed=12227.2s
+  fold  39/58 | 2023-04 | n_train=37,808 | n_test= 424 | λ=0.0631 | IC=+0.2056 | elapsed=12261.8s
+  fold  40/58 | 2023-05 | n_train=38,232 | n_test= 425 | λ=0.0631 | IC=+0.1015 | elapsed=12297.1s
+  fold  41/58 | 2023-06 | n_train=38,656 | n_test= 425 | λ=0.0631 | IC=+0.0788 | elapsed=12332.4s
+  fold  42/58 | 2023-07 | n_train=39,081 | n_test= 425 | λ=0.0631 | IC=+0.0414 | elapsed=12366.8s
+  fold  43/58 | 2023-08 | n_train=39,506 | n_test= 426 | λ=63.1 | IC=-0.1552 | elapsed=12403.1s
+  fold  44/58 | 2023-09 | n_train=39,931 | n_test= 427 | λ=15.85 | IC=-0.3047 | elapsed=12439.1s
+  fold  45/58 | 2023-10 | n_train=40,357 | n_test= 428 | λ=15.85 | IC=+0.1162 | elapsed=12475.7s
+  fold  46/58 | 2023-11 | n_train=40,784 | n_test= 428 | λ=15.85 | IC=+0.2937 | elapsed=12515.0s
+  fold  47/58 | 2023-12 | n_train=41,212 | n_test= 428 | λ=15.85 | IC=-0.2326 | elapsed=12553.8s
+  fold  48/58 | 2024-01 | n_train=41,640 | n_test= 428 | λ=15.85 | IC=+0.2183 | elapsed=12593.6s
+  fold  49/58 | 2024-02 | n_train=42,068 | n_test= 428 | λ=0.2512 | IC=+0.0775 | elapsed=12633.8s
+  fold  50/58 | 2024-03 | n_train=42,496 | n_test= 429 | λ=0.2512 | IC=-0.1224 | elapsed=12673.8s
+  fold  51/58 | 2024-04 | n_train=42,924 | n_test= 432 | λ=0.2512 | IC=+0.0365 | elapsed=12713.4s
+  fold  52/58 | 2024-05 | n_train=43,353 | n_test= 432 | λ=0.2512 | IC=-0.0437 | elapsed=12753.5s
+  fold  53/58 | 2024-06 | n_train=43,785 | n_test= 432 | λ=0.2512 | IC=+0.0073 | elapsed=12793.3s
+  fold  54/58 | 2024-07 | n_train=44,217 | n_test= 432 | λ=0.2512 | IC=-0.0905 | elapsed=12833.7s
+  fold  55/58 | 2024-08 | n_train=44,649 | n_test= 432 | λ=1 | IC=+0.0921 | elapsed=12876.6s
+  fold  56/58 | 2024-09 | n_train=45,081 | n_test= 432 | λ=1 | IC=-0.1227 | elapsed=12918.8s
+  fold  57/58 | 2024-10 | n_train=45,513 | n_test= 433 | λ=1 | IC=+0.0673 | elapsed=12962.1s
+  fold  58/58 | 2024-11 | n_train=45,945 | n_test= 433 | λ=1 | IC=-0.0202 | elapsed=13005.5s
+
+Saved summary -> output/rung3a_gam_kfold_lambda_summary.csv
+Saved diagnostics -> output/rung3a_gam_kfold_lambda_diag.csv
+
+================================================================================
+COMPARISON TABLE
+================================================================================
+Model                          IC_mean    IC_std     IC_IR  Hit_Rate  LS_Sharpe  n_months
+--------------------------------------------------------------------------------
+GAM_gridsearch_GCV             +0.0146       N/A       N/A       N/A     0.792        58
+GAM_kfold_lambda               +0.0126    0.1320    0.0953     0.517     0.763        58
+
+================================================================================
+λ SELECTION DIAGNOSTICS (across outer folds)
+================================================================================
+  mean   = 3.126
+  median = 0.2512
+  std    = 9.075
+  min    = 0.01585
+  max    = 63.1
+
+  λ value   | count | fraction
+  ----------|-------|----------
+    0.01585 |    12 |  20.7%  #############
+     0.0631 |     6 |  10.3%  ######
+     0.2512 |    18 |  31.0%  ####################
+          1 |    10 |  17.2%  ###########
+      3.981 |     6 |  10.3%  ######
+      15.85 |     5 |   8.6%  #####
+       63.1 |     1 |   1.7%  #
+
+  Grid coverage OK (0% at edges)
+
+================================================================================
+VERDICT
+================================================================================
+  K-fold λ IC_mean:    +0.0126
+  GCV baseline IC:     +0.0146
+  ΔIC (kfold - GCV):   -0.0020
+  IC delta within noise range — K-fold λ did NOT materially change IC.
+
+  IC_IR (K-fold):  0.0953
+  (Baseline IC_IR not available — run rung3a_gam_audit.py with IC_IR output)
+  IC_IR below 0.4 — signal consistency is low.
+
+  ΔSharpe (kfold - GCV): -0.029
+  Sharpe roughly equivalent.
+
+  All sanity checks PASSED.
+================================================================================
+Outputs: output/rung3a_gam_kfold_lambda_summary.csv
+         output/rung3a_gam_kfold_lambda_diag.csv
+Elapsed: 13005.5s
+================================================================================

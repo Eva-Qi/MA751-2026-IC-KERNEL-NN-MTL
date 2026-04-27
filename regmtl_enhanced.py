@@ -236,7 +236,12 @@ def train_one_fold(
     epochs=150, batch_size=512, lr=1e-3, weight_decay=1e-5,
     dropout=0.10, patience=20, val_frac=0.10,
     device="cpu",
+    fold_idx=0,  # audit 2026-04-24: per-fold seed
 ):
+    # audit 2026-04-24: reproducibility
+    torch.manual_seed(fold_idx)
+    np.random.seed(fold_idx)
+
     n_val = max(1, int(len(X_tr) * val_frac))
 
     X_val, X_tr = X_tr[-n_val:], X_tr[:-n_val]
@@ -400,6 +405,7 @@ def walk_forward_evaluate(
             epochs=epochs, batch_size=batch_size, lr=lr,
             weight_decay=weight_decay, dropout=dropout,
             patience=patience, device=device,
+            fold_idx=i,  # audit 2026-04-24
         )
 
         model.eval()

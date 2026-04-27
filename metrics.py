@@ -58,11 +58,19 @@ def compute_long_short_sharpe(
     return float(np.sqrt(12.0) * arr.mean() / std)
 
 
-def compute_ic_ir(ic_series: pd.Series) -> float:
-    """IC Information Ratio = mean(IC) / std(IC)."""
-    if len(ic_series) < 2 or ic_series.std() < 1e-8:
+def compute_ic_ir(ic_series) -> float:
+    """IC Information Ratio = mean(IC) / std(IC).
+
+    Accepts pd.Series or np.ndarray (consolidated from statistical_tests.py duplicate).
+    Returns np.nan when std is too small to be meaningful.
+    """
+    arr = np.asarray(ic_series, dtype=float)
+    if len(arr) < 2:
         return np.nan
-    return float(ic_series.mean() / ic_series.std())
+    std = float(np.std(arr, ddof=1))
+    if std < 1e-8:
+        return np.nan
+    return float(arr.mean() / std)
 
 
 def compute_hit_rate(ic_series: pd.Series) -> float:

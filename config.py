@@ -94,6 +94,23 @@ HMM_FEATURE_COLS = [
     "BAMLH0A0HYM2",
 ]
 
+# ── Missingness indicators ───────────────────────────────────────────────
+# Binary flags (0.0/1.0) for features where NaN means "no data coverage",
+# not "zero signal". Used as auxiliary inputs to models that can exploit them.
+#   has_sue              : 1 = IBES covers this stock this month
+#   has_short_interest   : 1 = Compustat has short interest data
+#   has_inst_ownership   : 1 = 13F filing was reported this month (quarterly)
+#   has_analyst_consensus: 1 = IBES has a current consensus row
+#                              (Revision/Dispersion/Breadth all defined)
+#   has_positive_earnings: 1 = Compustat ib > 0 (firm in profit regime)
+MISSINGNESS_INDICATORS = [
+    "has_sue",
+    "has_short_interest",
+    "has_inst_ownership",
+    "has_analyst_consensus",
+    "has_positive_earnings",
+]
+
 # ── Composite feature sets ───────────────────────────────────────────────
 
 # V1: original 15 features (backward compatible)
@@ -122,8 +139,12 @@ ALL_FEATURE_COLS_V3 = (
 # V2 with macro interactions (optional, for models that can use them)
 ALL_FEATURE_COLS_V2_WITH_MACRO = ALL_FEATURE_COLS_V2 + MACRO_COLS + REGIME_COLS
 
-# Default — V2 stock-level features
-ALL_FEATURE_COLS = ALL_FEATURE_COLS_V2
+# Missingness-indicator augmented variants (audit fix: wire MISSINGNESS_INDICATORS into models)
+ALL_FEATURE_COLS_V2_WITH_MISS = ALL_FEATURE_COLS_V2 + MISSINGNESS_INDICATORS
+ALL_FEATURE_COLS_V3_WITH_MISS = ALL_FEATURE_COLS_V3 + MISSINGNESS_INDICATORS
+
+# Default — V2 + missingness indicators (audit-fix default; includes has_* coverage flags)
+ALL_FEATURE_COLS = ALL_FEATURE_COLS_V2_WITH_MISS
 FACTOR_COLS = ALL_FEATURE_COLS  # alias used by main.py / rung5
 
 # ── Enhanced Regime MoE feature set (V3-updated, data-driven) ────────────
@@ -158,18 +179,6 @@ TYPE_A_SECTORS = {
     "GrossProfitability_zscore": ["Financials", "Utilities", "Real Estate"],
     "NetDebtEBITDA_zscore": ["Financials", "Real Estate"],
 }
-
-# ── Missingness indicators ───────────────────────────────────────────────
-# Binary flags (0.0/1.0) for features where NaN means "no data coverage",
-# not "zero signal". Used as auxiliary inputs to models that can exploit them.
-#   has_sue           : 1 = IBES covers this stock this month
-#   has_short_interest: 1 = Compustat has short interest data
-#   has_inst_ownership: 1 = 13F filing was reported this month (quarterly)
-MISSINGNESS_INDICATORS = [
-    "has_sue",
-    "has_short_interest",
-    "has_inst_ownership",
-]
 
 # ── Walk-forward defaults ────────────────────────────────────────────────
 

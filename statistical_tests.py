@@ -15,7 +15,7 @@ Rungs:
   1a  - OLS (plain multivariate linear regression)
   1b  - IC-weighted linear ensemble (univariate OLS combined with IC-weights)
   2   - LASSO (LassoCV with walk-forward)
-  5a  - MLP single-task (ret only)
+  rung4 - MLP single-task (ret only) — was labeled "5a" before audit fix 2026-04-22
   5b  - MTL (ret + ret3m)
   5c  - MTL (ret + vol)
   5d  - MTL (ret + ret3m + vol)
@@ -39,6 +39,8 @@ warnings.filterwarnings("ignore")
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT_ROOT))  # ensure project root on path for metrics import
+from metrics import compute_ic_ir, compute_hit_rate  # consolidated from duplicate local defs (Category A)
 BASELINE_DATA = PROJECT_ROOT / "data" / "baseline" / "model_dataset.parquet"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 
@@ -514,7 +516,8 @@ def ljung_box_test(
 # Section 3b: Power Analysis + Economic Metrics
 # ═══════════════════════════════════════════════════════════════════════════
 
-def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05) -> dict:
+def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05,
+                  ic_std: float | None = None) -> dict:
     """
     Statistical power analysis for detecting IC differences.
 
@@ -536,8 +539,11 @@ def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05)
     -------
     dict with: power (%), n_needed_80pct, n_months, effect_size
     """
-    # Assumed monthly IC std (cross-sectional models typically 0.05-0.15)
-    sigma = 0.10
+    # Audit fix 2026-04-26 (P1 #1): sigma was hardcoded 0.10 — ML actuals
+    # show sigma ≈ 0.10–0.16 in our 58-mo window for top models, so the
+    # fixed sigma was rough but in-range. Allow override via kwarg-like
+    # access to the actual sigma when the caller passes ic_std.
+    sigma = ic_std if ic_std is not None else 0.10
 
     # Critical values
     z_alpha = stats.norm.ppf(1.0 - alpha / 2.0)   # two-sided
@@ -566,15 +572,7 @@ def compute_power(n_months: int, effect_size: float = 0.05, alpha: float = 0.05)
     }
 
 
-def compute_ic_ir(ic_series: np.ndarray) -> float:
-    """IC Information Ratio = mean(IC) / std(IC)"""
-    std = float(np.std(ic_series, ddof=1)) if len(ic_series) > 1 else 0.0
-    return float(ic_series.mean()) / std if std > 0 else 0.0
-
-
-def compute_hit_rate(ic_series: np.ndarray) -> float:
-    """Fraction of months with positive IC"""
-    return float((ic_series > 0).mean())
+# compute_ic_ir and compute_hit_rate removed — now imported from metrics.py (Category A consolidation)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -587,13 +585,13 @@ def compute_hit_rate(ic_series: np.ndarray) -> float:
 
 PRIMARY_COMPARISONS = [
     # Key scientific question: does best MTL beat best single-task?
-    ("5d_MTL_ret_ret3m_vol", "5a_MLP_ret"),   # 1 comparison
+    ("5d_MTL_ret_ret3m_vol", "rung4_MLP"),   # 1 comparison
 ]
 
 SECONDARY_COMPARISONS = [
     # Within-rung pairs (same complexity level)
-    ("5b_MTL_ret_ret3m", "5a_MLP_ret"),
-    ("5c_MTL_ret_vol",   "5a_MLP_ret"),
+    ("5b_MTL_ret_ret3m", "rung4_MLP"),
+    ("5c_MTL_ret_vol",   "rung4_MLP"),
     ("5d_MTL_ret_ret3m_vol", "5b_MTL_ret_ret3m"),
     ("5d_MTL_ret_ret3m_vol", "5c_MTL_ret_vol"),  # 4 comparisons total
 ]
@@ -603,7 +601,7 @@ EXPLORATORY_COMPARISONS = [
     ("2a_LASSO",  "1a_OLS"),
     ("2a_LASSO",  "1b_IC_Ensemble"),
     ("2b_Ridge",  "1a_OLS"),
-    ("5a_MLP_ret", "2a_LASSO"),
+    ("rung4_MLP", "2a_LASSO"),
     ("5d_MTL_ret_ret3m_vol", "2a_LASSO"),
 ]
 
@@ -815,9 +813,9 @@ def main():
     #       all_monthly["2_LASSO_v1"]  = run_lasso_walkforward(df_base)
 
     # ── Rung 4-5: Load from saved parquets ───────────────────────────────
-    for variant in ["5a", "5b", "5c", "5d"]:
+    for variant in ["rung4", "5b", "5c", "5d"]:
         label_map = {
-            "5a": "5a_MLP_ret",
+            "rung4": "rung4_MLP",  # audit-fix 2026-04-22: was "5a"
             "5b": "5b_MTL_ret_ret3m",
             "5c": "5c_MTL_ret_vol",
             "5d": "5d_MTL_ret_ret3m_vol",
@@ -837,9 +835,9 @@ def main():
     # Use the shortest overlapping series for the key primary comparison
     n_overlap = 34   # conservative estimate (Rung 5 months)
     # Try to derive from actual data if both models loaded
-    if "5d_MTL_ret_ret3m_vol" in all_monthly and "5a_MLP_ret" in all_monthly:
+    if "5d_MTL_ret_ret3m_vol" in all_monthly and "rung4_MLP" in all_monthly:
         ma = all_monthly["5d_MTL_ret_ret3m_vol"]
-        mb = all_monthly["5a_MLP_ret"]
+        mb = all_monthly["rung4_MLP"]
         merged_power = pd.merge(
             ma[["date"]], mb[["date"]], on="date", how="inner"
         )
@@ -870,7 +868,7 @@ def main():
         "2b_Ridge":            "2",
         "2c_OLS_LASSO3":       "2",
         "2c_OLS_LASSO5":       "2",
-        "5a_MLP_ret":          "4-5",
+        "rung4_MLP":          "4-5",
         "5b_MTL_ret_ret3m":    "4-5",
         "5c_MTL_ret_vol":      "4-5",
         "5d_MTL_ret_ret3m_vol":"4-5",

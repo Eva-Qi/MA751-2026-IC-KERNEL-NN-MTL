@@ -38,6 +38,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F  # audit 2026-04-24: for smooth_l1_loss (Huber)
 from scipy.stats import spearmanr
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
@@ -49,6 +50,7 @@ from config import (
     ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
     TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
 )
+from metrics import compute_long_short_sharpe  # Category B consolidation
 
 # Default to V2; overridden by --v1 flag
 FACTOR_COLS = ALL_FEATURE_COLS_V2
@@ -170,6 +172,11 @@ class UncertaintyMTLLoss(nn.Module):
         var_ret: float = 1.0,
         var_ret3m: float = 1.0,
         var_vol: float = 1.0,
+        # audit 2026-04-24: Huber β per task, auto-scaled to ~0.5 × std(y)
+        # Fixes previous β=0.01 which made Huber degenerate to MAE for return std≈0.08
+        huber_beta_ret: float = 0.04,
+        huber_beta_ret3m: float = 0.08,
+        huber_beta_vol: float = 0.5,  # vol is z-scored internally, unit-variance
     ):
         super().__init__()
 
@@ -177,6 +184,9 @@ class UncertaintyMTLLoss(nn.Module):
         self.var_ret = max(var_ret, 1e-8)
         self.var_ret3m = max(var_ret3m, 1e-8)
         self.var_vol = max(var_vol, 1e-8)
+        self.huber_beta_ret = huber_beta_ret
+        self.huber_beta_ret3m = huber_beta_ret3m
+        self.huber_beta_vol = huber_beta_vol
 
         self.log_vars = nn.ParameterDict()
         if "ret" in self.active_tasks:
@@ -199,11 +209,20 @@ class UncertaintyMTLLoss(nn.Module):
         valid_vol = y_vol_std[~torch.isnan(y_vol_std)]
         var_vol = float(valid_vol.var()) if len(valid_vol) > 1 else 1.0
 
+        # audit 2026-04-24: Huber β auto-scaled to 0.5 × std(y)
+        # Covers ~1 std deviation; keeps bulk of observations in quadratic region
+        std_ret = float(y_ret.std())
+        std_3m = float(valid_3m.std()) if len(valid_3m) > 1 else 1.0
+        std_vol = float(valid_vol.std()) if len(valid_vol) > 1 else 1.0
+
         return UncertaintyMTLLoss(
             active_tasks=active_tasks,
             var_ret=float(y_ret.var()),
             var_ret3m=var_ret3m,
             var_vol=var_vol,
+            huber_beta_ret=max(0.01, 0.5 * std_ret),
+            huber_beta_ret3m=max(0.01, 0.5 * std_3m),
+            huber_beta_vol=max(0.1, 0.5 * std_vol),
         )
 
     def forward(
@@ -215,22 +234,24 @@ class UncertaintyMTLLoss(nn.Module):
     ) -> torch.Tensor:
         total = torch.zeros(1, device=y_ret.device).squeeze()
 
+        # audit 2026-04-24: Huber β is per-task, auto-scaled via from_train_data
+        # (fixed previous mis-scaling at β=0.01 → retained signal magnitude learning)
         if "ret" in preds:
-            base_ret = ((preds["ret"] - y_ret) ** 2).mean() / self.var_ret
+            base_ret = F.smooth_l1_loss(preds["ret"], y_ret, beta=self.huber_beta_ret) / self.var_ret
             s = self.log_vars["ret"].squeeze()
             total = total + 0.5 * torch.exp(-s) * base_ret + 0.5 * s
 
         if "ret3m" in preds:
             valid = ~torch.isnan(y_ret3m)
             if valid.sum() > 0:
-                base_ret3m = ((preds["ret3m"][valid] - y_ret3m[valid]) ** 2).mean() / self.var_ret3m
+                base_ret3m = F.smooth_l1_loss(preds["ret3m"][valid], y_ret3m[valid], beta=self.huber_beta_ret3m) / self.var_ret3m
                 s = self.log_vars["ret3m"].squeeze()
                 total = total + 0.5 * torch.exp(-s) * base_ret3m + 0.5 * s
 
         if "vol" in preds:
             valid_vol = ~torch.isnan(y_vol_std)
             if valid_vol.sum() > 0:
-                base_vol = ((preds["vol"][valid_vol] - y_vol_std[valid_vol]) ** 2).mean() / self.var_vol
+                base_vol = F.smooth_l1_loss(preds["vol"][valid_vol], y_vol_std[valid_vol], beta=self.huber_beta_vol) / self.var_vol
                 s = self.log_vars["vol"].squeeze()
                 total = total + 0.5 * torch.exp(-s) * base_vol + 0.5 * s
 
@@ -252,6 +273,14 @@ class UncertaintyMTLLoss(nn.Module):
         return out
 
 # 5. TRAIN ONE FOLD
+# Category D audit note: NOT consolidated with regmtl.py / regmtl_enhanced.py /
+# rung5_planned.py / rung5_combined.py — each uses a different model class:
+#   main.py          → MTLNet(active_tasks),        inputs: (X, y_ret, y_ret3m, y_vol)
+#   regmtl.py        → RegimeGatedMTLMoE(n_experts), inputs: (X, R, y_ret, y_ret3m, y_vol)
+#   regmtl_enhanced.py → EnhancedRegimeMoE,          inputs: (X, G, y_ret, y_ret3m, y_vol)
+#   rung5_planned.py → MTLNet(active_tasks),         inputs: (X, y_ret, y_rank, y_sector_rel)
+#   rung5_combined.py → MTLNet(active_tasks),        inputs: (X, train_targets: dict)
+# Consolidation would require a model-factory pattern — unsafe 1 day from submission.
 
 def train_one_fold(
     X_tr: torch.Tensor,
@@ -267,7 +296,13 @@ def train_one_fold(
     patience: int = 20,
     val_frac: float = 0.10,
     device: str = "cpu",
+    fold_idx: int = 0,  # audit 2026-04-24: per-fold seed for reproducibility
 ) -> tuple[MTLNet, dict[str, float], dict[str, float]]:
+    # audit 2026-04-24: set seeds per fold for reproducibility (across-runs)
+    # while preserving cross-fold variation for diagnostics
+    torch.manual_seed(fold_idx)
+    np.random.seed(fold_idx)
+
     n_val = max(1, int(len(X_tr) * val_frac))
 
     X_val, X_tr = X_tr[-n_val:], X_tr[:-n_val]
@@ -356,13 +391,21 @@ def train_one_fold(
 # 6. WALK-FORWARD
 
 ABLATION_TASKS = {
-    "5a": {"ret"},
+    "rung4": {"ret"},  # audit-fix 2026-04-22: was "5a"; architecturally pure single-task MLP = Rung 4 of ladder
     "5b": {"ret", "ret3m"},
     "5c": {"ret", "vol"},
     "5d": {"ret", "ret3m", "vol"},
 }
 
 
+# Category E audit note: walk_forward_evaluate NOT consolidated across files.
+# Each version is coupled to a different train_one_fold / model class:
+#   main.py          → calls local train_one_fold (MTLNet, 3 positional targets)
+#   regmtl.py        → calls local train_one_fold (RegimeGatedMoE, HMM per fold)
+#   regmtl_enhanced.py → calls local train_one_fold (EnhancedRegimeMoE, gate features)
+#   rung5_planned.py → calls local train_one_fold (MTLNet, rank/sector_rel heads)
+#   rung5_combined.py → calls local train_one_fold (MTLNet, dict-based targets)
+# A harness abstraction would require model-factory + callable injection — unsafe pre-submission.
 def walk_forward_evaluate(
     df: pd.DataFrame,
     active_tasks: set,
@@ -417,6 +460,7 @@ def walk_forward_evaluate(
             dropout=dropout,
             patience=patience,
             device=device,
+            fold_idx=i,  # audit 2026-04-24: seed per fold for reproducibility
         )
 
         model.eval()
@@ -477,39 +521,7 @@ def compute_monthly_ic(results: pd.DataFrame) -> pd.Series:
     return monthly.dropna()
 
 
-def compute_long_short_sharpe(results: pd.DataFrame, top_q: float = 0.2, bottom_q: float = 0.2) -> float:
-    """
-    Simple equal-weight long-short portfolio formed within each month:
-      long = top q by predicted return
-      short = bottom q by predicted return
-    """
-    monthly_rets = []
-
-    for _, g in results.groupby(DATE_COL):
-        g = g.dropna(subset=["y_pred", "y_true"]).copy()
-        if len(g) < 10:
-            continue
-
-        n_long = max(1, int(len(g) * top_q))
-        n_short = max(1, int(len(g) * bottom_q))
-
-        g = g.sort_values("y_pred", ascending=False)
-        long_ret = g.head(n_long)["y_true"].mean()
-        short_ret = g.tail(n_short)["y_true"].mean()
-
-        monthly_rets.append(long_ret - short_ret)
-
-    if len(monthly_rets) < 2:
-        return np.nan
-
-    monthly_rets = np.asarray(monthly_rets, dtype=float)
-    mean_ret = monthly_rets.mean()
-    std_ret = monthly_rets.std(ddof=1)
-
-    if std_ret < 1e-8:
-        return np.nan
-
-    return float(np.sqrt(12.0) * mean_ret / std_ret)
+# compute_long_short_sharpe removed — imported from metrics.py (Category B consolidation)
 
 
 def compute_ret3m_auxiliary_ic(results: pd.DataFrame) -> dict:
@@ -636,7 +648,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Rung 5 MTL MLP with uncertainty weighting")
-    parser.add_argument("--data", type=str, default="data/master_panel.parquet", help="Path to master panel parquet")
+    parser.add_argument("--data", type=str, default="data/master_panel_v2.parquet", help="Path to master panel parquet. Default is V2 (CRSP-based panel). V1 (master_panel.parquet) has known dei-namespace gaps for V/BRK-B/STZ — use only for legacy comparison.")
     parser.add_argument("--output_dir", type=str, default="output", help="Directory to save outputs")
     parser.add_argument("--device", type=str, default="cpu", help="cpu or cuda")
     parser.add_argument("--quiet", action="store_true", help="Suppress fold-level logging")

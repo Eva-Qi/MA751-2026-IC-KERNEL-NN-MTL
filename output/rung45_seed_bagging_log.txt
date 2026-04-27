@@ -1,0 +1,121 @@
+================================================================================
+RUNG 4/5 K-SEED BAGGING — Variance Reduction via Seed Ensemble
+================================================================================
+Seeds: [0, 1, 2, 42, 123]  (K=5)
+Prior single-seed baseline:  mean IC=+0.0109, std=0.0082, SNR=1.33, mean Sharpe=0.412
+Expected SNR boost: sqrt(5) × 1.33 = 2.97
+
+Loading V3 panel...
+  46,811 rows, 119 months, 27 features
+
+================================================================================
+STAGE 1: Rung 4 MLP (hidden=64) — K=5 seed bagging
+================================================================================
+  fold   1/58  [4.3s]  bagged_IC=-0.1203  std=0.0426  corr=0.441  |  s0=-0.0880  s1=-0.1385  s2=-0.1461  s42=-0.0343  s123=-0.0661  |  total=0.1min
+  fold   2/58  [3.9s]  bagged_IC=+0.0566  std=0.0674  corr=0.307  |  s0=+0.1272  s1=-0.0216  s2=-0.0039  s42=+0.0190  s123=+0.1382  |  total=0.1min
+  fold   3/58  [3.8s]  bagged_IC=+0.1099  std=0.0561  corr=0.269  |  s0=-0.0035  s1=+0.1347  s2=+0.1363  s42=+0.1069  s123=+0.0360  |  total=0.2min
+  fold   4/58  [3.6s]  bagged_IC=+0.1702  std=0.0789  corr=0.416  |  s0=+0.2342  s1=+0.0954  s2=+0.2464  s42=+0.1092  s123=+0.0492  |  total=0.3min
+  fold   5/58  [4.2s]  bagged_IC=-0.0116  std=0.0602  corr=0.289  |  s0=-0.0678  s1=-0.0320  s2=+0.0188  s42=-0.1018  s123=+0.0669  |  total=0.3min
+  fold   6/58  [5.8s]  bagged_IC=+0.1050  std=0.0223  corr=0.395  |  s0=+0.0944  s1=+0.0319  s2=+0.0785  s42=+0.0897  s123=+0.0680  |  total=0.4min
+  fold   7/58  [5.9s]  bagged_IC=+0.0039  std=0.0453  corr=0.405  |  s0=+0.0721  s1=+0.0027  s2=-0.0281  s42=-0.0617  s123=+0.0217  |  total=0.5min
+  fold   8/58  [5.6s]  bagged_IC=-0.0073  std=0.0400  corr=0.291  |  s0=-0.0654  s1=+0.0367  s2=-0.0469  s42=+0.0226  s123=+0.0085  |  total=0.6min
+  fold   9/58  [4.1s]  bagged_IC=+0.1826  std=0.0887  corr=0.274  |  s0=+0.1945  s1=+0.0053  s2=+0.0775  s42=+0.2601  s123=+0.1375  |  total=0.7min
+  fold  10/58  [4.8s]  bagged_IC=+0.0465  std=0.0238  corr=0.403  |  s0=+0.0680  s1=+0.0304  s2=-0.0015  s42=+0.0150  s123=+0.0432  |  total=0.8min
+  fold  11/58  [4.7s]  bagged_IC=+0.0251  std=0.0657  corr=0.286  |  s0=+0.1268  s1=-0.0659  s2=+0.0814  s42=+0.0063  s123=+0.0319  |  total=0.8min
+  fold  12/58  [4.9s]  bagged_IC=+0.0185  std=0.0584  corr=0.443  |  s0=+0.0892  s1=-0.0646  s2=+0.0580  s42=+0.0014  s123=+0.0855  |  total=0.9min
+  fold  13/58  [4.6s]  bagged_IC=-0.0360  std=0.0768  corr=0.485  |  s0=+0.0362  s1=-0.1367  s2=+0.0766  s42=-0.0619  s123=+0.0238  |  total=1.0min
+  fold  14/58  [4.8s]  bagged_IC=+0.0391  std=0.0370  corr=0.436  |  s0=+0.0783  s1=+0.0340  s2=+0.0254  s42=-0.0345  s123=+0.0476  |  total=1.1min
+  fold  15/58  [4.4s]  bagged_IC=-0.0560  std=0.0574  corr=0.283  |  s0=-0.1297  s1=+0.0324  s2=-0.0463  s42=-0.0577  s123=+0.0139  |  total=1.2min
+  fold  16/58  [4.7s]  bagged_IC=+0.0329  std=0.0264  corr=0.426  |  s0=+0.0648  s1=-0.0004  s2=+0.0228  s42=+0.0477  s123=-0.0024  |  total=1.2min
+  fold  17/58  [4.8s]  bagged_IC=+0.0680  std=0.0782  corr=0.310  |  s0=+0.0730  s1=+0.0260  s2=+0.1460  s42=-0.0627  s123=-0.0519  |  total=1.3min
+  fold  18/58  [4.9s]  bagged_IC=-0.0714  std=0.0488  corr=0.455  |  s0=-0.0621  s1=+0.0033  s2=-0.1198  s42=-0.0798  s123=+0.0064  |  total=1.4min
+  fold  19/58  [4.6s]  bagged_IC=-0.1072  std=0.0376  corr=0.311  |  s0=-0.0563  s1=-0.0681  s2=-0.1400  s42=-0.0633  s123=-0.0260  |  total=1.5min
+  fold  20/58  [5.3s]  bagged_IC=+0.0761  std=0.0688  corr=0.309  |  s0=+0.0150  s1=+0.1392  s2=+0.1337  s42=-0.0393  s123=+0.0509  |  total=1.6min
+  fold  21/58  [4.7s]  bagged_IC=+0.1188  std=0.0358  corr=0.427  |  s0=+0.1167  s1=+0.0937  s2=+0.1198  s42=+0.0582  s123=+0.0266  |  total=1.6min
+  fold  22/58  [4.5s]  bagged_IC=-0.1455  std=0.0567  corr=0.161  |  s0=-0.1426  s1=+0.0106  s2=-0.0385  s42=-0.1210  s123=-0.0417  |  total=1.7min
+  fold  23/58  [4.6s]  bagged_IC=-0.3226  std=0.0615  corr=0.314  |  s0=-0.1338  s1=-0.3113  s2=-0.2078  s42=-0.2572  s123=-0.1794  |  total=1.8min
+  fold  24/58  [4.5s]  bagged_IC=-0.0992  std=0.0554  corr=0.336  |  s0=+0.0258  s1=-0.1188  s2=-0.0003  s42=-0.0990  s123=-0.0430  |  total=1.9min
+  fold  25/58  [5.2s]  bagged_IC=-0.0526  std=0.0205  corr=0.312  |  s0=-0.0454  s1=-0.0286  s2=-0.0524  s42=-0.0300  s123=-0.0852  |  total=2.0min
+  fold  26/58  [4.9s]  bagged_IC=-0.2453  std=0.0611  corr=0.385  |  s0=-0.2064  s1=-0.1718  s2=-0.1618  s42=-0.0599  s123=-0.2419  |  total=2.0min
+  fold  27/58  [5.0s]  bagged_IC=-0.0236  std=0.0498  corr=0.513  |  s0=+0.0288  s1=-0.0718  s2=-0.0874  s42=+0.0078  s123=+0.0250  |  total=2.1min
+  fold  28/58  [4.7s]  bagged_IC=+0.1160  std=0.0935  corr=0.294  |  s0=+0.1034  s1=+0.1415  s2=-0.1071  s42=+0.1365  s123=+0.1151  |  total=2.2min
+  fold  29/58  [5.7s]  bagged_IC=+0.3806  std=0.0389  corr=0.398  |  s0=+0.2832  s1=+0.3292  s2=+0.2182  s42=+0.2557  s123=+0.3074  |  total=2.3min
+  fold  30/58  [6.3s]  bagged_IC=-0.1377  std=0.0574  corr=0.430  |  s0=-0.1980  s1=-0.0284  s2=-0.1203  s42=-0.1405  s123=-0.1663  |  total=2.4min
+  fold  31/58  [5.0s]  bagged_IC=+0.0325  std=0.0475  corr=0.176  |  s0=+0.0332  s1=+0.0373  s2=+0.0066  s42=-0.0335  s123=+0.1115  |  total=2.5min
+  fold  32/58  [6.2s]  bagged_IC=-0.1364  std=0.0217  corr=0.306  |  s0=-0.1149  s1=-0.0679  s2=-0.1208  s42=-0.0841  s123=-0.1208  |  total=2.6min
+  fold  33/58  [7.8s]  bagged_IC=+0.0759  std=0.0303  corr=0.471  |  s0=+0.0437  s1=+0.1080  s2=+0.0966  s42=+0.0351  s123=+0.0966  |  total=2.7min
+  fold  34/58  [6.3s]  bagged_IC=-0.0619  std=0.0494  corr=0.428  |  s0=-0.0551  s1=-0.0387  s2=-0.1246  s42=+0.0137  s123=+0.0040  |  total=2.8min
+  fold  35/58  [7.7s]  bagged_IC=+0.4566  std=0.0550  corr=0.539  |  s0=+0.3503  s1=+0.3362  s2=+0.4080  s42=+0.3020  s123=+0.4568  |  total=2.9min
+  fold  36/58  [6.8s]  bagged_IC=+0.0883  std=0.0289  corr=0.291  |  s0=+0.0533  s1=-0.0217  s2=+0.0262  s42=+0.0334  s123=+0.0606  |  total=3.1min
+  fold  37/58  [8.6s]  bagged_IC=+0.0661  std=0.0407  corr=0.359  |  s0=+0.0875  s1=+0.0267  s2=+0.1202  s42=+0.0439  s123=+0.0095  |  total=3.2min
+  fold  38/58  [7.9s]  bagged_IC=+0.0821  std=0.0473  corr=0.408  |  s0=+0.0710  s1=+0.0458  s2=+0.1144  s42=-0.0136  s123=-0.0028  |  total=3.3min
+  fold  39/58  [7.7s]  bagged_IC=+0.1383  std=0.0433  corr=0.636  |  s0=+0.0853  s1=+0.1495  s2=+0.0519  s42=+0.1683  s123=+0.1379  |  total=3.5min
+  fold  40/58  [7.0s]  bagged_IC=+0.0151  std=0.0750  corr=0.392  |  s0=+0.1153  s1=+0.1027  s2=+0.0990  s42=-0.0390  s123=-0.0544  |  total=3.6min
+  fold  41/58  [8.1s]  bagged_IC=-0.0844  std=0.0223  corr=0.256  |  s0=-0.0059  s1=-0.0316  s2=-0.0178  s42=-0.0721  s123=-0.0295  |  total=3.7min
+  fold  42/58  [8.6s]  bagged_IC=+0.0092  std=0.0438  corr=0.380  |  s0=-0.0297  s1=-0.0409  s2=+0.0640  s42=+0.0552  s123=+0.0367  |  total=3.9min
+  fold  43/58  [6.3s]  bagged_IC=-0.0435  std=0.0327  corr=0.250  |  s0=-0.0297  s1=-0.0716  s2=+0.0225  s42=-0.0202  s123=+0.0081  |  total=4.0min
+  fold  44/58  [7.1s]  bagged_IC=-0.2714  std=0.0212  corr=0.552  |  s0=-0.2415  s1=-0.1841  s2=-0.2400  s42=-0.2340  s123=-0.2248  |  total=4.1min
+  fold  45/58  [8.0s]  bagged_IC=+0.0525  std=0.0560  corr=0.328  |  s0=-0.0261  s1=+0.1240  s2=+0.0423  s42=+0.0314  s123=+0.1155  |  total=4.2min
+  fold  46/58  [6.7s]  bagged_IC=+0.1463  std=0.0560  corr=0.299  |  s0=+0.1567  s1=+0.1586  s2=+0.1681  s42=+0.1362  s123=+0.0173  |  total=4.3min
+  fold  47/58  [6.4s]  bagged_IC=-0.2636  std=0.0911  corr=0.491  |  s0=-0.2225  s1=-0.2975  s2=-0.2289  s42=-0.2405  s123=-0.0294  |  total=4.4min
+  fold  48/58  [7.5s]  bagged_IC=+0.0892  std=0.0612  corr=0.360  |  s0=+0.0792  s1=+0.1573  s2=+0.1861  s42=+0.0301  s123=+0.0480  |  total=4.6min
+  fold  49/58  [6.6s]  bagged_IC=-0.1734  std=0.0348  corr=0.282  |  s0=-0.0540  s1=-0.1332  s2=-0.1032  s42=-0.0539  s123=-0.1289  |  total=4.7min
+  fold  50/58  [6.5s]  bagged_IC=-0.1222  std=0.0623  corr=0.387  |  s0=+0.0311  s1=-0.0923  s2=-0.1550  s42=-0.0505  s123=-0.1044  |  total=4.8min
+  fold  51/58  [6.2s]  bagged_IC=+0.0036  std=0.0228  corr=0.266  |  s0=+0.0166  s1=-0.0433  s2=+0.0115  s42=+0.0153  s123=+0.0106  |  total=4.9min
+  fold  52/58  [6.3s]  bagged_IC=+0.0418  std=0.0478  corr=0.210  |  s0=+0.0332  s1=+0.0896  s2=-0.0077  s42=+0.0921  s123=-0.0230  |  total=5.0min
+  fold  53/58  [6.5s]  bagged_IC=+0.0891  std=0.0419  corr=0.515  |  s0=+0.0825  s1=+0.0015  s2=+0.1295  s42=+0.0941  s123=+0.0757  |  total=5.1min
+  fold  54/58  [7.3s]  bagged_IC=+0.1228  std=0.0728  corr=0.289  |  s0=+0.1297  s1=-0.0365  s2=+0.0762  s42=-0.0115  s123=+0.1435  |  total=5.2min
+  fold  55/58  [6.7s]  bagged_IC=+0.0858  std=0.0142  corr=0.544  |  s0=+0.0641  s1=+0.0996  s2=+0.0652  s42=+0.0623  s123=+0.0808  |  total=5.3min
+  fold  56/58  [6.4s]  bagged_IC=-0.1972  std=0.0151  corr=0.236  |  s0=-0.1092  s1=-0.1341  s2=-0.1507  s42=-0.1497  s123=-0.1314  |  total=5.4min
+  fold  57/58  [7.9s]  bagged_IC=+0.0644  std=0.0237  corr=0.335  |  s0=+0.0137  s1=+0.0186  s2=+0.0646  s42=+0.0702  s123=+0.0281  |  total=5.6min
+  fold  58/58  [8.2s]  bagged_IC=+0.0206  std=0.0248  corr=0.560  |  s0=+0.0265  s1=-0.0358  s2=+0.0163  s42=+0.0282  s123=+0.0292  |  total=5.7min
+
+  Walk-forward complete: 5.7 min
+
+  === STAGE 1 Results ===
+  n_months  : 58
+  Bagged IC mean : +0.0076
+  Bagged IC std  : 0.1394
+  Bagged IC IR   : 0.054
+  Hit Rate       : 60.3%
+  LS Sharpe      : 0.394
+  Saved: output/rung4_seed_bagging_summary.csv
+  Saved: output/rung4_seed_bagging_diag.csv
+
+================================================================================
+STAGE 2: Verdict vs single-seed baseline
+================================================================================
+  Prior single-seed:  IC=+0.0109 ± 0.0082, SNR=1.33, Sharpe=0.412
+  Bagged (K=5):       IC=+0.0076 ± 0.1394, SNR(across-time)=0.05, Sharpe=0.394
+  IC delta vs prior:  -0.0033  (expected ≈ 0 — bagging shouldn't shift mean)
+  Sharpe improvement: -0.019
+  SNR (across-time):  0.05  (prior single-seed: 1.33)
+  SNR (within-fold):  0.16  (bagged IC / mean seed spread per fold)
+  Ridge Sharpe baseline: 0.925
+
+  === VERDICT ===
+  NEUTRAL/NEGATIVE: Bagged Sharpe 0.394 < prior mean 0.412 — no improvement.
+  SNR (across-time) = 0.05 — limited improvement over single-seed SNR=1.33.
+
+================================================================================
+STAGE 3: MTL bagging — SKIPPED (future work)
+================================================================================
+  Rationale: Stage 1 took sufficient time; MTL 3-head machinery adds
+  complexity. To implement: replicate MTL class from main.py, add same
+  K-seed loop, average predictions across seeds before IC computation.
+
+================================================================================
+FINAL SUMMARY
+================================================================================
+            model  IC_mean  LS_Sharpe                      type
+    MLP_h64_seed0 0.021000   0.648000 single-seed (prior audit)
+    MLP_h64_seed1 0.002000   0.097000 single-seed (prior audit)
+    MLP_h64_seed2 0.013000   0.414000 single-seed (prior audit)
+   MLP_h64_seed42 0.000700   0.347000 single-seed (prior audit)
+  MLP_h64_seed123 0.017600   0.556000 single-seed (prior audit)
+MLP_h64_K5_bagged 0.007582   0.393866    seed-bagged (this run)
+     Ridge_alpha1      NaN   0.925000           linear baseline
+
+  Saved: output/rung4_seed_bagging_final_comparison.csv
+================================================================================
+DONE.

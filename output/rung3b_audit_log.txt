@@ -1,0 +1,77 @@
+================================================================================
+RUNG 3B AUDIT — Sensitivity + GKX + Shape Diagnostic
+================================================================================
+Loading V3 panel...
+  46,811 rows, 119 months, 27 features
+
+================================================================================
+STAGE 1: Quantile XGB shape diagnostic (current config d=4, lr=0.05, n=200)
+================================================================================
+  [done in 70.7s]  IC=-0.0045, Sharpe=0.217
+
+  Per-fold diagnostic (n=58):
+    pred_std:  mean=0.01022, min=0.00482, max=0.01706
+    pred_mean: mean=+0.01527, min=+0.00813, max=+0.02603
+    y_te_std:  mean=0.07809  (for scale reference)
+    [SHAPE] pred_std / y_te_std = 0.1309
+    folds with pred_std<0.001: 0/58
+
+  Top-1 feature across 58 folds:
+    High52W_Proximity_zscore: 30 folds
+    has_short_interest: 18 folds
+    AnalystCoverageChg_zscore: 10 folds
+
+================================================================================
+STAGE 2: Sensitivity grid — MSE objective, depth ∈ {1,4,6} × lr ∈ {0.01,0.05,0.1}
+  n_estimators=300 fixed. 9 configs.
+================================================================================
+  d=1 lr=0.01  [16.9s]  IC=+0.0190, IC_IR=0.143, Sharpe=0.882, Hit=60.3%
+  d=1 lr=0.05  [16.8s]  IC=+0.0142, IC_IR=0.124, Sharpe=0.841, Hit=63.8%
+  d=1 lr=0.1  [16.9s]  IC=+0.0117, IC_IR=0.114, Sharpe=0.710, Hit=62.1%
+  d=4 lr=0.01  [30.1s]  IC=+0.0095, IC_IR=0.079, Sharpe=0.741, Hit=65.5%
+  d=4 lr=0.05  [29.9s]  IC=+0.0076, IC_IR=0.079, Sharpe=0.450, Hit=62.1%
+  d=4 lr=0.1  [30.1s]  IC=+0.0016, IC_IR=0.019, Sharpe=0.273, Hit=58.6%
+  d=6 lr=0.01  [55.9s]  IC=+0.0033, IC_IR=0.028, Sharpe=0.485, Hit=56.9%
+  d=6 lr=0.05  [56.3s]  IC=+0.0047, IC_IR=0.058, Sharpe=0.655, Hit=56.9%
+  d=6 lr=0.1  [56.9s]  IC=+0.0013, IC_IR=0.016, Sharpe=0.357, Hit=55.2%
+
+  === Sensitivity grid summary ===
+ max_depth  learning_rate  n_estimators  IC_mean    IC_IR  LS_Sharpe
+         1           0.01           300 0.019003 0.142714   0.881814
+         1           0.05           300 0.014248 0.124201   0.841106
+         1           0.10           300 0.011651 0.114429   0.710146
+         4           0.01           300 0.009485 0.079116   0.741031
+         4           0.05           300 0.007638 0.079230   0.450212
+         4           0.10           300 0.001621 0.019115   0.273331
+         6           0.01           300 0.003269 0.027676   0.485060
+         6           0.05           300 0.004729 0.057970   0.655071
+         6           0.10           300 0.001254 0.015645   0.356734
+
+  [SIGN CHECK] positive IC: 9/9, negative IC: 0/9
+  [RANGE]      IC spans +0.0013 to +0.0190 (Δ=0.0177)
+  ⚠️  Large spread — IC is sensitive to hyperparams, individual result unreliable
+
+================================================================================
+STAGE 3: Gu-Kelly-Xiu 2020 RFS tuned (depth=1 stumps, n=1000, lr=0.01)
+================================================================================
+  [done in 45.3s]
+  GKX: IC=+0.0177, IC_IR=0.146, Sharpe=0.984, Hit=62.1%
+
+  === GKX vs current default ===
+    Current (d=4, lr=0.05, n=300): IC=+0.0076, Sharpe=0.450
+    GKX     (d=1, lr=0.01, n=1000): IC=+0.0177, Sharpe=0.984
+    Δ:                              ΔIC=+0.0101, ΔSharpe=+0.534
+  🔔 GKX tuned IC > 0.01 — hyperparameter tuning MATTERS, retract 'GBM fails' claim
+
+================================================================================
+VERDICT
+================================================================================
+  Stage 1 (shape):       pred_std / y_te_std = 0.1309
+  Stage 2 (sensitivity): sign reversal = NO, IC range = 0.0177
+  Stage 3 (GKX tuned):   IC = +0.0177, Sharpe = 0.984
+
+All outputs:
+  output/rung3b_quantile_shape_diag.csv
+  output/rung3b_sensitivity_grid.csv
+  output/rung3b_gkx_tuned.csv
+================================================================================
