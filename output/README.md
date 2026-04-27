@@ -10,9 +10,64 @@ Living results directory: walk-forward + CPCV + audit-cycle outputs. Total ~41 M
 - `<rung>_<study>_diag.csv` — per-fold diagnostics for one study
 - `<group>_summary.csv` — cross-model summary tables
 
-Panels:
-- `_v2` = 14 firm features + 5 missingness flags (V2 panel)
-- `_v3` = 22 firm features + 5 missingness flags (V3 panel) — used for paper
+## Feature panels
+
+### V2 — 14 firm features + 5 missingness flags = 19 columns
+
+**Classical factors (6)** — Compustat + CRSP-derived:
+- `EarningsYield_zscore` (ib / mktcap)
+- `GrossProfitability_zscore` (gp / at)
+- `AssetGrowth_zscore` (Δassets / lag-assets)
+- `Accruals_zscore` (working-capital change)
+- `Momentum12_1_zscore` (12-1 momentum)
+- `NetDebtEBITDA_zscore` ((debt − cash) / EBITDA)
+
+**Analyst signals (4)** — IBES:
+- `SUE_zscore` (standardized unexpected earnings)
+- `AnalystRevision_zscore` (consensus revision)
+- `AnalystDispersion_zscore` (analyst std)
+- `RevisionBreadth_zscore` (up vs. down ratio)
+
+**Risk (2)** — CRSP daily-derived:
+- `Beta_zscore` (252-day market beta)
+- `IVOL_zscore` (60-day CAPM residual std)
+
+**Alt-data (2)** — Compustat short interest, TFN 13F:
+- `ShortInterestRatio_zscore`
+- `InstOwnershipChg_zscore`
+
+**Missingness flags (5)** — paired with imputed features above:
+- `has_sue`, `has_short_interest`, `has_inst_ownership`, `has_analyst_consensus`, `has_positive_earnings`
+
+### V3 — 22 firm features + 5 missingness flags = 27 columns (paper panel)
+
+V3 = V2 + 8 Phase-2 features (no deletions):
+
+**Liquidity (+2)** — CRSP daily volume:
+- `Turnover_zscore`
+- `AmihudIlliquidity_zscore`
+
+**Price patterns (+3)** — CRSP daily prices:
+- `High52W_Proximity_zscore`
+- `MaxDailyReturn_zscore`
+- `ReturnSkewness_zscore`
+
+**Growth (+2)** — IBES + Compustat quarterly:
+- `ImpliedEPSGrowth_zscore`
+- `QRevGrowthYoY_zscore`
+
+**Coverage (+1)** — IBES:
+- `AnalystCoverageChg_zscore`
+
+(Same 5 missingness flags as V2.)
+
+### V1 (deprecated) — yfinance + SEC XBRL
+
+V1 used 4 firm features (`EarningsYield`, `AssetGrowth`, `Accruals`, `Momentum12_1`) + macro factors. Replaced entirely by V2 in 2026-04-18 due to split-contamination in EarningsYield and missing XBRL `dei` namespace. See `docs/archive/data_changelog.md` for migration table.
+
+---
+
+
 
 ## Canonical paper-cited results
 
