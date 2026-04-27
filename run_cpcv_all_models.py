@@ -56,7 +56,7 @@ from run_rung12_v2 import (
     elastic_net_model,
 )
 
-from cpcv_harness import cpcv_paths, summarise_paths, paths_to_long_df
+from src.harness.cpcv_harness import cpcv_paths, summarise_paths, paths_to_long_df
 
 DATA = ROOT / "data" / "master_panel_v2.parquet"
 OUTPUT = ROOT / "output"
