@@ -45,10 +45,10 @@ MODELS = {
     "2c_OLS_LASSO3":       "archive/results_2c_OLS_LASSO3.parquet",
     "2c_OLS_LASSO5":       "archive/results_2c_OLS_LASSO5.parquet",
     "3_GAM":               "results_rung3_gam.parquet",
-    "5a_MLP":              "archive/results_5a_uw.parquet",
-    "5b_MTL_ret3m":        "results_5b_uw.parquet",
-    "5c_MTL_vol":          "results_5c_uw.parquet",
-    "5d_MTL_ret3m_vol":    "results_5d_uw.parquet",
+    "5a_MLP":              "results_rung4_uw.parquet",
+    "5b_MTL_ret3m":        "archive/results_5b_uw.parquet",
+    "5c_MTL_vol":          "archive/results_5c_uw.parquet",
+    "5d_MTL_ret3m_vol":    "archive/results_5d_uw.parquet",
 }
 
 
