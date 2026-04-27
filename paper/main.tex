@@ -189,17 +189,15 @@ strictly nested in or orthogonal to the next:
   MoE with LASSO-selected feature subset (\texttt{regmtl\_enhanced.py}).
 \end{description}
 
-% Figure 2: Complexity ladder schematic
+% Figure 2: 5-rung complexity ladder schematic
 \begin{figure}[t]
   \centering
-  \fbox{\parbox{0.7\textwidth}{\centering
-    \texttt{[fig\_ladder.pdf — schematic]}\\[6pt]
-    Rung 1 (linear) $\to$ Rung 2 (regularized) $\to$ Rung 3 (additive) $\to$
-    Rung 4 (MLP) $\to$ Rung 5 (MTL+MoE)\\
-    Showing 12 model variants and parameter counts
-  }}
-  \caption{The 5-rung complexity ladder. Each rung adds a strictly
-  greater capacity to model the conditional return function.}
+  \includegraphics[width=\textwidth]{fig_ladder.pdf}
+  \caption{The 5-rung complexity ladder. Each rung adds a structured
+    increase in model capacity, from pooled linear regression (Rung~1)
+    to multi-task learning with mixture-of-experts gating (Rung~5).
+    Annotations show approximate parameter counts; arrows label the
+    additional structure introduced at each rung.}
   \label{fig:ladder}
 \end{figure}
 
