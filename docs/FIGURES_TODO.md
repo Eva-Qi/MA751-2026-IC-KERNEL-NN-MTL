@@ -5,7 +5,12 @@
 
 ---
 
-## ✅ Have (8 figures, all in `paper/figures/`)
+## ✅ Have (14 figures, all in `MA751-paper/figures/`)
+
+> Note: `fig_data_flow.pdf` (Fig 1) is listed below for historical
+> reference but is NOT in the current paper draft and is not on disk.
+> The §2 Data narrative is fully prose-based; the data-flow schematic
+> was deemed unnecessary.
 
 | # | Figure | Section | Type | Source data |
 |---|---|---|---|---|
@@ -17,16 +22,24 @@
 | 6 | `fig_cpcv_sharpe.pdf` | §6 CPCV | boxplot + swarm | `output/cpcv_results.parquet` |
 | 7 | `fig_pareto_with_bounds.pdf` | §6 | scatter + errorbars | `output/cpcv_summary.csv` |
 | 8 | `fig_cumret.pdf` | §4 Results | time-series multi-line | `output/results_*_v3.parquet` (top 5 models) |
+| 9 | `fig_pca.pdf` | §2 Data (appendix) | scree + PC1×PC2 scatter | 27 V3 features, sklearn PCA |
+| 10 | `fig_perm_importance.pdf` | §5 Audit (appendix) | 3-panel bar | top-3 models shuffled feature IC |
+| 11 | `fig_effective_df.pdf` | §7 Discussion | scatter (DoF vs Sharpe) | post-hoc analysis per rung |
+| 12 | `fig_lasso_freq.pdf` | §5 Audit | horizontal bar | `output/lasso_v3_selection_summary.csv` |
+| 13 | `fig_correlation.pdf` | §2 Data | 27×27 heatmap | `data/master_panel_v2.parquet` V3 features |
+| 14 | `fig_regime_timeline.pdf` | §3 Method (appendix) | stacked area | HMM posteriors per fold |
+| 15 | `fig_v2_vs_v3.pdf` | §2 Data (appendix) | grouped bar | `output/rung12_v2_summary.csv` + `output/rung12_v3_summary.csv` |
 
-Generation scripts (gitignored, local-only): `make_figures.py`, `make_ladder_figure.py`.
+Generation scripts (gitignored, local-only): `make_figures.py`, `make_advanced_figures.py`, `make_ladder_figure.py`.
 
 ---
 
-## 🎯 Planned but not yet implemented (3 — from original Week 4 plan)
+## ~~🎯 Planned but not yet implemented~~ → All generated
 
-These were on the original `docs/final-plan.pdf` deliverable list but never executed.
+All 3 planned figures and 4 suggested figures have been generated (2026-04-27).
+See figures 9-15 above. Original descriptions preserved below for reference.
 
-### 9. `fig_pca.pdf` — PCA scree + scatter
+### ~~9.~~ `fig_pca.pdf` — PCA scree + scatter ~~(now generated)~~
 
 **Section**: §2.4 (proposed) — feature space dimensionality.
 **Type**: Two-panel: top = scree plot (% variance per PC, cumulative), bottom = PC1 vs PC2 scatter.
@@ -55,7 +68,9 @@ These were on the original `docs/final-plan.pdf` deliverable list but never exec
 
 ---
 
-## 💡 Suggested (4 — consider adding for paper polish)
+## ~~💡 Suggested~~ → All generated
+
+All 4 suggested figures have been generated (2026-04-27). See figures 12-15 above.
 
 ### 12. `fig_lasso_freq.pdf` — LASSO selection frequency
 
@@ -117,8 +132,6 @@ Both scripts depend on `output/*.csv` + `output/*.parquet` files already present
 
 | Category | Count | Files |
 |---|---|---|
-| ✅ Have | 8 | Figs 1--8 |
-| 🎯 Planned (Week-4 deliverable) | 3 | Figs 9--11 |
-| 💡 Suggested polish | 4 | Figs 12--15 |
+| ✅ Have | 15 | Figs 1--15 |
 | 🔬 Future | 5 | unnumbered |
 | **Total target** | **20** | |

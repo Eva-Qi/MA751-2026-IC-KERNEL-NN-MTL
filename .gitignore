@@ -12,3 +12,16 @@ analysis/eda.ipynb
 paper/
 make_figures.py
 make_ladder_figure.py
+make_advanced_figures.py
+
+# LaTeX build artifacts in MA751-paper/ (figures/ subdirectory PDFs are tracked)
+MA751-paper/*.aux
+MA751-paper/*.log
+MA751-paper/*.out
+MA751-paper/*.toc
+MA751-paper/*.bbl
+MA751-paper/*.blg
+MA751-paper/*.fls
+MA751-paper/*.fdb_latexmk
+MA751-paper/*.synctex.gz
+MA751-paper/*.pdf
