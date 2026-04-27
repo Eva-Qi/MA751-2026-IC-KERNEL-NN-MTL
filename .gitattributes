@@ -1,0 +1,4 @@
+# Audit / ablation snapshots — frozen, not actively maintained
+# GitHub: excluded from language statistics, collapsed in PR diffs
+audits/** linguist-generated=true
+audits/**.py linguist-language=Markdown
