@@ -21,8 +21,7 @@ default in pull-request diffs.
 |---|---|---|
 | `rung3_gam.py` | Original Rung 3a GAM driver (default `n_splines=10`); produces the "default config" baseline for Sec.~5.1 default-vs-tuned comparison | `output/results_3a_*.parquet`, `output/gam_summary.csv` |
 | `rung3b_gbm.py` | Original Rung 3b XGBoost driver (default `depth=4, lr=0.05, n=200`); produces the "default config" baseline | `output/results_3b_*.parquet` |
-| `rung3a_gam_audit.py` | n_splines coarse sweep $\{3, 5, 10, 15, 20\}$ | `output/rung3a_n_splines_sweep.csv` |
-| `rung3a_gam_finetune.py` | n_splines fine-tune $\{4, 6, 7, 8, 9\}$ | `output/rung3a_n_splines_finetune.csv` |
+| `rung3a_gam_sweep.py` | Combined n_splines sweep $\{3,4,5,6,7,8,9,10,15,20\}$ — consolidates the prior `rung3a_gam_audit.py` (coarse) and `rung3a_gam_finetune.py` (fine-tune) into one script. See `rung3a_audit_procedure.md` for the iterative-audit narrative. | `output/rung3a_n_splines_sweep.csv`, `output/rung3a_n_splines_finetune.csv` (preserved from the original two-stage run); new full-sweep run writes `output/rung3a_n_splines_sweep_full.csv` |
 | `rung3a_gam_kfold_lambda.py` | Replace pygam GCV with TimeSeriesSplit($K{=}5$) inner CV for $\lambda$ — negative result | `output/rung3a_gam_kfold_lambda_*.csv` |
 | `rung3b_audit.py` | XGBoost 9-config sensitivity grid + Gu-Kelly-Xiu-tuned variant | `output/rung3b_sensitivity_grid.csv`, `output/rung3b_gkx_tuned.csv` |
 | `rung4_hp_search.py` | Inner-CV HP grid search over hidden/lr/dropout — **negative result** (Sec.~5.4 P8 lesson) | `output/rung4_hp_search_*.csv` |
