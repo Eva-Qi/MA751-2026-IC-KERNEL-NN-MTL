@@ -1,0 +1,55 @@
+================================================================================
+RUNG 5 AUDIT — Baselines + Seed + Hidden Dim
+================================================================================
+Loading V3 panel...
+  46,811 rows, 119 months, 27 features
+
+================================================================================
+STAGE 0: Naive baselines (zero predictor + ridge linear)
+================================================================================
+  zero predictor [0.1s]  IC=+0.0002, Sharpe=0.262, Hit=53.4%
+  ridge α=1    [1.0s]  IC=+0.0164, Sharpe=0.925, Hit=53.4%
+
+================================================================================
+STAGE 1: rung4 MLP seed sensitivity (hidden=64, 5 seeds)
+================================================================================
+  seed=0 [68.1s]  IC=+0.0210, Sharpe=0.648, pred_std=0.00900, Hit=62.1%
+  seed=1 [71.6s]  IC=+0.0020, Sharpe=0.097, pred_std=0.00931, Hit=51.7%
+  seed=2 [67.2s]  IC=+0.0130, Sharpe=0.414, pred_std=0.00856, Hit=56.9%
+  seed=42 [275.0s]  IC=+0.0007, Sharpe=0.347, pred_std=0.00937, Hit=51.7%
+  seed=123 [91.1s]  IC=+0.0176, Sharpe=0.556, pred_std=0.00926, Hit=65.5%
+
+  [SEED SIGN]  positive IC: 5/5, negative: 0/5
+  [SEED RANGE] +0.0007 to +0.0210  (Δ=0.0203)
+  [SEED STATS] mean IC = +0.0108, std across seeds = 0.0082
+  [SNR]        |mean|/std = 1.33
+  ⚠️  |mean|/std in [1,2) — weak signal, barely above init noise
+
+================================================================================
+STAGE 2: MLP hidden_dim sweep (seed=42, hidden ∈ {8, 16, 32, 64})
+================================================================================
+  hidden= 8 [1014.1s]  IC=+0.0113, Sharpe=0.410, pred_std=0.00535
+  hidden=16 [60.9s]  IC=+0.0036, Sharpe=0.313, pred_std=0.00641
+  hidden=32 [59.9s]  IC=+0.0111, Sharpe=0.364, pred_std=0.00785
+  hidden=64 [72.4s]  IC=+0.0007, Sharpe=0.347, pred_std=0.00937
+
+  === Hidden dim summary ===
+ hidden  IC_mean    IC_IR  LS_Sharpe  pred_std_mean
+      8 0.011287 0.088658   0.410369       0.005354
+     16 0.003599 0.029377   0.313472       0.006412
+     32 0.011059 0.094381   0.364221       0.007852
+     64 0.000694 0.006376   0.346596       0.009372
+
+  Best hidden: 8 (IC=+0.0113, Sharpe=0.410)
+  Hidden-dim IC range: 0.0106
+  ⚠️  hidden=8 ≥ hidden=64 — our 64-32 default is over-parameterized
+
+================================================================================
+VERDICT
+================================================================================
+  Zero predictor: IC=+0.0002, Sharpe=0.262
+  Ridge α=1:      IC=+0.0164, Sharpe=0.925
+  MLP h64 seeds:  mean IC=+0.0108 ± 0.0082 (n=5, SNR=1.33)
+  MLP h sweep:    IC range +0.0007 to +0.0113 (hidden 64 → 8)
+================================================================================
+Saved: output/rung5_seed_sensitivity.csv, output/rung5_hidden_sweep.csv
