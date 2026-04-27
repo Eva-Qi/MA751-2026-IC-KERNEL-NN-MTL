@@ -795,8 +795,8 @@ def main():
 
     # Post-LASSO OLS variants (Rung 2c)
     v2c_models = {
-        "2c_OLS_LASSO3": "results_2c_OLS_LASSO3.parquet",
-        "2c_OLS_LASSO5": "results_2c_OLS_LASSO5.parquet",
+        "2c_OLS_LASSO3": "archive/results_2c_OLS_LASSO3.parquet",
+        "2c_OLS_LASSO5": "archive/results_2c_OLS_LASSO5.parquet",
     }
     for label, fname in v2c_models.items():
         monthly = load_v2_monthly(fname)
