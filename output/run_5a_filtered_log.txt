@@ -1,0 +1,121 @@
+/Users/evanolott/anaconda3/lib/python3.11/site-packages/pandas/core/arrays/masked.py:60: UserWarning: Pandas requires version '1.3.6' or newer of 'bottleneck' (version '1.3.5' currently installed).
+  from pandas.core import (
+Some rows of transmat_ have zero sum because no transition from the state was ever observed.
+Model is not converging.  Current: -372.07523472609256 is not greater than -366.7544568446818. Delta is -5.320777881410777
+Model is not converging.  Current: -403.56813454458376 is not greater than -398.7148250273024. Delta is -4.853309517281332
+Model is not converging.  Current: -403.56813454458376 is not greater than -398.7148250273024. Delta is -4.853309517281332
+Model is not converging.  Current: -401.30322993997316 is not greater than -396.63519900406095. Delta is -4.668030935912213
+Model is not converging.  Current: -401.30322993997316 is not greater than -396.63519900406095. Delta is -4.668030935912213
+Model is not converging.  Current: -468.3738223218262 is not greater than -467.6516055596914. Delta is -0.7222167621347921
+Model is not converging.  Current: -480.4698134635488 is not greater than -478.196142329237. Delta is -2.273671134311826
+Model is not converging.  Current: -509.04545532913846 is not greater than -505.65522113190326. Delta is -3.390234197235202
+Model is not converging.  Current: -541.6759398094376 is not greater than -538.1891776653208. Delta is -3.486762144116824
+Model is not converging.  Current: -569.7620236004961 is not greater than -569.1109392678028. Delta is -0.6510843326933582
+Loading panel...
+Features (11): ['AmihudIlliquidity_zscore', 'Turnover_zscore', 'GrossProfitability_zscore', 'Beta_zscore', 'IVOL_zscore', 'ShortInterestRatio_zscore', 'AnalystDispersion_zscore', 'IVOL_x_Beta', 'IVOL_x_GP', 'Amihud_x_Turnover', 'Amihud_x_GP']
+Rows: 46,811  Months: 119  Tickers: 442
+
+Building market features for HMM (forward-filter on this branch)...
+Market features: 135 months
+
+======================================================================
+Enhanced MoE 5a (ret-only) — forward-filtered HMM
+======================================================================
+fold  61 | 2020-02 | n_train=22,025 | IC=+0.4206 | UW: ret=0.225 | Gate: g0=0.320, g1=0.313, g2=0.367
+fold  62 | 2020-03 | n_train=22,426 | IC=-0.2776 | UW: ret=0.172 | Gate: g0=0.404, g1=0.382, g2=0.214
+fold  63 | 2020-04 | n_train=22,827 | IC=+0.0024 | UW: ret=0.169 | Gate: g0=0.044, g1=0.519, g2=0.438
+  fold 64: HMM skip — transmat_ rows must sum to 1 (got row sums of [1. 1. 0.])
+fold  65 | 2020-06 | n_train=23,636 | IC=+0.2831 | UW: ret=0.171 | Gate: g0=0.244, g1=0.161, g2=0.595
+fold  66 | 2020-07 | n_train=24,044 | IC=-0.1498 | UW: ret=0.171 | Gate: g0=0.196, g1=0.336, g2=0.468
+fold  67 | 2020-08 | n_train=24,452 | IC=-0.0068 | UW: ret=0.251 | Gate: g0=0.204, g1=0.295, g2=0.501
+fold  68 | 2020-09 | n_train=24,861 | IC=+0.1074 | UW: ret=0.928 | Gate: g0=0.387, g1=0.363, g2=0.249
+fold  69 | 2020-10 | n_train=25,270 | IC=+0.2493 | UW: ret=0.689 | Gate: g0=0.260, g1=0.459, g2=0.280
+fold  70 | 2020-11 | n_train=25,680 | IC=-0.0544 | UW: ret=0.961 | Gate: g0=0.508, g1=0.225, g2=0.267
+fold  71 | 2020-12 | n_train=26,089 | IC=+0.0144 | UW: ret=0.739 | Gate: g0=0.709, g1=0.184, g2=0.107
+fold  72 | 2021-01 | n_train=26,500 | IC=+0.3022 | UW: ret=0.935 | Gate: g0=0.150, g1=0.254, g2=0.595
+fold  73 | 2021-02 | n_train=26,914 | IC=-0.1679 | UW: ret=0.452 | Gate: g0=0.324, g1=0.586, g2=0.090
+fold  74 | 2021-03 | n_train=27,330 | IC=+0.1027 | UW: ret=0.757 | Gate: g0=0.431, g1=0.275, g2=0.295
+fold  75 | 2021-04 | n_train=27,744 | IC=-0.2437 | UW: ret=0.368 | Gate: g0=0.234, g1=0.192, g2=0.575
+fold  76 | 2021-05 | n_train=28,158 | IC=-0.0363 | UW: ret=0.327 | Gate: g0=0.369, g1=0.487, g2=0.144
+fold  77 | 2021-06 | n_train=28,574 | IC=-0.0435 | UW: ret=0.730 | Gate: g0=0.147, g1=0.423, g2=0.429
+fold  78 | 2021-07 | n_train=28,990 | IC=+0.0585 | UW: ret=0.680 | Gate: g0=0.376, g1=0.357, g2=0.267
+fold  79 | 2021-08 | n_train=29,406 | IC=-0.1057 | UW: ret=0.909 | Gate: g0=0.281, g1=0.389, g2=0.330
+fold  80 | 2021-09 | n_train=29,823 | IC=+0.0915 | UW: ret=0.521 | Gate: g0=0.067, g1=0.516, g2=0.418
+fold  81 | 2021-10 | n_train=30,240 | IC=+0.1349 | UW: ret=0.330 | Gate: g0=0.187, g1=0.331, g2=0.481
+fold  82 | 2021-11 | n_train=30,657 | IC=-0.0317 | UW: ret=0.867 | Gate: g0=0.433, g1=0.264, g2=0.303
+fold  83 | 2021-12 | n_train=31,075 | IC=-0.2365 | UW: ret=0.835 | Gate: g0=0.310, g1=0.466, g2=0.224
+fold  84 | 2022-01 | n_train=31,493 | IC=+0.0003 | UW: ret=0.214 | Gate: g0=0.509, g1=0.169, g2=0.322
+fold  85 | 2022-02 | n_train=31,911 | IC=-0.1733 | UW: ret=0.281 | Gate: g0=0.301, g1=0.267, g2=0.432
+fold  86 | 2022-03 | n_train=32,329 | IC=+0.4439 | UW: ret=0.227 | Gate: g0=0.257, g1=0.201, g2=0.542
+fold  87 | 2022-04 | n_train=32,747 | IC=-0.0694 | UW: ret=0.209 | Gate: g0=0.291, g1=0.258, g2=0.451
+fold  88 | 2022-05 | n_train=33,165 | IC=+0.4860 | UW: ret=0.200 | Gate: g0=0.363, g1=0.271, g2=0.367
+fold  89 | 2022-06 | n_train=33,584 | IC=+0.4120 | UW: ret=0.195 | Gate: g0=0.411, g1=0.297, g2=0.292
+fold  90 | 2022-07 | n_train=34,004 | IC=-0.1957 | UW: ret=0.203 | Gate: g0=0.363, g1=0.358, g2=0.279
+fold  91 | 2022-08 | n_train=34,426 | IC=+0.0485 | UW: ret=0.188 | Gate: g0=0.222, g1=0.191, g2=0.587
+fold  92 | 2022-09 | n_train=34,848 | IC=-0.0708 | UW: ret=0.192 | Gate: g0=0.379, g1=0.332, g2=0.289
+fold  93 | 2022-10 | n_train=35,270 | IC=+0.1480 | UW: ret=0.192 | Gate: g0=0.413, g1=0.399, g2=0.188
+fold  94 | 2022-11 | n_train=35,692 | IC=-0.0641 | UW: ret=0.185 | Gate: g0=0.498, g1=0.183, g2=0.319
+fold  95 | 2022-12 | n_train=36,114 | IC=-0.2389 | UW: ret=0.194 | Gate: g0=0.406, g1=0.297, g2=0.297
+fold  96 | 2023-01 | n_train=36,537 | IC=-0.0661 | UW: ret=0.228 | Gate: g0=0.370, g1=0.246, g2=0.384
+fold  97 | 2023-02 | n_train=36,960 | IC=+0.1481 | UW: ret=0.195 | Gate: g0=0.406, g1=0.364, g2=0.230
+fold  98 | 2023-03 | n_train=37,384 | IC=-0.2453 | UW: ret=0.187 | Gate: g0=0.299, g1=0.281, g2=0.420
+fold  99 | 2023-04 | n_train=37,808 | IC=+0.2721 | UW: ret=0.203 | Gate: g0=0.316, g1=0.239, g2=0.445
+fold 100 | 2023-05 | n_train=38,232 | IC=-0.2552 | UW: ret=0.191 | Gate: g0=0.214, g1=0.468, g2=0.318
+fold 101 | 2023-06 | n_train=38,656 | IC=+0.3503 | UW: ret=0.205 | Gate: g0=0.332, g1=0.378, g2=0.290
+fold 102 | 2023-07 | n_train=39,081 | IC=-0.0171 | UW: ret=0.201 | Gate: g0=0.124, g1=0.496, g2=0.380
+fold 103 | 2023-08 | n_train=39,506 | IC=-0.2028 | UW: ret=0.236 | Gate: g0=0.216, g1=0.428, g2=0.356
+fold 104 | 2023-09 | n_train=39,931 | IC=+0.1211 | UW: ret=0.202 | Gate: g0=0.331, g1=0.368, g2=0.301
+fold 105 | 2023-10 | n_train=40,357 | IC=+0.4505 | UW: ret=0.195 | Gate: g0=0.392, g1=0.356, g2=0.253
+fold 106 | 2023-11 | n_train=40,784 | IC=-0.5105 | UW: ret=0.250 | Gate: g0=0.440, g1=0.145, g2=0.415
+fold 107 | 2023-12 | n_train=41,212 | IC=+0.1905 | UW: ret=0.221 | Gate: g0=0.353, g1=0.371, g2=0.276
+fold 108 | 2024-01 | n_train=41,640 | IC=+0.2673 | UW: ret=0.191 | Gate: g0=0.304, g1=0.448, g2=0.248
+fold 109 | 2024-02 | n_train=42,068 | IC=+0.1493 | UW: ret=0.227 | Gate: g0=0.311, g1=0.345, g2=0.343
+fold 110 | 2024-03 | n_train=42,496 | IC=-0.1554 | UW: ret=0.200 | Gate: g0=0.408, g1=0.322, g2=0.271
+fold 111 | 2024-04 | n_train=42,924 | IC=+0.0691 | UW: ret=0.194 | Gate: g0=0.398, g1=0.217, g2=0.385
+fold 112 | 2024-05 | n_train=43,353 | IC=-0.0029 | UW: ret=0.198 | Gate: g0=0.355, g1=0.324, g2=0.321
+fold 113 | 2024-06 | n_train=43,785 | IC=-0.0952 | UW: ret=0.195 | Gate: g0=0.552, g1=0.199, g2=0.249
+fold 114 | 2024-07 | n_train=44,217 | IC=-0.1801 | UW: ret=0.206 | Gate: g0=0.234, g1=0.336, g2=0.430
+fold 115 | 2024-08 | n_train=44,649 | IC=+0.1612 | UW: ret=0.200 | Gate: g0=0.257, g1=0.401, g2=0.342
+fold 116 | 2024-09 | n_train=45,081 | IC=-0.1079 | UW: ret=0.198 | Gate: g0=0.232, g1=0.511, g2=0.257
+fold 117 | 2024-10 | n_train=45,513 | IC=-0.0828 | UW: ret=0.193 | Gate: g0=0.230, g1=0.319, g2=0.451
+fold 118 | 2024-11 | n_train=45,945 | IC=+0.1046 | UW: ret=0.211 | Gate: g0=0.249, g1=0.461, g2=0.290
+
+Saved: output/results_5a_enhanced_moe_filtered.parquet
+
+Summary:
+  label: 5a_filtered
+  IC_mean: 0.0264
+  IC_std: 0.2144
+  IC_t: 0.928
+  IC_pos_frac: 0.491
+  LS_Sharpe: 0.458
+  ret3m_ic_mean: nan
+  ret3m_ic_std: nan
+  vol_corr: nan
+  pred_std_ratio: 0.9306
+  n_months: 57
+  uw_ret_mean: 0.3383
+  uw_ret_std: 0.2458
+  logvar_ret_mean: 1.2733
+  uw_ret3m_mean: nan
+  uw_ret3m_std: nan
+  logvar_ret3m_mean: nan
+  uw_vol_mean: nan
+  uw_vol_std: nan
+  logvar_vol_mean: nan
+  gate_w_0_mean: 0.3216
+  gate_w_0_std: 0.1181
+  gate_w_1_mean: 0.3337
+  gate_w_1_std: 0.1046
+  gate_w_2_mean: 0.3446
+  gate_w_2_std: 0.114
+
+Gate distribution (mean per test month):
+  expert 0: mean=0.321  std=0.120  range=[0.044, 0.709]
+  expert 1: mean=0.334  std=0.106  range=[0.145, 0.586]
+  expert 2: mean=0.345  std=0.116  range=[0.090, 0.595]
+
+  Avg per-month max-min spread: 0.229
+  (collapse if ≈ 0; healthy specialization if > 0.10)
+
+Total wall: 17.2 min
