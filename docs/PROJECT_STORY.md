@@ -12,7 +12,7 @@
 
 **Thesis (final)**: At the scale of 442 S&P~500 stocks × 119 months × 27 features, **adding model complexity does not improve cross-sectional return prediction in a statistically meaningful way**. Combinatorial Purged K-fold (CPCV) shows that all top-7 models' 5--95% Sharpe bands overlap. **Fama-MacBeth and Grinold-Kahn Barra are the most robust point estimates** (CPCV mean Sharpe 1.071 / 1.058, both with $P(\text{Sharpe}{<}0)=0\%$).
 
-**5-rung complexity ladder** (12 model variants):
+**6-rung complexity ladder** (12 model variants):
 
 | Rung | Variants | Top result (CPCV mean Sharpe) |
 |---|---|---|
@@ -20,7 +20,8 @@
 | 2 — Regularized | LASSO, Ridge, Elastic Net, Adaptive LASSO | 1.037 (LASSO) |
 | 3 — Smooth non-linear | GAM ($n_{\text{splines}}{=}4$), XGBoost (GKX-tuned) | **1.086** (XGB) |
 | 4 — Single-task MLP | hidden=64, ReLU, dropout 0.10 | 0.412 (5-seed mean, all $<$ Ridge) |
-| 5 — Multi-task / MoE | 5b/5c/5d MTL, Regime-MoE, Enhanced MoE | dominated by linear |
+| 5 — MTL | 5b/5c/5d MTL (shared encoder + per-task heads, Kendall-Gal-Cipolla UW) | dominated by linear |
+| 6 — MoE | Regime-Gated MoE, Enhanced MoE (K=3 expert MLPs, HMM-gated softmax) | dominated by linear |
 
 **Active code structure (post-cleanup)**:
 - 16 active `.py` in project root (driver scripts) + `scripts/` (analysis utilities) + `src/` (shared modules)
@@ -524,7 +525,7 @@ Rolling document of code fixes applied during the audit cycle. Organized by seve
 
 > Source: `docs/final-plan.pdf` (118 KB, retained as the only PDF). 4-week plan from March 31.
 
-**Original premise**: 5-rung complexity ladder on cross-sectional stock return prediction, walking from simplest theory-driven model to multi-task neural network. **13 pre-validated fundamental factors** (the original V1 set, before V2 expansion to 27) across $\sim$500 S&P 500 stocks.
+**Original premise**: 6-rung complexity ladder on cross-sectional stock return prediction, walking from simplest theory-driven model to multi-task neural network (Rung 5) and mixture-of-experts (Rung 6). **13 pre-validated fundamental factors** (the original V1 set, before V2 expansion to 27) across $\sim$500 S&P 500 stocks.
 
 **Original ladder definition**:
 

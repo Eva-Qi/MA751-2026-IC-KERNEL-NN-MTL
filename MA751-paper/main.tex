@@ -23,7 +23,7 @@
 }
 
 \title{Does Complexity Help Cross-Sectional Stock Return Prediction? \\
-       \large A 5-Rung Ladder Audit on the S\&P~500 Panel (2016--2024)}
+       \large A 6-Rung Ladder Audit on the S\&P~500 Panel (2016--2024)}
 \author{Alan Xi, Eva Qi, Reetom Gangopadhyay}
 \date{April 2026}
 
@@ -36,8 +36,8 @@
 We test whether progressively complex models improve cross-sectional
 monthly stock-return prediction on a 442-ticker S\&P~500 panel across
 119~months (2015--2024) with 27~firm-level features. Twelve model
-variants span a 5-rung complexity ladder: pooled linear, regularized
-linear, smooth non-linear, single-task MLP, and multi-task with
+variants span a 6-rung complexity ladder: pooled linear, regularized
+linear, smooth non-linear, single-task MLP, multi-task learning, and
 mixture-of-experts gating. Single-path walk-forward backtests appear to
 support a Pareto ranking with six top models clustered within annualized
 long-short quintile Sharpe~$\in[0.92,\,1.13]$. \textbf{Combinatorial
@@ -69,10 +69,10 @@ subsamples. But whether this finding transfers to the scale of a
 single-decade, large-cap panel---closer to the typical buy-side equity
 research dataset---remains an open question.
 
-We address this by constructing a \textbf{five-rung complexity ladder}
+We address this by constructing a \textbf{six-rung complexity ladder}
 (Fig.~\ref{fig:ladder}): twelve model variants spanning pooled linear,
 regularized linear, smooth non-linear (GAM, XGBoost), single-task MLP,
-and multi-task mixture-of-experts. All variants are evaluated under a
+multi-task learning, and mixture-of-experts gating. All variants are evaluated under a
 unified protocol on an identical 442-ticker S\&P~500 panel (2015--2024)
 with 27~firm-level features: expanding-window walk-forward backtesting
 for point estimates and Combinatorial Purged K-fold (CPCV,
@@ -184,20 +184,21 @@ $\lambda$-search), we use \texttt{TimeSeriesSplit}($K{=}5$,
 gap$=$1~month) on month boundaries (not row indices).
 
 % =====================================================================
-\section{Methodology: Five-Rung Complexity Ladder}\label{sec:methodology}
+\section{Methodology: Six-Rung Complexity Ladder}\label{sec:methodology}
 
-We organize twelve model variants into five rungs of progressively
+We organize twelve model variants into six rungs of progressively
 greater capacity (Fig.~\ref{fig:ladder}). Each rung introduces a
 specific structural addition over the previous one.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{fig_ladder.pdf}
-  \caption{The five-rung complexity ladder. Each rung introduces a
+  \caption{The six-rung complexity ladder. Each rung introduces a
     specific structural increase: regularization (1$\to$2),
     smooth non-linearity (2$\to$3), deep capacity with implicit
-    interaction learning (3$\to$4), and shared representation across
-    multiple targets (4$\to$5). Annotations show approximate parameter
+    interaction learning (3$\to$4), shared representation across
+    multiple targets (4$\to$5), and regime-conditional mixture of
+    experts (5$\to$6). Annotations show approximate parameter
     counts; arrows label the additional structure introduced.}
   \label{fig:ladder}
 \end{figure}
@@ -241,16 +242,23 @@ split). 3{,}073 parameters. We label this as \emph{Rung 4} (a previous
 draft of the project labeled it ``5a''; we relabel for ladder
 consistency).
 
-\subsection{Rung 5 --- Multi-task and mixture-of-experts}
+\subsection{Rung 5 --- Multi-task learning}
 
 Three multi-task learning variants (5b: ret$+$ret\_3m; 5c: ret$+$vol;
 5d: all three) using Kendall-Gal-Cipolla uncertainty-weighted loss
 \citep{kendall_gal_cipolla} with shared encoder
-($n_\text{in}\to 64\to 32$) and per-task heads. Plus
+($n_\text{in}\to 64\to 32$) and per-task heads.
+
+\subsection{Rung 6 --- Mixture of experts}
+
 \textbf{Regime-Gated MoE}: $K=3$ expert MLPs gated by softmax outputs
 of a 3-state hidden Markov model fitted per fold on macro features
-(VIX, T10Y2Y, BAML high-yield spread). Plus \textbf{Enhanced MoE} with
+(VIX, T10Y2Y, BAML high-yield spread). \textbf{Enhanced MoE} adds a
 LASSO-frequency-selected feature subset and additional gate inputs.
+MoE is architecturally distinct from MTL: rather than a single shared
+encoder feeding multiple task heads, MoE adds $K$ parallel expert
+networks gated by an auxiliary regime signal, so capacity is conditioned
+on regime rather than shared across targets.
 
 \subsection{Evaluation metrics}
 
@@ -316,8 +324,8 @@ panel; the multi-task and MoE architectures were not retuned for V3
 since V2 walk-forward already places them well below the linear
 floor. See Sec.~\ref{subsec:rung5-fail} for the architecture-specific
 failure modes (negative transfer, expert collapse, HMM
-under-identification). Regime-Gated MoE and Enhanced MoE follow the
-same pattern and are excluded for brevity.}
+under-identification). Regime-Gated MoE and Enhanced MoE (Rung 6)
+follow the same dominated pattern and are excluded for brevity.}
 \end{table}
 
 \paragraph{Top-line ranking.}
@@ -341,11 +349,13 @@ $n_{\text{splines}}{=}4$ achieves Sharpe~0.828 and the
 Sharpe~0.984---both materially higher and competitive with the linear
 top.
 
-\paragraph{Rung 4--5 dominated by linear.}
+\paragraph{Rung 4--6 dominated by linear.}
 Single-seed MLP (Rung~4) gives Sharpe~0.347. The five-seed mean
 is~0.412. \emph{All five seeds individually fall below the Ridge
 linear floor}~(0.925). Section~\ref{sec:audit} documents three
 independent attempts to improve MLP performance, none of which succeeds.
+Both the Rung~5 MTL variants (5b, 5c, 5d) and the Rung~6 MoE variants
+(Regime-Gated MoE, Enhanced MoE) likewise fall below the linear floor.
 
 \begin{figure}[t]
   \centering
@@ -578,13 +588,12 @@ late-stage code review: a single duplicate definition silently
 flipped a ``failed'' result into a top-three result.
 
 % --------------------------------------------------------------
-\subsection{Rung 5 Negative Findings}\label{subsec:rung5-fail}
+\subsection{Rung 5 Negative Findings (MTL)}\label{subsec:rung5-fail}
 
-The three Rung~5 rows in Tab.~\ref{tab:wf-results} (5b, 5c, 5d) all
-fall below the linear floor: best is 5d at Sharpe~0.664, well under
-even the worst Rung~1--2 model (1b IC-Ensemble at 0.844). Three
-architecture-level failure modes explain why complexity does not
-recover here.
+The three Rung~5 MTL rows (5b, 5c, 5d) all fall below the linear floor;
+below we document the architecture-specific failure mode. Best is 5d
+at Sharpe~0.664, well under even the worst Rung~1--2 model (1b
+IC-Ensemble at 0.844).
 
 \paragraph{Negative transfer in 5b (ret$+$ret\_3m).} Adding the
 3-month forward return as an auxiliary task \emph{flips the sign} of
@@ -598,6 +607,13 @@ phenomenon visible in the 2022--2023 inflation transition), the shared
 representation collapses toward the auxiliary task. Gradient-surgery
 methods such as PCGrad~\citep{yu_pcgrad} are designed for exactly this
 case but were beyond our deadline scope.
+
+% --------------------------------------------------------------
+\subsection{Rung 6 Negative Findings (MoE)}\label{subsec:rung6-fail}
+
+Both Regime-Gated and Enhanced MoE variants follow the same dominated
+pattern as MTL; we document two architecture-specific failure modes
+below.
 
 \paragraph{Expert collapse in MoE.} The Regime-Gated and Enhanced
 MoE variants use a softmax gate over $K{=}3$ expert MLPs, with the
@@ -638,7 +654,7 @@ remainder, with adjacent-block embargo).
 $N{=}6$ contiguous blocks of 19--20~months each;
 $k_{\text{test}}{=}2$~blocks per path; 1-month embargo on either side
 of each test block; $\binom{6}{2}{=}15$ paths per model. We apply CPCV
-to the 8 top models from Rung~1, 2, and 3b. Rung 4--5 results are
+to the 8 top models from Rung~1, 2, and 3b. Rung 4--6 results are
 already dominated by linear baselines under walk-forward; CPCV would
 only confirm and not change the ranking.
 
@@ -759,7 +775,8 @@ within the same Sharpe band.
   \label{fig:effective-df}
 \end{figure}
 
-The Rung~5 failure modes documented in Sec.~\ref{subsec:rung5-fail}
+The Rung~5 (MTL) and Rung~6 (MoE) failure modes documented in
+Sec.~\ref{subsec:rung5-fail}--\ref{subsec:rung6-fail}
 (negative transfer, expert collapse, HMM under-identification) are
 architecture-specific manifestations of the same sample-size
 constraint: gradient-surgery, load-balancing, and HMM identification
@@ -845,28 +862,29 @@ We list known limitations with explicit direction-of-bias estimates.
   the pipeline---well within CPCV path noise. We did not re-run for
   deadline reasons; the disclosure is explicit here.
 
-\item \textbf{Validation-split granularity.} The MLP/MTL training in
-  Rung~4--5 uses a row-based ($n_\text{val}=\lfloor 0.1\cdot
+\item \textbf{Validation-split granularity.} The MLP/MTL/MoE training in
+  Rung~4--6 uses a row-based ($n_\text{val}=\lfloor 0.1\cdot
   n_\text{train}\rfloor$) chronological-tail validation split rather
   than a strict month-boundary split. This introduces minor
   train/val month-boundary fuzziness. \emph{Direction:} negligible at
   ${\sim}442$ stocks per month; partial-month boundaries affect at
   most 442 of $\sim$25{,}000 observations.
 
-\item \textbf{CPCV does not include Rung 4--5.} Walk-forward
-  point estimates for Rung~4 (MLP) and Rung~5 (MTL/MoE) appear in
-  Tab.~\ref{tab:wf-results}, but path-uncertainty bounds via CPCV are
-  not computed. Walk-forward already places them well below the linear
-  floor; CPCV would only further confirm dominance, not produce new
-  findings, and we omit it to preserve compute budget. Rung~5 results
-  in particular use the V2 14-feature panel (footnote in
-  Tab.~\ref{tab:wf-results}); the architectures were not retuned for V3.
+\item \textbf{CPCV does not include Rung 4--6.} Walk-forward
+  point estimates for Rung~4 (MLP), Rung~5 (MTL), and Rung~6 (MoE)
+  appear in Tab.~\ref{tab:wf-results}, but path-uncertainty bounds
+  via CPCV are not computed. Walk-forward already places them well
+  below the linear floor; CPCV would only further confirm dominance,
+  not produce new findings, and we omit it to preserve compute
+  budget. Rung~5 and Rung~6 results in particular use the V2
+  14-feature panel (footnote in Tab.~\ref{tab:wf-results}); the
+  architectures were not retuned for V3.
 
 \item \textbf{Hyperparameter search is not exhaustive.} GAM
   $n_{\text{splines}}$ is swept over 9 values; XGBoost depth/$\eta$
   is swept over a 9-config grid plus the GKX-tuned configuration. MoE
   expert count $K$ and gate temperature were not swept (left at
-  $K{=}3$, $T{=}1$). \emph{Direction:} Rung~5 results may improve under
+  $K{=}3$, $T{=}1$). \emph{Direction:} Rung~6 results may improve under
   better-tuned MoE; extrapolating from Rung~4 single-task results, the
   improvement is unlikely to exceed the linear floor.
 
@@ -979,7 +997,7 @@ Learning Representations (ICLR)}, 2017.
 
 \begin{table}[h]
 \centering
-\caption{Hyperparameter inventory across the 5-rung ladder. ``Tested''
+\caption{Hyperparameter inventory across the 6-rung ladder. ``Tested''
 indicates whether a sensitivity sweep was performed during the audit
 cycle.}
 \label{tab:hp-inventory}
@@ -1003,7 +1021,7 @@ Rung & Model & Hyperparameter (default) & Tested? \\
 \midrule
 4  & MLP                & hidden$=$64, $\eta=10^{-3}$, dropout$=$0.10 & yes (5 seeds, hidden sweep, HP search) \\
 \midrule
-5  & MoE                & $K{=}3$ experts, gate temp.~$T{=}1$ & no \\
+6  & MoE                & $K{=}3$ experts, gate temp.~$T{=}1$ & no \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1040,7 +1058,7 @@ Rung & Model & Hyperparameter (default) & Tested? \\
     spread, market return, realized volatility). The COVID crash
     (2020~Q1), inflation regime (2022), and AI-concentration period
     (2023) correspond to distinct regime transitions used as gate inputs
-    for the Rung~5 mixture-of-experts.}
+    for the Rung~6 mixture-of-experts.}
   \label{fig:regime-timeline}
 \end{figure}
 

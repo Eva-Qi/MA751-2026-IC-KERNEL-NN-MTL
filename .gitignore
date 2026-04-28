@@ -14,6 +14,12 @@ make_figures.py
 make_ladder_figure.py
 make_advanced_figures.py
 
+# Local-only zip archive of MA751-paper/ (folder itself is tracked)
+MA751-paper.zip
+
+# Local V3 retune output (temp work; will land in main output/ after promotion)
+output/v3_rung5_temp/
+
 # LaTeX build artifacts in MA751-paper/ (figures/ subdirectory PDFs are tracked)
 MA751-paper/*.aux
 MA751-paper/*.log

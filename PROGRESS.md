@@ -25,8 +25,8 @@
 
 ## 🔁 Pivots & milestones (newest first)
 
-### 2026-04-27 (today): Paper Rung 5 fill + repo move + slides outline
-- **Rung 5 added to paper body**: Tab 1 extended with 5b/5c/5d MTL rows (V2 panel, footnoted); new §5.6 "Rung 5 Negative Findings" documents negative transfer, expert collapse, HMM under-identification; §7 Discussion paragraph links Rung 5 failures to sample-size constraint; Limitations note for CPCV exclusion reconciled
+### 2026-04-27 (today): Paper Rung 5+6 fill + repo move + slides outline
+- **Rungs 5+6 added to paper body**: Tab 1 extended with 5b/5c/5d MTL rows (V2 panel, footnoted); new §5.6 "Rung 5 (MTL) + Rung 6 (MoE) Negative Findings" documents negative transfer (Rung 5), expert collapse (Rung 6), HMM under-identification (Rung 6); §7 Discussion paragraph links Rung 5+6 failures to sample-size constraint; Limitations note for CPCV exclusion reconciled
 - **Figure callouts strengthened**: `fig_cumret`, `fig_cpcv_sharpe`, `fig_pareto_with_bounds` now have interpretive body text instead of navigational refs
 - **Bibliography**: added `yu_pcgrad` (NeurIPS 2020) and `shazeer_moe` (ICLR 2017)
 - **Repo move**: `paper/MA751-paper/` → `MA751-paper/` at repo root; `paper/` stays gitignored (private scratch); LaTeX build-artifact ignores added for `MA751-paper/*` to keep `pdflatex` runs out of git status
@@ -73,7 +73,7 @@
 - Now superseded by V2 — script preserved in `data/build_baseline_dataset.py` for legacy reproducibility
 
 ### 2026-03-31: Original project plan
-- 5-rung complexity ladder (Rung 1 linear → Rung 5 MTL+MoE)
+- 6-rung complexity ladder (Rung 1 linear → Rung 5 MTL → Rung 6 MoE)
 - 13 features, ~500 S&P 500 stocks, 4-week timeline
 - Original Week 4 deliverable: PCA + permutation importance + effective-df plot (delivered 2026-04-27 as Figs 9, 10, 11)
 

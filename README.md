@@ -1,6 +1,6 @@
 # MA751 Final Project — Cross-Sectional Stock Return Prediction
 
-5-rung complexity ladder testing whether added model capacity improves cross-sectional monthly stock-return prediction on a 442-stock S&P~500 panel (2015--2024).
+6-rung complexity ladder testing whether added model capacity improves cross-sectional monthly stock-return prediction on a 442-stock S&P~500 panel (2015--2024).
 
 ## Headline finding
 
@@ -16,12 +16,12 @@ See `RESULTS.md` for the canonical numbers and `PROGRESS.md` for the milestone t
 ├── load_data.py                    # V2 panel assembly, NaN/winsorize
 ├── metrics.py                      # IC, IC-IR, Hit, LS Sharpe (canonical)
 ├── statistical_tests.py            # paired t-test, DM, BHY, power analysis
-├── regime.py                       # HMM regime identification (Rung 5 MoE)
+├── regime.py                       # HMM regime identification (Rung 6 MoE)
 │
 ├── run_rung12_v2.py                # Rung 1+2 driver (8 model variants)
 ├── main.py                         # Rung 4/5 MLP/MTL driver
-├── regmtl.py                       # Regime-Gated MoE (Rung 5)
-├── regmtl_enhanced.py              # Enhanced MoE (Rung 5)
+├── regmtl.py                       # Regime-Gated MoE (Rung 6)
+├── regmtl_enhanced.py              # Enhanced MoE (Rung 6)
 ├── run_cpcv_all_models.py          # CPCV evaluation driver
 │
 ├── pipeline/                       # Data-build scripts (run-once)
@@ -55,7 +55,7 @@ See `RESULTS.md` for the canonical numbers and `PROGRESS.md` for the milestone t
 └── README.md                       # this file
 ```
 
-## 5-rung complexity ladder (12 model variants)
+## 6-rung complexity ladder (12 model variants)
 
 | Rung | Variants | Best (CPCV mean Sharpe) |
 |---|---|---|
@@ -63,7 +63,8 @@ See `RESULTS.md` for the canonical numbers and `PROGRESS.md` for the milestone t
 | 2 — Regularized | LASSO, Ridge, Elastic Net, Adaptive LASSO | 1.037 (LASSO) |
 | 3 — Smooth non-linear | GAM ($n_{\text{splines}}{=}4$), XGBoost (GKX-tuned) | **1.086 (XGB)** |
 | 4 — Single-task MLP | hidden=64, ReLU, dropout 0.10, Huber loss | 0.412 (5-seed mean — all $<$ Ridge) |
-| 5 — Multi-task / MoE | 5b/5c/5d MTL, Regime MoE, Enhanced MoE | dominated by linear |
+| 5 — MTL | 5b/5c/5d MTL (shared encoder + per-task heads, Kendall-Gal-Cipolla UW) | dominated by linear |
+| 6 — MoE | Regime-Gated MoE, Enhanced MoE (K=3 expert MLPs, HMM-gated softmax) | dominated by linear |
 
 ## Data
 

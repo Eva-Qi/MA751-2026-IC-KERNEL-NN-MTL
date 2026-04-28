@@ -48,9 +48,9 @@ Source: `output/rung12_v3_summary.csv`
 | 4 | MLP 5-seed mean | +0.0109 | — | — | 0.412 | bagging across 5 seeds |
 | 5b† | MTL (ret + ret_3m) | −0.0036 | −0.028 | 50.0 | 0.229 | UW loss, neg-transfer sign-flip |
 | 5c† | MTL (ret + vol) | +0.0061 | +0.043 | 48.3 | 0.391 | UW loss, vol head corr 0.50 |
-| 5d† | MTL (ret + ret_3m + vol) | +0.0173 | +0.117 | 58.6 | 0.664 | UW loss, best Rung 5 |
+| 5d† | MTL (ret + ret_3m + vol) | +0.0173 | +0.117 | 58.6 | 0.664 | UW loss, best Rung 5 MTL |
 
-†Rung 5 numbers are V2 14-feature panel; not retuned for V3 (paper §5.6 + Tab 1 footnote). Source: `output/ablation_summary_uncertainty.csv`. Regime-Gated MoE and Enhanced MoE follow the same dominated pattern; not summarized here.
+†Rung 5 (MTL) numbers are V2 14-feature panel; not retuned for V3 (paper §5.6 + Tab 1 footnote). Source: `output/ablation_summary_uncertainty.csv`. Rung 6 (MoE): Regime-Gated MoE and Enhanced MoE follow the same dominated pattern; not summarized here.
 
 ---
 
