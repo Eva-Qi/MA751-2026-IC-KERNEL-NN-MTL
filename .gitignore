@@ -13,7 +13,6 @@ paper/
 make_figures.py
 make_ladder_figure.py
 make_advanced_figures.py
-make_data_slide_figures.py
 
 # Local-only zip archive of MA751-paper/ (folder itself is tracked)
 MA751-paper.zip
