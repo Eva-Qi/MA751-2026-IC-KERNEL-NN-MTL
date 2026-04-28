@@ -25,3 +25,4 @@ MA751-paper/*.fls
 MA751-paper/*.fdb_latexmk
 MA751-paper/*.synctex.gz
 MA751-paper/*.pdf
+.venv/
