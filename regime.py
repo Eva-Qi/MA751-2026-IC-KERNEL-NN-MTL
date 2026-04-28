@@ -163,23 +163,39 @@ def fit_and_predict_regime(
     for k in range(n_regimes):
         out_train[f"raw_p{k}"] = train_probs[:, k]
 
-    # ── For months AFTER train_end: 1-step transition from last state ──
-    # Use HMM transition matrix to predict forward without future data.
+    # ── For months AFTER train_end: forward-filter on test market features ──
+    # Standard HMM filtering: prior @ T, then update with each month's
+    # observation likelihood. Uses TRAIN-fit scaler + HMM only — no leakage.
+    # The market covariates fed at test time are contemporaneous market state
+    # (VIX, term spread, market return) and are NOT the alpha target — same
+    # legality as feeding any market feature to the model at inference.
     df_future = df[~train_mask].copy().reset_index(drop=True)
     if len(df_future) > 0:
-        last_probs = train_probs[-1]  # posterior at train_end
-        T = hmm.transmat_             # T[i,j] = P(s_{t+1}=j | s_t=i)
+        last_probs = train_probs[-1]   # posterior at train_end
+        T = hmm.transmat_              # T[i,j] = P(s_{t+1}=j | s_t=i)
+
+        # Standardize future features with TRAIN scaler (frozen)
+        X_future = scaler.transform(df_future[feature_cols].values)
+        # Per-state log-likelihood under fitted HMM emission model
+        log_emission_future = hmm._compute_log_likelihood(X_future)
+
         future_entries = []
         current_probs = last_probs
         for idx in range(len(df_future)):
-            # 1-step forward: marginalize over current state
-            next_probs = current_probs @ T
+            # Forward filter: prior(t) = posterior(t-1) @ T
+            prior = current_probs @ T
+            # Update with this month's emission likelihood
+            log_post = np.log(prior + 1e-300) + log_emission_future[idx]
+            log_post -= log_post.max()                 # numerical stability
+            posterior = np.exp(log_post)
+            posterior /= posterior.sum()
+
             entry = {"date": df_future.loc[idx, "date"],
-                     "raw_state": int(np.argmax(next_probs))}
+                     "raw_state": int(np.argmax(posterior))}
             for k in range(n_regimes):
-                entry[f"raw_p{k}"] = next_probs[k]
+                entry[f"raw_p{k}"] = posterior[k]
             future_entries.append(entry)
-            current_probs = next_probs  # iterate forward
+            current_probs = posterior  # iterate filter forward
         out_future = pd.DataFrame(future_entries)
         out = pd.concat([out_train, out_future], ignore_index=True)
     else:
