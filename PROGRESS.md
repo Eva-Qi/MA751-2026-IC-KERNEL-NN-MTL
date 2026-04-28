@@ -25,6 +25,17 @@
 
 ## 🔁 Pivots & milestones (newest first)
 
+### 2026-04-27 (later): V3 retune of Rung 5 MTL — replaces V2 numbers in Tab 1
+- Added `--v3` flag to `main.py`; ran full walk-forward on 27-feature V3 panel (4 ablations, 58 folds, ~80 min CPU)
+- **V3 results uniformly worse than V2 for all MTL variants**:
+  - 5b (ret+ret_3m): V2 Sharpe 0.229 → V3 Sharpe 0.015
+  - 5c (ret+vol): V2 0.391 → V3 0.204
+  - 5d (3-task): V2 0.664 → V3 **−0.227** (sign flip!)
+- Story: more features amplify gradient conflict in shared encoder, not signal
+- Tab 1 updated with V3 numbers; V2-panel footnote removed; §5.6 narrative rewritten around 5d sign-flip
+- V2 results preserved at `output/ablation_summary_uncertainty_v2.csv` for comparison
+- Limitations §8 updated (no longer claims "V2-only retune deferred")
+
 ### 2026-04-27 (today): Paper Rung 5+6 fill + repo move + slides outline
 - **Rungs 5+6 added to paper body**: Tab 1 extended with 5b/5c/5d MTL rows (V2 panel, footnoted); new §5.6 "Rung 5 (MTL) + Rung 6 (MoE) Negative Findings" documents negative transfer (Rung 5), expert collapse (Rung 6), HMM under-identification (Rung 6); §7 Discussion paragraph links Rung 5+6 failures to sample-size constraint; Limitations note for CPCV exclusion reconciled
 - **Figure callouts strengthened**: `fig_cumret`, `fig_cpcv_sharpe`, `fig_pareto_with_bounds` now have interpretive body text instead of navigational refs

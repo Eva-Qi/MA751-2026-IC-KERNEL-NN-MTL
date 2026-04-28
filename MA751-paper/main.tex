@@ -313,19 +313,18 @@ Ridge $\alpha{=}1$ (linear floor)  & +0.0164 & --      & 53.4 & 0.925 \\
 4~MLP single-task (seed~42)       & +0.0007 & 0.007 & 51.7 & 0.347 \\
 4~MLP single-task (5-seed mean)   & +0.0109 & --   & --   & 0.412 \\
 \midrule
-5b~MTL (ret$+$ret\_3m)$^{\dagger}$           & $-$0.0036 & $-$0.028 & 50.0 & 0.229 \\
-5c~MTL (ret$+$vol)$^{\dagger}$               & +0.0061 & 0.043 & 48.3 & 0.391 \\
-5d~MTL (3-task)$^{\dagger}$                  & +0.0173 & 0.117 & 58.6 & 0.664 \\
+5b~MTL (ret$+$ret\_3m)           & $-$0.0003 & $-$0.003 & 55.2 & 0.015 \\
+5c~MTL (ret$+$vol)               & +0.0029 & 0.035 & 50.0 & 0.204 \\
+5d~MTL (3-task)                  & $-$0.0087 & $-$0.080 & 50.0 & $-$0.227 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\footnotesize $^{\dagger}$Rung~5 rows are computed on the V2 14-feature
-panel; the multi-task and MoE architectures were not retuned for V3
-since V2 walk-forward already places them well below the linear
-floor. See Sec.~\ref{subsec:rung5-fail} for the architecture-specific
-failure modes (negative transfer, expert collapse, HMM
-under-identification). Regime-Gated MoE and Enhanced MoE (Rung 6)
-follow the same dominated pattern and are excluded for brevity.}
+{\footnotesize Rung~5 rows above are V3-retuned (same 27-feature panel
+as Rungs~1--4). All three multi-task variants fall below the linear
+floor; the 3-task variant 5d is negative on V3. See
+Sec.~\ref{subsec:rung5-fail} for the failure mode discussion.
+Rung~6 (Regime-Gated MoE, Enhanced MoE) follows the same dominated
+pattern and is excluded for brevity.}
 \end{table}
 
 \paragraph{Top-line ranking.}
@@ -590,23 +589,25 @@ flipped a ``failed'' result into a top-three result.
 % --------------------------------------------------------------
 \subsection{Rung 5 Negative Findings (MTL)}\label{subsec:rung5-fail}
 
-The three Rung~5 MTL rows (5b, 5c, 5d) all fall below the linear floor;
-below we document the architecture-specific failure mode. Best is 5d
-at Sharpe~0.664, well under even the worst Rung~1--2 model (1b
-IC-Ensemble at 0.844).
+All three Rung~5 MTL rows (5b, 5c, 5d) fall below the linear floor on
+the V3 panel. Best is 5c (ret$+$vol) at Sharpe~$+0.204$, still well
+under even the worst Rung~1--2 model (1b IC-Ensemble at~0.844). The
+3-task variant 5d, the most complex of the three, is
+negative~($-0.227$): adding capacity \emph{hurts}.
 
-\paragraph{Negative transfer in 5b (ret$+$ret\_3m).} Adding the
-3-month forward return as an auxiliary task \emph{flips the sign} of
-the IC on the primary 1-month task: 5a single-task IC~$=+0.0048$
-becomes 5b IC~$=-0.0036$ under Kendall-Gal-Cipolla uncertainty
-weighting~\citep{kendall_gal_cipolla}. The Kendall-Gal-Cipolla loss
-attenuates conflicting gradients via per-task variance normalization,
-but cannot reverse them: when 1-month and 3-month return gradients
-point in opposite directions in encoder weight-space (a regime-shift
-phenomenon visible in the 2022--2023 inflation transition), the shared
-representation collapses toward the auxiliary task. Gradient-surgery
-methods such as PCGrad~\citep{yu_pcgrad} are designed for exactly this
-case but were beyond our deadline scope.
+\paragraph{Negative transfer and shared-encoder collapse.} The
+Kendall-Gal-Cipolla uncertainty-weighted loss
+\citep{kendall_gal_cipolla} normalizes per-task gradients by their
+running variance, but cannot reverse gradient direction. When the
+1-month and 3-month return gradients point in opposite directions in
+encoder weight-space---a regime-shift phenomenon visible across the
+2022--2023 inflation transition---the shared encoder representation
+collapses toward whichever task gradient is louder per fold. On the V3
+panel this manifests as 5d (3 tasks, the most opportunities for
+gradient conflict) producing Sharpe~$-0.227$, materially worse than
+5b~(0.015) and 5c~(0.204) which each carry only one auxiliary task.
+Gradient-surgery methods such as PCGrad~\citep{yu_pcgrad} are
+specifically designed for this case but were beyond our deadline scope.
 
 % --------------------------------------------------------------
 \subsection{Rung 6 Negative Findings (MoE)}\label{subsec:rung6-fail}
@@ -874,11 +875,9 @@ We list known limitations with explicit direction-of-bias estimates.
   point estimates for Rung~4 (MLP), Rung~5 (MTL), and Rung~6 (MoE)
   appear in Tab.~\ref{tab:wf-results}, but path-uncertainty bounds
   via CPCV are not computed. Walk-forward already places them well
-  below the linear floor; CPCV would only further confirm dominance,
-  not produce new findings, and we omit it to preserve compute
-  budget. Rung~5 and Rung~6 results in particular use the V2
-  14-feature panel (footnote in Tab.~\ref{tab:wf-results}); the
-  architectures were not retuned for V3.
+  below the linear floor on the V3 panel; CPCV would only further
+  confirm dominance, not produce new findings, and we omit it to
+  preserve compute budget.
 
 \item \textbf{Hyperparameter search is not exhaustive.} GAM
   $n_{\text{splines}}$ is swept over 9 values; XGBoost depth/$\eta$
