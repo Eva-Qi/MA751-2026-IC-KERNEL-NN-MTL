@@ -49,12 +49,13 @@ eight CPCV-tested models show positive Sharpe in every one of their
 15~backtest paths. The Grinold-Kahn Barra factor model and
 Fama-MacBeth time-averaged regression are the most robust point
 estimates (CPCV mean Sharpe~1.058 and~1.071, zero negative-Sharpe
-paths). The neural rungs do not beat the linear floor in this sample.
-An audit cycle documents two methodology pitfalls that generalize
-beyond this project: mean-prediction bagging is incompatible with
-rank-based evaluation metrics, and hyperparameter grid search can
-degrade out-of-sample performance when validation signal is below the
-noise floor.
+paths). The Enhanced MoE achieves the highest IC point estimate in the
+audit, but the neural rungs still do not beat the linear floor by
+long-short Sharpe in this sample. An audit cycle documents two
+methodology pitfalls that generalize beyond this project: mean-prediction
+bagging is incompatible with rank-based evaluation metrics, and
+hyperparameter grid search can degrade out-of-sample performance when
+validation signal is below the noise floor.
 \end{abstract}
 
 % =====================================================================
@@ -81,8 +82,8 @@ expanding-window walk-forward evaluation. CPCV path-uncertainty
 analysis is applied to Rungs~1--2 and the tuned XGBoost model from
 Rung~3. Rung~4--6 neural models are reported as walk-forward and audit
 results rather than CPCV results. In particular, the plain MTL and
-regime-informed MoE-MTL experiments are based on the earlier V2
-14-feature panel and are disclosed separately in the results table.
+regime-informed MoE-MTL experiments are based on neural audit runs and
+are disclosed separately in the results table.
 
 Our contributions are fourfold:
 \begin{itemize}[leftmargin=2em,topsep=2pt,itemsep=2pt]
@@ -335,13 +336,12 @@ We report four metrics in the main results table:
 
 \begin{table}[t]
 \centering
-\caption{Walk-forward results, 58 test months (2020-02 to 2024-11),
-V3+missingness flag features. IC = Spearman; IC-IR = mean/std across
-months; Hit = fraction of months with IC$>$0;
-LS Sharpe = annualized long-short quintile.
-\textbf{Bold} = top-3 by Sharpe. Top group is reported \emph{after} the
-audit-cycle Barra fix (Sec.~\ref{subsec:default-trap}); see also
-Tab.~\ref{tab:cpcv} for path-uncertainty bounds.}
+\caption{Walk-forward results. Main Rung~1--3 rows use the V3 panel with
+27 features. Rung~4--6 rows are neural audit results. IC = Spearman;
+IC-IR = mean/std across months; Hit = fraction of months with IC$>$0;
+LS Sharpe = annualized long-short quintile. \textbf{Bold} = top-3 by
+Sharpe. See Tab.~\ref{tab:cpcv} for path-uncertainty bounds on the
+linear, regularized linear, and XGBoost models.}
 \label{tab:wf-results}
 \small
 \begin{tabular}{l r r r r}
@@ -366,21 +366,26 @@ Ridge $\alpha{=}1$ (linear floor)  & +0.0164 & --      & 53.4 & 0.925 \\
 3b~XGBoost (default)              & +0.0018 & 0.018 & 50.0 & 0.335 \\
 3b~XGBoost (GKX-tuned)            & +0.0177 & 0.146 & 62.1 & 0.984 \\
 \midrule
-4~MLP single-task (seed~42)       & +0.0007 & 0.007 & 51.7 & 0.347 \\
-4~MLP single-task (5-seed mean)   & +0.0109 & --   & --   & 0.412 \\
+4~MLP single-task / ret-only$^{\dagger}$     & +0.0081 & 0.083 & 51.7 & 0.270 \\
 \midrule
-5b~MTL (ret$+$ret\_3m)$^{\dagger}$           & $-$0.0036 & $-$0.028 & 50.0 & 0.229 \\
-5c~MTL (ret$+$vol)$^{\dagger}$               & +0.0061 & 0.043 & 48.3 & 0.391 \\
-5d~MTL (3-task)$^{\dagger}$                  & +0.0173 & 0.117 & 58.6 & 0.664 \\
+5b~MTL (ret$+$ret\_3m)$^{\dagger}$           & +0.0126 & 0.119 & 53.4 & 0.377 \\
+5c~MTL (ret$+$vol)$^{\dagger}$               & $-$0.0043 & $-$0.042 & 51.7 & $-$0.161 \\
+5d~MTL (3-task)$^{\dagger}$                  & +0.0115 & 0.098 & 53.4 & 0.183 \\
+\midrule
+6a~Enhanced MoE (ret-only)$^{\ddagger}$      & +0.0322 & 0.138 & 54.4 & 0.481 \\
+6b~Enhanced MoE (ret$+$ret\_3m)$^{\ddagger}$ & +0.0255 & 0.112 & 54.4 & 0.382 \\
+6c~Enhanced MoE (ret$+$vol)$^{\ddagger}$     & +0.0111 & 0.046 & 50.9 & 0.341 \\
+6d~Enhanced MoE (3-task)$^{\ddagger}$        & +0.0050 & 0.021 & 52.6 & 0.314 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\footnotesize $^{\dagger}$Rung~5 plain MTL rows are computed on the
-V2 14-feature panel and were not retuned for V3. Rung~6
-Regime-Informed MoE-MTL and Enhanced MoE-MTL variants follow the same
-dominated pattern and are excluded from the main table for brevity.
-See Sec.~\ref{subsec:rung56-fail} for the neural and regime-gated
-failure modes.}
+{\footnotesize $^{\dagger}$Rung~4--5 neural rows are computed from the
+plain uncertainty-weighted MLP/MTL audit. $^{\ddagger}$Rung~6 rows are
+computed from the Enhanced Regime-Informed MoE audit and use 57 test
+months. These neural models are reported as walk-forward audit results
+rather than CPCV results. Although Rung~6 achieves the highest IC point
+estimate, all neural models remain below the Ridge linear floor by
+long-short Sharpe.}
 \end{table}
 
 \paragraph{Top-line ranking.}
@@ -404,14 +409,19 @@ $n_{\text{splines}}{=}4$ achieves Sharpe~0.828 and the
 Sharpe~0.984---both materially higher and competitive with the linear
 top.
 
-\paragraph{Rung 4--6 dominated by linear.}
-The neural rungs do not beat the linear floor. The single-task MLP
-(Rung~4) gives Sharpe~0.347 for seed~42, and the five-seed mean is
-0.412. Plain MTL (Rung~5) improves over the single-task neural baseline
-in its best configuration but still remains below the Ridge linear floor.
-The regime-informed MoE-MTL extensions (Rung~6) add HMM-conditioned
-expert specialization, but this additional structure does not rescue
-out-of-sample performance in the 119-month panel.
+\paragraph{Neural rungs: MoE wins by IC, linear wins by Sharpe.}
+The neural models do not beat the linear floor by portfolio Sharpe, but
+the audit shows meaningful differences within the neural class. The
+Rung~4 ret-only MLP achieves IC~$=0.0081$ and Sharpe~$=0.270$. Plain
+MTL improves over this baseline only when the three-month return
+auxiliary task is added: 5b achieves IC~$=0.0126$ and Sharpe~$=0.377$.
+Adding volatility hurts performance, consistent with volatility being
+predictable but weakly aligned with alpha. The Enhanced Regime-Informed
+MoE gives the strongest neural result: the single-task MoE achieves
+IC~$=0.0322$ and Sharpe~$=0.481$. This is the highest IC point estimate
+in the audit, suggesting improved broad cross-sectional ranking, but it
+still remains well below the Ridge linear floor of~0.925 by long-short
+Sharpe.
 
 \begin{figure}[t]
   \centering
@@ -428,12 +438,13 @@ out-of-sample performance in the 119-month panel.
 % =====================================================================
 \section{Audit-Cycle Findings}\label{sec:audit}
 
-This section documents five sensitivity studies performed during the
-project's audit cycle. Two produced \emph{retractions} of earlier
-``failed'' results; three produced \emph{negative results} that
-illuminate failure modes of common practice. We surface them
-explicitly because they shape the central claim of the paper:
-single-result comparisons hide more than they reveal at our sample size.
+This section documents several sensitivity studies and code audits
+performed during the project audit cycle. Some produced
+\emph{retractions} of earlier ``failed'' results; others produced
+negative or mixed results that illuminate failure modes of common
+practice. We surface them explicitly because they shape the central
+claim of the paper: single-result comparisons hide more than they reveal
+at our sample size.
 
 % --------------------------------------------------------------
 \subsection{The Hyperparameter Default Trap (P5)}\label{subsec:default-trap}
@@ -562,8 +573,8 @@ This is meaningful: a single-seed MLP report would have shown either
 Sharpe~0.097 (worst-case seed~1) or 0.648 (best-case seed~0)---an
 8$\times$ range driven entirely by random initialization. Reporting any
 single seed misrepresents the model's reliability. We therefore report
-the five-seed mean and standard deviation, both in
-Tab.~\ref{tab:wf-results} and downstream.
+the five-seed mean and standard deviation downstream as an additional
+neural robustness check.
 
 \begin{figure}[t]
   \centering
@@ -661,53 +672,60 @@ late-stage code review: a single duplicate definition silently
 flipped a ``failed'' result into a top-three result.
 
 % --------------------------------------------------------------
-\subsection{Rung 5--6 Negative Transfer and Regime-Gated Failure Modes}
-\label{subsec:rung56-fail}
+\subsection{Rung 5--6 Neural Results: MTL Gains and Regime-MoE Improvement}
+\label{subsec:rung56-results}
 
-The three Rung~5 plain MTL rows in Tab.~\ref{tab:wf-results} (5b, 5c,
-5d) all fall below the linear floor: best is 5d at Sharpe~0.664, well
-under even the worst Rung~1--2 model (1b IC-Ensemble at 0.844). Rung~6
-Regime-Informed MoE-MTL adds HMM-conditioned expert specialization, but
-the additional architecture does not rescue out-of-sample performance.
-Three architecture-level failure modes explain why complexity does not
-recover here.
+The neural models do not beat the linear floor by Sharpe, but the audit
+does not show uniform neural failure. Instead, it shows a clear ordering
+within the neural class.
 
-\paragraph{Negative transfer in 5b (ret$+$ret\_3m).} Adding the
-3-month forward return as an auxiliary task \emph{flips the sign} of
-the IC on the primary 1-month task: 5a single-task IC~$=+0.0048$
-becomes 5b IC~$=-0.0036$ under Kendall-Gal-Cipolla uncertainty
-weighting~\citep{kendall_gal_cipolla}. The Kendall-Gal-Cipolla loss
-attenuates conflicting gradients via per-task variance normalization,
-but cannot reverse them: when 1-month and 3-month return gradients
-point in opposite directions in encoder weight-space (a regime-shift
-phenomenon visible in the 2022--2023 inflation transition), the shared
-representation collapses toward the auxiliary task. Gradient-surgery
-methods such as PCGrad~\citep{yu_pcgrad} are designed for exactly this
-case but were beyond our deadline scope.
+\paragraph{Rung 4 ret-only MLP baseline.}
+The Rung~4 single-task MLP achieves IC~$=0.0081$ and Sharpe~$=0.270$.
+This model uses only the next-month return target and therefore provides
+the baseline that the multi-task and regime-informed neural models must
+improve on.
 
-\paragraph{Expert collapse in Rung 6.} The Regime-Informed and Enhanced
-MoE-MTL variants use a softmax gate over $K{=}3$ expert MLPs, with the
-gate conditioned on a 3-state HMM regime posterior. Per-fold gate
-weights average ${\approx}1/3$ across experts (standard deviation
-0.08--0.12), indicating that the gate effectively ignores its inputs
-and becomes a uniform mixture. This is the well-known expert-collapse
-pathology of soft MoEs trained without load-balancing
-loss~\citep{shazeer_moe}; without an entropy-regularizer or
-load-balancing penalty, gradients flow uniformly through all experts
-and no specialization emerges. In effect, the MoE reduces to an
-ensemble of three weakly differentiated MLP heads.
+\paragraph{Plain MTL modestly improves only with return-based auxiliary supervision.}
+The best plain MTL model is 5b, which adds the three-month return
+auxiliary task. It achieves IC~$=0.0126$ and Sharpe~$=0.377$, improving
+over the Rung~4 ret-only MLP. This suggests that the medium-horizon
+return task provides some useful representation-level regularization.
+However, volatility-based auxiliary supervision hurts alpha prediction:
+5c has IC~$=-0.0043$ and Sharpe~$=-0.161$, while the full three-task
+model 5d reaches only IC~$=0.0115$ and Sharpe~$=0.183$. The audit
+therefore suggests that volatility is predictable but weakly aligned
+with cross-sectional return ranking.
 
-\paragraph{HMM under-identification on early folds.} The 3-state HMM
-gating signal is fitted per fold on five market-level features (VIX,
-T10Y2Y, BAML high-yield spread, market return, and market realized
-volatility) with full covariance emissions. Free parameters:
-$K(K{-}1) = 6$ transition probabilities, $Kp = 15$ means, and
-$K p(p{+}1)/2 = 45$ covariance entries, totaling ${\approx}66$. The
-earliest walk-forward folds have only 60~training observations: the HMM
-is materially under-identified. Posterior regime probabilities in those
-folds revert toward weakly informative averages, contributing little
-usable gating signal until $n_\text{train} \gtrsim 100$. By the time the
-HMM is better-conditioned, expert collapse has already taken hold.
+\paragraph{Enhanced Regime-Informed MoE gives the strongest neural IC.}
+The Enhanced Regime-Informed MoE provides the strongest neural result.
+The single-task MoE achieves IC~$=0.0322$ and Sharpe~$=0.481$,
+substantially improving over both the Rung~4 MLP and the plain MTL
+variants. This indicates that regime conditioning can improve the
+average cross-sectional ranking signal. However, the improvement does
+not translate into a top-performing trading model: the best MoE Sharpe
+remains below the Ridge linear floor of~0.925 and far below the Barra
+Sharpe of~1.134.
+
+\paragraph{Auxiliary tasks still interfere inside the MoE.}
+Adding auxiliary tasks to the MoE reduces performance. The ret$+$ret\_3m
+MoE obtains IC~$=0.0255$ and Sharpe~$=0.382$, while the volatility
+variants fall further. The volatility task receives high uncertainty
+weight, around~3.0 in the audit, meaning the model can learn it
+relatively easily. But predictability is not the same as alpha
+usefulness: emphasizing volatility shifts the shared representation
+toward risk prediction rather than return ranking.
+
+\paragraph{Gate behavior should be interpreted cautiously.}
+The average MoE gate weights are roughly balanced across the three
+experts, near one-third each. This means no single expert dominates
+globally. However, average gate balance alone does not prove
+regime-specific specialization: the gate could assign different experts
+in different regimes while still averaging to one-third over the full
+sample, or it could remain close to uniform observation by observation.
+The improved single-task MoE performance is consistent with useful
+regime conditioning, but a stronger specialization claim would require
+showing that gate weights vary systematically across HMM regimes or
+market states.
 
 % =====================================================================
 \section{Combinatorial Purged K-Fold (CPCV)}\label{sec:cpcv}
@@ -725,10 +743,9 @@ $N{=}6$ contiguous blocks of 19--20~months each;
 $k_{\text{test}}{=}2$~blocks per path; 1-month embargo on either side
 of each test block; $\binom{6}{2}{=}15$ paths per model. We apply CPCV
 to the 8 top models from Rung~1, Rung~2, and tuned XGBoost from
-Rung~3. Rung~4--6 neural results are already dominated by linear
-baselines under walk-forward and are omitted from CPCV for compute
-budget reasons; this omission is listed as a limitation in
-Sec.~\ref{sec:limitations}.
+Rung~3. Rung~4--6 neural results are omitted from CPCV for compute
+budget reasons and are reported as walk-forward audit results; this
+omission is listed as a limitation in Sec.~\ref{sec:limitations}.
 
 \paragraph{Result.}
 Tab.~\ref{tab:cpcv} reports the 15-path Sharpe distribution per model,
@@ -811,79 +828,82 @@ suggesting regime-specific fragility.
 \section{Discussion}\label{sec:discussion}
 
 At our 119-month / 442-stock sample size, no model statistically
-dominates another. The Grinold-Kahn Barra factor model and
-Fama-MacBeth time-averaged regression are the most robust point
-estimates. Linear factor methods, when properly specified, are not
-improved upon by any non-linear, deep, multi-task, or regime-gated
-approach in our test window.
+dominates another among the CPCV-tested models. The Grinold-Kahn Barra
+factor model and Fama-MacBeth time-averaged regression are the most
+robust point estimates. Linear factor methods, when properly specified,
+are not improved upon by any non-linear, deep, multi-task, or
+regime-gated approach in terms of long-short Sharpe in our test window.
 
-Why do all top-seven models look the same? The arithmetic is direct.
-A 58-month walk-forward window with $\sim$442 stocks gives roughly
-$58 \times 442 \approx 25{,}636$ test observations. Per-month Spearman
-IC standard error under~$H_0$ is $\approx 1/\sqrt{442} \approx 0.048$;
-across 58 months, the time-averaged IC standard error is
-$0.048/\sqrt{58} \approx 0.0063$. Detected IC values of $0.018$--$0.029$
-are $\sim 3\sigma$ above zero (significant for any individual model),
-but pairwise model differences of $\Delta\text{IC} \approx 0.002$--$0.005$
-fall well within the noise floor. Two complementary arguments explain
-why complexity does not help: \emph{structurally}, our features are
-near-monotone factor aggregates well-captured by one or two internal
-knots per GAM spline (the $n_{\text{splines}}{=}4$ finding);
-\emph{statistically}, at IC$\approx$0.01, signal magnitude is below
-the model-selection noise floor. Fig.~\ref{fig:effective-df}
-visualizes this directly: models with effective degrees of freedom
-ranging from $\sim$27~(linear) to $\sim$3{,}000--4{,}000~(MLP) all
-cluster within the same Sharpe band.
+Why do all top-seven CPCV-tested models look the same? The arithmetic is
+direct. A 58-month walk-forward window with $\sim$442 stocks gives
+roughly $58 \times 442 \approx 25{,}636$ test observations. Per-month
+Spearman IC standard error under~$H_0$ is
+$\approx 1/\sqrt{442} \approx 0.048$; across 58 months, the
+time-averaged IC standard error is $0.048/\sqrt{58} \approx 0.0063$.
+Detected IC values of $0.018$--$0.029$ are $\sim 3\sigma$ above zero
+(significant for any individual model), but pairwise model differences
+of $\Delta\text{IC} \approx 0.002$--$0.005$ fall well within the noise
+floor. Two complementary arguments explain why complexity does not help
+by Sharpe: \emph{structurally}, our features are near-monotone factor
+aggregates well-captured by one or two internal knots per GAM spline
+(the $n_{\text{splines}}{=}4$ finding); \emph{statistically}, at
+IC$\approx$0.01, signal magnitude is below the model-selection noise
+floor. Fig.~\ref{fig:effective-df} visualizes this directly: models
+with effective degrees of freedom ranging from $\sim$27~(linear) to
+thousands of neural parameters do not translate additional flexibility
+into higher portfolio Sharpe.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\textwidth]{fig_effective_df.pdf}
   \caption{Effective degrees of freedom vs.\ walk-forward LS Sharpe.
     Despite a large range in model capacity (27~parameters for
-    linear models to thousands for neural models), all top models
-    cluster within Sharpe~$\in[0.83, 1.13]$. Additional parameters do
-    not translate to additional predictive power at our sample size.}
+    linear models to thousands for neural models), the top Sharpe
+    performers are simple linear, regularized linear, or tuned
+    low-complexity non-linear models. Additional parameters do not
+    translate to higher portfolio Sharpe at our sample size.}
   \label{fig:effective-df}
 \end{figure}
 
-The Rung~5--6 failure modes documented in Sec.~\ref{subsec:rung56-fail}
-(negative transfer, expert collapse, HMM under-identification) are
-architecture-specific manifestations of the same sample-size
-constraint: gradient-surgery, load-balancing, and HMM identification
-all require enough training observations to separate signal from
-noise in the gradient or posterior. Below the noise floor, additional
-architectural machinery is unidentifiable from the data and
-contributes only variance. This is not a refutation of multi-task or
-mixture-of-experts as paradigms, but a quantitative statement about
-the panel size at which they begin to add value.
+The Rung~5--6 neural results documented in
+Sec.~\ref{subsec:rung56-results} refine the main conclusion. Plain MTL
+modestly improves over the ret-only MLP when the auxiliary task is
+three-month return, while the Enhanced Regime-Informed MoE achieves the
+highest IC point estimate in the audit. However, these gains do not
+translate into a Sharpe ratio competitive with the linear floor. This
+suggests an IC-to-portfolio mismatch: the MoE improves broad
+cross-sectional ranking, but the simple top-minus-bottom quintile
+portfolio does not monetize that ranking strongly enough. The additional
+neural structure is therefore promising, but underpowered in the
+available 119-month monthly panel.
 
-Importantly, this failure should not be interpreted as evidence that
-MTL or MoE-MTL models are inherently inappropriate for return
-prediction. These architectures are designed to exploit repeated
-patterns across tasks, market states, and regimes. A longer panel,
-higher-frequency decision grid, or broader stock universe would give
-the shared encoder and regime gate more opportunities to observe
-similar conditions multiple times. In that setting, the larger
-Rung~5--6 models may become more competitive, and possibly superior,
-because their additional parameters would be supported by more
-independent training environments. Our result is therefore best read as
-a sample-size limitation of the available monthly S\&P~500 panel, not a
-general rejection of neural multi-task or regime-gated architectures.
+Importantly, this result should not be interpreted as evidence that MTL
+or MoE-MTL models are inherently inappropriate for return prediction.
+These architectures are designed to exploit repeated patterns across
+tasks, market states, and regimes. A longer panel, higher-frequency
+decision grid, or broader stock universe would give the shared encoder
+and regime gate more opportunities to observe similar conditions
+multiple times. In that setting, the larger Rung~5--6 models may become
+more competitive, and possibly superior, because their additional
+parameters would be supported by more independent training environments.
+Our result is therefore best read as a sample-size limitation of the
+available monthly S\&P~500 panel, not a general rejection of neural
+multi-task or regime-gated architectures.
 
-Our null result is consistent with, not contradictory to,
+Our null result by Sharpe is consistent with, not contradictory to,
 \citet{gu_kelly_xiu}, who report substantial ML benefit on a much
 broader universe ($\sim$30{,}000 stocks) over a longer history
 (1957--2016), particularly on smaller-cap subsamples. The benefit of
 ML scales with sample size and with the dispersion of stock
 characteristics; at large-cap S\&P~500 scale, where stocks are
-well-followed and characteristics are tightly distributed, the
-marginal value of ML is below the noise floor.
+well-followed and characteristics are tightly distributed, the marginal
+value of ML is below the noise floor.
 \citet{demiguel_compare} similarly find that simple equal-weighted
 portfolios outperform complex optimization in out-of-sample tests,
 suggesting that estimation noise dominates model sophistication when
 the cross-section is narrow. Our results bound the threshold from
-below: $\sim$25{,}000 panel observations is insufficient for
-complexity to help.
+below: $\sim$25{,}000 panel observations is insufficient for complexity
+to beat the linear floor by portfolio Sharpe.
 
 The audit cycle produced two methodology lessons that travel beyond
 this project. \textbf{P7}: mean-prediction bagging is contraindicated
@@ -902,8 +922,9 @@ that includes the COVID-19 crash and 2022 inflation regime.
 For practice, we recommend deploying the Fama-MacBeth or
 Grinold-Kahn Barra model---not the highest-mean-Sharpe model
 (XGBoost-GKX, which carries a 6.7\% probability of negative Sharpe
-under CPCV). For research, the natural next question is: at what
-sample size does complexity start to help? Our results and
+under CPCV), and not the highest-IC neural model, whose Sharpe remains
+below the linear floor. For research, the natural next question is: at
+what sample size does complexity start to help? Our results and
 Gu-Kelly-Xiu's bracket the answer between $\sim$25{,}000 and
 $\sim$1.5~million panel observations.
 
@@ -956,13 +977,11 @@ We list known limitations with explicit direction-of-bias estimates.
 
 \item \textbf{CPCV does not include Rung 4--6.} Walk-forward point
   estimates for Rung~4 (MLP), Rung~5 (plain MTL), and Rung~6
-  (Regime-Informed MoE-MTL) appear either in Tab.~\ref{tab:wf-results}
-  or in the audit outputs, but path-uncertainty bounds via CPCV are not
-  computed for these neural rungs. Given their walk-forward
-  underperformance relative to the linear floor, CPCV for Rung~4--6 was
-  omitted for compute-budget reasons; this remains a limitation. Rung~5
-  and Rung~6 results in particular use the V2 14-feature panel and were
-  not retuned for V3.
+  (Regime-Informed MoE-MTL) appear in Tab.~\ref{tab:wf-results}, but
+  path-uncertainty bounds via CPCV are not computed for these neural
+  rungs. Given their lower portfolio Sharpe relative to the linear
+  floor, CPCV for Rung~4--6 was omitted for compute-budget reasons;
+  this remains a limitation.
 
 \item \textbf{Hyperparameter search is not exhaustive.} GAM
   $n_{\text{splines}}$ is swept over 10 candidate values, with $n=3$
@@ -970,9 +989,8 @@ We list known limitations with explicit direction-of-bias estimates.
   depth/$\eta$ is swept over a 9-config grid plus the GKX-tuned
   configuration. For Rung~6, MoE expert count $K$ and gate temperature
   were not swept (left at $K{=}3$, $T{=}1$). \emph{Direction:}
-  Rung~6 results may improve under better-tuned gating, but
-  extrapolating from Rung~4--5 neural audits, the improvement is
-  unlikely to exceed the linear floor in this sample.
+  Rung~6 results may improve under better-tuned gating, but its current
+  improvement is primarily in IC rather than long-short Sharpe.
 
 \item \textbf{Transaction costs.} We report gross long-short Sharpe
   and net Sharpe at a fixed 10~bps cost per trade. Real costs vary by
@@ -1006,17 +1024,21 @@ competitive relative to the linear baselines.
 
 On a 442-stock S\&P~500 panel across 119~months with 27~features,
 \emph{adding model complexity does not improve cross-sectional return
-prediction in a statistically meaningful way}. CPCV reveals that all
-top-seven models' 5--95\% Sharpe bands overlap; the Grinold-Kahn Barra
-factor model and Fama-MacBeth regression are the most robust point
-estimates (mean CPCV Sharpe~1.058 and~1.071, zero negative-Sharpe
-paths). Three independent attempts to improve the single-task MLP fail to beat
-any linear baseline, and neither plain MTL nor Regime-Informed MoE-MTL
-rescues the neural rungs in this sample, though these architectures may
-require longer, higher-frequency, or broader panels before their
-additional capacity is estimable. The audit cycle surfaces two
-methodology pitfalls---bagging-metric mismatch and hyperparameter
-overtune on low-SNR validation---that generalize beyond this project.
+prediction in a statistically meaningful way when performance is judged
+by long-short portfolio Sharpe}. CPCV reveals that all top-seven tested
+models' 5--95\% Sharpe bands overlap; the Grinold-Kahn Barra factor
+model and Fama-MacBeth regression are the most robust point estimates
+(mean CPCV Sharpe~1.058 and~1.071, zero negative-Sharpe paths). Plain
+MTL modestly improves over the single-task MLP when the three-month
+return auxiliary task is used, and Regime-Informed MoE-MTL achieves the
+highest IC point estimate in the audit. However, neither neural
+extension reaches the Sharpe of the regularized linear models, so the
+linear floor remains unbeaten by portfolio performance. These
+architectures may require longer, higher-frequency, or broader panels
+before their additional capacity is fully estimable. The audit cycle
+surfaces two methodology pitfalls---bagging-metric mismatch and
+hyperparameter overtune on low-SNR validation---that generalize beyond
+this project.
 
 % =====================================================================
 \bibliographystyle{plainnat}
