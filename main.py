@@ -47,12 +47,12 @@ warnings.filterwarnings("ignore")
 
 # 1. COLUMN NAMES — imported from shared config
 from config import (
-    ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2,
+    ALL_FEATURE_COLS_V1, ALL_FEATURE_COLS_V2, ALL_FEATURE_COLS_V3_WITH_MISS,
     TARGET_COL, RET3M_COL, VOL_COL, FWD_VOL_COL, SECTOR_COL, DATE_COL, STOCK_COL,
 )
 from metrics import compute_long_short_sharpe  # Category B consolidation
 
-# Default to V2; overridden by --v1 flag
+# Default to V2; overridden by --v1 / --v3 flags
 FACTOR_COLS = ALL_FEATURE_COLS_V2
 
 # 2. DATA HELPERS
@@ -654,11 +654,14 @@ def main():
     parser.add_argument("--quiet", action="store_true", help="Suppress fold-level logging")
     parser.add_argument("--no_save", action="store_true", help="Do not save result files")
     parser.add_argument("--v1", action="store_true", help="Use V1 features (15) instead of V2 (25)")
+    parser.add_argument("--v3", action="store_true", help="Use V3 features + missingness flags (22 stock + 5 = 27)")
     args = parser.parse_args()
 
     global FACTOR_COLS
     if args.v1:
         FACTOR_COLS = ALL_FEATURE_COLS_V1
+    elif args.v3:
+        FACTOR_COLS = ALL_FEATURE_COLS_V3_WITH_MISS
 
     print("Loading panel...")
     df = pd.read_parquet(args.data)

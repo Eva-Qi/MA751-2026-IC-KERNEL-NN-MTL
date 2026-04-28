@@ -2,14 +2,14 @@
 
 > Target deck: 22 slides for ~15 minutes (~45s/slide). Action-title style throughout. One exhibit per slide max. Speaker notes are talking points, not script.
 >
-> Paper: *Does Complexity Help Cross-Sectional Stock Return Prediction? A 5-Rung Ladder Audit on the S&P 500 Panel (2016-2024)*. Authors: Alan Xi, Eva Qi, Reetom Gangopadhyay.
+> Paper: *Does Complexity Help Cross-Sectional Stock Return Prediction? A 6-Rung Ladder Audit on the S&P 500 Panel (2016-2024)*. Authors: Alan Xi, Eva Qi, Reetom Gangopadhyay.
 
 ---
 
 # Slide 1: Complexity does not improve cross-sectional return prediction
 
 - 442 stocks, 119 months, 27 features, 12 model variants
-- 5-rung ladder: linear -> regularized -> GAM/XGB -> MLP -> MTL/MoE
+- 6-rung ladder: linear -> regularized -> GAM/XGB -> MLP -> MTL -> MoE
 - CPCV: top-7 models' 5-95% Sharpe bands all overlap
 - Best by robustness: Fama-MacBeth and Grinold-Kahn Barra
 
@@ -34,17 +34,19 @@ The motivating open question is whether the GKX deep-learning result on 30,000 s
 
 ---
 
-# Slide 3: Five-rung ladder isolates each capacity step
+# Slide 3: Six-rung ladder isolates each capacity step
 
 - Rung 1 Linear: OLS, IC-Ensemble, Fama-MacBeth, Barra-GK
 - Rung 2 Regularized: LASSO, Ridge, Elastic Net, Adaptive LASSO
 - Rung 3 Smooth non-linear: GAM (splines), XGBoost (trees)
-- Rung 4-5: single-task MLP, multi-task MLP, regime-gated MoE
+- Rung 4: single-task MLP
+- Rung 5: MTL (shared encoder + per-task heads, Kendall-Gal-Cipolla UW)
+- Rung 6: MoE (K=3 expert MLPs, HMM-gated softmax)
 
-**Figure**: `fig_ladder.pdf` -- Each rung adds one structural ingredient (regularization, smooth non-linearity, deep capacity, shared representation).
+**Figure**: `fig_ladder.pdf` -- Each rung adds one structural ingredient (regularization, smooth non-linearity, deep capacity, shared representation, expert routing).
 
 ## Speaker Notes
-The ladder is the experimental design: each step adds exactly one structural ingredient over the previous step, so any Sharpe gain is attributable to that ingredient. Parameter count grows from about 27 at Rung 1 to over 3,000 at Rung 4. All twelve variants share an identical panel, identical preprocessing, identical evaluation metric (Spearman IC + LS-quintile Sharpe). The framework lets us answer "does the next step buy us anything" rather than comparing apples to oranges. Next we describe the panel.
+The ladder is the experimental design: each step adds exactly one structural ingredient over the previous step, so any Sharpe gain is attributable to that ingredient. Parameter count grows from about 27 at Rung 1 to over 3,000 at Rung 4. Rung 5 adds multi-task shared representations; Rung 6 adds mixture-of-experts routing. All twelve variants share an identical panel, identical preprocessing, identical evaluation metric (Spearman IC + LS-quintile Sharpe). The framework lets us answer "does the next step buy us anything" rather than comparing apples to oranges. Next we describe the panel.
 
 ---
 
@@ -230,17 +232,17 @@ Slides 8 and 9 each documented half of the same lesson: framework defaults (skle
 
 ---
 
-# Slide 17: Rung 5 fails three different ways: transfer, collapse, under-id
+# Slide 17: Rung 5 (MTL) + Rung 6 (MoE) fail three different ways: transfer, collapse, under-id
 
-- 5b MTL (ret + ret_3m) IC -0.0036: textbook negative transfer
-- MoE gate weights collapsed to ~uniform 0.33/0.33/0.34 across experts
-- HMM K=3 has 68 free params on 60-month early folds (under-id)
+- [Rung 5 MTL] 5b (ret + ret_3m) IC -0.0036: textbook negative transfer
+- [Rung 6 MoE] gate weights collapsed to ~uniform 0.33/0.33/0.34 across experts
+- [Rung 6 MoE] HMM K=3 has 68 free params on 60-month early folds (under-id)
 - Each pathology is well-known (Yu 2020, Shazeer 2017, Hamilton 1989)
 
 **Figure**: none (text slide; the three sub-points are the three bullets)
 
 ## Speaker Notes
-Rung 5 failures are not just "more data needed" -- each variant has a specific structural pathology. First, 5b multi-task with ret + ret_3m gives IC -0.0036, textbook negative transfer because 1-month and 3-month forward returns conflict during 2022's regime shift. Uncertainty weighting only adjusts loss magnitude, not gradient direction; PCGrad would fix this but is 40+ LOC of second-order gradients. Second, the MoE gate collapsed -- across the three experts, gate weights ended at 0.33/0.33/0.34, no specialization. K=3 MoE is empirically equivalent to K=1 MTL because Shazeer's load-balancing regularizers were not added. Third, the HMM has 68 free parameters on early folds with 60 observations -- under-identified, producing noisy regime posteriors that destabilize the gate. Three independent failure modes, each with a known fix. Next we synthesize why complexity does not help here.
+Rung 5 and Rung 6 failures are not just "more data needed" -- each variant has a specific structural pathology. First, Rung 5 MTL: 5b multi-task with ret + ret_3m gives IC -0.0036, textbook negative transfer because 1-month and 3-month forward returns conflict during 2022's regime shift. Uncertainty weighting only adjusts loss magnitude, not gradient direction; PCGrad would fix this but is 40+ LOC of second-order gradients. Second, Rung 6 MoE gate collapsed -- across the three experts, gate weights ended at 0.33/0.33/0.34, no specialization. K=3 MoE is empirically equivalent to K=1 MTL because Shazeer's load-balancing regularizers were not added. Third, also Rung 6: the HMM has 68 free parameters on early folds with 60 observations -- under-identified, producing noisy regime posteriors that destabilize the gate. Three independent failure modes across Rungs 5-6, each with a known fix. Next we synthesize why complexity does not help here.
 
 ---
 
@@ -320,7 +322,7 @@ Every PDF in `/Users/evanolott/Desktop/MA751-Project/paper/MA751-paper/figures/`
 
 | Figure | Status | Slide / Reason |
 |---|---|---|
-| `fig_ladder.pdf` | Used | Slide 3 -- the 5-rung complexity ladder framework |
+| `fig_ladder.pdf` | Used | Slide 3 -- the 6-rung complexity ladder framework |
 | `fig_v2_vs_v3.pdf` | Used | Slide 4 -- justifies V3 (27-feature) panel choice over V2 |
 | `fig_gam_n_splines.pdf` | Used | Slide 8 -- defaults 2x too complex; peak at n=4 |
 | `fig_xgb_sensitivity.pdf` | Used | Slide 9 -- GKX-tuned config dominates 9-grid |
@@ -333,7 +335,7 @@ Every PDF in `/Users/evanolott/Desktop/MA751-Project/paper/MA751-paper/figures/`
 | `fig_correlation.pdf` | Not used | Feature correlation heatmap motivates regularized estimators, but slide 4 already justifies the V3 panel and slide 7 jumps directly to results. Could be added to slide 4 as a small inset if desired. |
 | `fig_pca.pdf` | Not used | PCA scree + PC1xPC2 was an original-plan deliverable but the deck does not need feature-space exploration to make the headline argument. Reserve as a third backup if feature-structure questions arise. |
 | `fig_perm_importance.pdf` | Not used | Permutation importance for top-3 models duplicates the LASSO-frequency message on slide 22. Keep slide 22 simpler with one chart; offer perm-importance as a fourth backup. |
-| `fig_regime_timeline.pdf` | Not used | HMM K=3 regime posteriors over time is relevant only to Rung 5 MoE, which slide 17 covers verbally. The chart would force a separate slide on a Rung-5-specific architecture detail and the deck is already at 22 slides. Reserve as a deep-dive backup if a Rung 5 question emerges. |
+| `fig_regime_timeline.pdf` | Not used | HMM K=3 regime posteriors over time is relevant only to Rung 6 MoE, which slide 17 covers verbally. The chart would force a separate slide on a Rung-6-specific architecture detail and the deck is already at 22 slides. Reserve as a deep-dive backup if a Rung 6 MoE question emerges. |
 
 **Total figures**: 14 PDFs (each with a PNG twin). **Used**: 9. **Reserved as backup / not strictly needed**: 5.
 

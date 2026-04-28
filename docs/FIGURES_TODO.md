@@ -90,7 +90,7 @@ All 4 suggested figures have been generated (2026-04-27). See figures 12-15 abov
 
 ### 14. `fig_regime_timeline.pdf` — HMM regime states over time
 
-**Why**: Visualizes Rung 5 MoE gate input. Shows COVID/inflation/mag-7 regime shifts. Useful color for the §5.5 Rung 5 audit discussion.
+**Why**: Visualizes Rung 6 MoE gate input. Shows COVID/inflation/mag-7 regime shifts. Useful color for the §5.5 Rung 6 MoE audit discussion.
 **Type**: Stacked area chart, x = test month, y = posterior probability of each of 3 HMM states, colored.
 **Section**: §5.5 or §6 (CPCV interpretation re: regime-conditional XGB tail risk).
 **Source**: HMM posteriors per fold (would need to extract from `regmtl.py` runs or recompute).
