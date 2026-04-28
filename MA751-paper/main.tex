@@ -23,7 +23,7 @@
 }
 
 \title{Does Complexity Help Cross-Sectional Stock Return Prediction? \\
-       \large A 5-Rung Ladder Audit on the S\&P~500 Panel (2016--2024)}
+       \large A 6-Rung Ladder Audit on the S\&P~500 Panel (2015--2024)}
 \author{Alan Xi, Eva Qi, Reetom Gangopadhyay}
 \date{April 2026}
 
@@ -35,23 +35,26 @@
 \noindent
 We test whether progressively complex models improve cross-sectional
 monthly stock-return prediction on a 442-ticker S\&P~500 panel across
-119~months (2015--2024) with 27~firm-level features. Twelve model
-variants span a 5-rung complexity ladder: pooled linear, regularized
-linear, smooth non-linear, single-task MLP, and multi-task with
-mixture-of-experts gating. Single-path walk-forward backtests appear to
-support a Pareto ranking with six top models clustered within annualized
-long-short quintile Sharpe~$\in[0.92,\,1.13]$. \textbf{Combinatorial
-Purged K-fold (CPCV) analysis reveals that all top-7 models' 5--95\%
-Sharpe bands overlap}---no model statistically dominates another at this
-sample size. Six of eight CPCV-tested models show positive Sharpe in
-every one of their 15~backtest paths. The Grinold-Kahn Barra factor
-model and Fama-MacBeth time-averaged regression are the most robust
-point estimates (CPCV mean Sharpe~1.058 and~1.071, lowest standard
-deviations across paths). An audit cycle documents two methodology
-pitfalls that generalize beyond this project: mean-prediction bagging
-is incompatible with rank-based evaluation metrics, and hyperparameter
-grid search actively degrades out-of-sample performance when validation
-signal is below the noise floor.
+119~months (2015--2024). The primary V3 panel contains 27~features:
+22~firm-level signals and five missingness indicators. Model variants
+span a 6-rung complexity ladder: pooled linear, regularized linear,
+smooth non-linear, single-task MLP, plain multi-task learning (MTL), and
+regime-informed mixture-of-experts MTL (MoE-MTL). Single-path
+walk-forward backtests appear to support a Pareto ranking with six top
+models clustered within annualized long-short quintile
+Sharpe~$\in[0.92,\,1.13]$. \textbf{Combinatorial Purged K-fold (CPCV)
+analysis reveals that all top-7 models' 5--95\% Sharpe bands overlap}:
+no model statistically dominates another at this sample size. Seven of
+eight CPCV-tested models show positive Sharpe in every one of their
+15~backtest paths. The Grinold-Kahn Barra factor model and
+Fama-MacBeth time-averaged regression are the most robust point
+estimates (CPCV mean Sharpe~1.058 and~1.071, zero negative-Sharpe
+paths). The neural rungs do not beat the linear floor in this sample.
+An audit cycle documents two methodology pitfalls that generalize
+beyond this project: mean-prediction bagging is incompatible with
+rank-based evaluation metrics, and hyperparameter grid search can
+degrade out-of-sample performance when validation signal is below the
+noise floor.
 \end{abstract}
 
 % =====================================================================
@@ -69,18 +72,21 @@ subsamples. But whether this finding transfers to the scale of a
 single-decade, large-cap panel---closer to the typical buy-side equity
 research dataset---remains an open question.
 
-We address this by constructing a \textbf{five-rung complexity ladder}
-(Fig.~\ref{fig:ladder}): twelve model variants spanning pooled linear,
-regularized linear, smooth non-linear (GAM, XGBoost), single-task MLP,
-and multi-task mixture-of-experts. All variants are evaluated under a
-unified protocol on an identical 442-ticker S\&P~500 panel (2015--2024)
-with 27~firm-level features: expanding-window walk-forward backtesting
-for point estimates and Combinatorial Purged K-fold (CPCV,
-\citealt{lopezdeprado_finml}) for path-uncertainty bounds.
+We address this by constructing a \textbf{six-rung complexity ladder}
+(Fig.~\ref{fig:ladder}): pooled linear models, regularized linear
+models, smooth non-linear models, a single-task MLP, plain
+multi-task learning, and regime-informed mixture-of-experts MTL. The
+primary Rung~1--3 comparison uses the V3 27-feature panel under
+expanding-window walk-forward evaluation. CPCV path-uncertainty
+analysis is applied to Rungs~1--2 and the tuned XGBoost model from
+Rung~3. Rung~4--6 neural models are reported as walk-forward and audit
+results rather than CPCV results. In particular, the plain MTL and
+regime-informed MoE-MTL experiments are based on the earlier V2
+14-feature panel and are disclosed separately in the results table.
 
 Our contributions are fourfold:
 \begin{itemize}[leftmargin=2em,topsep=2pt,itemsep=2pt]
-\item A reproducible, audit-graded comparison of twelve model variants
+\item A reproducible, audit-graded comparison of a 6-rung model ladder
   on a frozen 119-month panel.
 \item CPCV uncertainty bounds showing all top-seven models' 5--95\%
   Sharpe distributions overlap---no model statistically dominates.
@@ -184,20 +190,21 @@ $\lambda$-search), we use \texttt{TimeSeriesSplit}($K{=}5$,
 gap$=$1~month) on month boundaries (not row indices).
 
 % =====================================================================
-\section{Methodology: Five-Rung Complexity Ladder}\label{sec:methodology}
+\section{Methodology: Six-Rung Complexity Ladder}\label{sec:methodology}
 
-We organize twelve model variants into five rungs of progressively
-greater capacity (Fig.~\ref{fig:ladder}). Each rung introduces a
-specific structural addition over the previous one.
+We organize the model variants into six rungs of progressively greater
+capacity (Fig.~\ref{fig:ladder}). Each rung introduces a specific
+structural addition over the previous one.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{fig_ladder.pdf}
-  \caption{The five-rung complexity ladder. Each rung introduces a
+  \caption{The six-rung complexity ladder. Each rung introduces a
     specific structural increase: regularization (1$\to$2),
     smooth non-linearity (2$\to$3), deep capacity with implicit
-    interaction learning (3$\to$4), and shared representation across
-    multiple targets (4$\to$5). Annotations show approximate parameter
+    interaction learning (3$\to$4), shared representation across
+    multiple targets (4$\to$5), and explicit regime-conditioned expert
+    specialization (5$\to$6). Annotations show approximate parameter
     counts; arrows label the additional structure introduced.}
   \label{fig:ladder}
 \end{figure}
@@ -208,10 +215,11 @@ Four pooled or time-aggregated linear estimators:
 \textbf{1a OLS} (full-feature pooled cross-sectional regression);
 \textbf{1b IC-Ensemble} (univariate IC-weighted sum of single-feature
 predictors); \textbf{1c Fama-MacBeth} (per-month cross-sectional OLS,
-time-series average of slope coefficients, after \citealt{fama_macbeth_1973});
-\textbf{1d Barra} (Grinold-Kahn factor model: per-month factor returns
-$f_m$, Ledoit-Wolf shrunk covariance $\Sigma_f$, max-Sharpe combination
-$w^\ast = \Sigma_f^{-1}\mu_f$, after \citealt{grinold_kahn_2000}).
+time-series average of slope coefficients, after
+\citealt{fama_macbeth_1973}); \textbf{1d Barra} (Grinold-Kahn factor
+model: per-month factor returns $f_m$, Ledoit-Wolf shrunk covariance
+$\Sigma_f$, max-Sharpe combination $w^\ast = \Sigma_f^{-1}\mu_f$, after
+\citealt{grinold_kahn_2000}).
 
 \subsection{Rung 2 --- Regularized linear}
 
@@ -234,23 +242,79 @@ methods natively model interactions, distinguishing them from GAM.
 
 \subsection{Rung 4 --- Single-task MLP}
 
-A two-hidden-layer feedforward network ($n_\text{in}\to 64\to 32\to 1$,
-ReLU, dropout~0.10, Adam $\eta=10^{-3}$, smooth-$L_1$ Huber loss,
-early stopping with patience~20 on a chronological-tail validation
-split). 3{,}073 parameters. We label this as \emph{Rung 4} (a previous
-draft of the project labeled it ``5a''; we relabel for ladder
-consistency).
+Rung~4 is the single-task neural baseline. It uses a two-hidden-layer
+feedforward network to predict only next-month returns:
+\[
+n_{\text{in}} \to 64 \to 32 \to 1.
+\]
+The network uses ReLU activations, dropout~0.10, Adam optimization with
+learning rate $\eta=10^{-3}$, smooth-$L_1$ Huber loss, and early
+stopping with patience~20 on a chronological-tail validation split. In
+the codebase, this model appears either as \texttt{rung4} or under the
+legacy label \texttt{5a}; both refer to the same return-only MLP. The
+architecture has 3{,}073 parameters in the 14-feature V2 configuration,
+with a larger parameter count when run on the V3 27-feature panel.
 
-\subsection{Rung 5 --- Multi-task and mixture-of-experts}
+\subsection{Rung 5 --- Plain multi-task learning}
 
-Three multi-task learning variants (5b: ret$+$ret\_3m; 5c: ret$+$vol;
-5d: all three) using Kendall-Gal-Cipolla uncertainty-weighted loss
-\citep{kendall_gal_cipolla} with shared encoder
-($n_\text{in}\to 64\to 32$) and per-task heads. Plus
-\textbf{Regime-Gated MoE}: $K=3$ expert MLPs gated by softmax outputs
-of a 3-state hidden Markov model fitted per fold on macro features
-(VIX, T10Y2Y, BAML high-yield spread). Plus \textbf{Enhanced MoE} with
-LASSO-frequency-selected feature subset and additional gate inputs.
+Rung~5 adds auxiliary prediction tasks while keeping a single shared
+neural representation. The architecture uses a shared encoder
+\[
+n_{\text{in}} \to 64 \to 32
+\]
+followed by task-specific linear heads. The main variants are:
+\[
+\text{5b: ret + ret\_3m}, \qquad
+\text{5c: ret + vol}, \qquad
+\text{5d: ret + ret\_3m + vol}.
+\]
+The loss is the Kendall-Gal-Cipolla homoscedastic uncertainty-weighted
+multi-task objective:
+\[
+\mathcal{L}
+=
+\sum_{k}
+\left[
+\frac{1}{2}\exp(-s_k)\mathcal{L}_k
++
+\frac{1}{2}s_k
+\right],
+\]
+where $s_k=\log(\sigma_k^2)$ is a trainable task-uncertainty parameter.
+The goal is to test whether auxiliary targets provide useful inductive
+bias for the primary return task. In this paper, these plain MTL results
+are treated separately from the regime-informed MoE-MTL models in
+Rung~6.
+
+\subsection{Rung 6 --- Regime-informed MoE-MTL}
+
+Rung~6 adds explicit market-regime conditioning to the multi-task neural
+model. Instead of a single task head, the regime-informed
+mixture-of-experts MTL model uses $K=3$ expert heads per task and a
+gate network that mixes the experts:
+\[
+\hat{y}_{i,t}
+=
+\sum_{k=1}^{K} g_k(r_t)\, f_k(x_{i,t}),
+\]
+where $x_{i,t}$ denotes stock-level features, $r_t$ denotes
+market-regime inputs, $f_k$ is expert~$k$, and $g_k(r_t)$ is the
+softmax gate weight.
+
+The gate is informed by a 3-state hidden Markov model fitted inside
+each walk-forward fold. The HMM is fit only on training data and uses
+market-level features: one-month market return, realized volatility,
+VIX, the 10-year/2-year Treasury spread, and the BAML high-yield
+spread. The resulting regime posterior probabilities are lagged by one
+month before being merged into the stock-level panel. This prevents the
+gate from using contemporaneous or future market information.
+
+We evaluate two regime-informed variants. The baseline Regime-Gated
+MoE-MTL conditions the gate on HMM regime posteriors. The Enhanced
+MoE-MTL variant adds feature pruning, interaction features, a smaller
+encoder, and additional macro gate inputs. These models are grouped as
+Rung~6 because they add a qualitatively new structure beyond plain MTL:
+explicit regime-dependent expert specialization.
 
 \subsection{Evaluation metrics}
 
@@ -311,13 +375,12 @@ Ridge $\alpha{=}1$ (linear floor)  & +0.0164 & --      & 53.4 & 0.925 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\footnotesize $^{\dagger}$Rung~5 rows are computed on the V2 14-feature
-panel; the multi-task and MoE architectures were not retuned for V3
-since V2 walk-forward already places them well below the linear
-floor. See Sec.~\ref{subsec:rung5-fail} for the architecture-specific
-failure modes (negative transfer, expert collapse, HMM
-under-identification). Regime-Gated MoE and Enhanced MoE follow the
-same pattern and are excluded for brevity.}
+{\footnotesize $^{\dagger}$Rung~5 plain MTL rows are computed on the
+V2 14-feature panel and were not retuned for V3. Rung~6
+Regime-Informed MoE-MTL and Enhanced MoE-MTL variants follow the same
+dominated pattern and are excluded from the main table for brevity.
+See Sec.~\ref{subsec:rung56-fail} for the neural and regime-gated
+failure modes.}
 \end{table}
 
 \paragraph{Top-line ranking.}
@@ -341,11 +404,14 @@ $n_{\text{splines}}{=}4$ achieves Sharpe~0.828 and the
 Sharpe~0.984---both materially higher and competitive with the linear
 top.
 
-\paragraph{Rung 4--5 dominated by linear.}
-Single-seed MLP (Rung~4) gives Sharpe~0.347. The five-seed mean
-is~0.412. \emph{All five seeds individually fall below the Ridge
-linear floor}~(0.925). Section~\ref{sec:audit} documents three
-independent attempts to improve MLP performance, none of which succeeds.
+\paragraph{Rung 4--6 dominated by linear.}
+The neural rungs do not beat the linear floor. The single-task MLP
+(Rung~4) gives Sharpe~0.347 for seed~42, and the five-seed mean is
+0.412. Plain MTL (Rung~5) improves over the single-task neural baseline
+in its best configuration but still remains below the Ridge linear floor.
+The regime-informed MoE-MTL extensions (Rung~6) add HMM-conditioned
+expert specialization, but this additional structure does not rescue
+out-of-sample performance in the 119-month panel.
 
 \begin{figure}[t]
   \centering
@@ -377,15 +443,32 @@ default hyperparameters. Sensitivity sweeps revealed that defaults were
 the source of failure, not the methods.
 
 \paragraph{Rung 3a GAM.}
-A 9-config $n_{\text{splines}}$ sweep (Fig.~\ref{fig:gam-sweep},
+An $n_{\text{splines}}$ sweep over
+$\{4,5,6,7,8,9,10,15,20\}$ (Fig.~\ref{fig:gam-sweep},
 Tab.~\ref{tab:gam-sweep}) shows IC and Sharpe peak at
 $n_{\text{splines}}\in\{4,5\}$, with monotone degradation thereafter.
-\texttt{pygam}'s default of~10 was 2--2.5$\times$ too complex for our
-IC$\approx$0.01 SNR regime. With $n_{\text{splines}}{=}4$, Rung~3a
-achieves Sharpe~0.828 (89\% of the Ridge linear floor). Smaller $n$
-corresponds to fewer internal knots and a more nearly-monotone
-per-feature shape; the financial signal in our features is well-fit by
-1--2 internal knots.
+The full audit also included $n_{\text{splines}}=3$, which is invalid
+under the \texttt{pygam} spline-order constraint. \texttt{pygam}'s
+default of~10 was 2--2.5$\times$ too complex for our IC$\approx$0.01
+SNR regime. With $n_{\text{splines}}{=}4$, Rung~3a achieves
+Sharpe~0.828 (89\% of the Ridge linear floor). Smaller $n$ corresponds
+to fewer internal knots and a more nearly-monotone per-feature shape;
+the financial signal in our features is well-fit by 1--2 internal knots.
+
+The GAM debugging audit supports the interpretation that the
+$n_{\text{splines}}=4$--5 optimum is a bias--variance effect rather
+than an implementation artifact. As $n_{\text{splines}}$ increases,
+training IC rises from 0.073 at $n=4$ to 0.090 at $n=20$, but test IC
+peaks at $n=5$ and then falls by roughly half for larger spline bases.
+Long-short Sharpe follows the same pattern, declining from 0.828 at
+$n=4$ to 0.406 at $n=20$. At the same time, median effective degrees of
+freedom increase from about 67 at $n=4$ to about 400 at $n=20$, while
+prediction dispersion more than doubles. Thus, the additional spline
+basis functions increase in-sample flexibility but mostly fit
+idiosyncratic cross-sectional noise rather than stable factor-return
+relationships. The useful nonlinear signal appears to be broad and
+low-curvature, which is why the best GAM behaves more like a lightly
+nonlinear factor model than a highly flexible machine-learning model.
 
 \paragraph{Rung 3b XGBoost.}
 A 9-config grid (depth $\in \{1,4,6\}$ $\times$ $\eta \in \{0.01,
@@ -578,12 +661,15 @@ late-stage code review: a single duplicate definition silently
 flipped a ``failed'' result into a top-three result.
 
 % --------------------------------------------------------------
-\subsection{Rung 5 Negative Findings}\label{subsec:rung5-fail}
+\subsection{Rung 5--6 Negative Transfer and Regime-Gated Failure Modes}
+\label{subsec:rung56-fail}
 
-The three Rung~5 rows in Tab.~\ref{tab:wf-results} (5b, 5c, 5d) all
-fall below the linear floor: best is 5d at Sharpe~0.664, well under
-even the worst Rung~1--2 model (1b IC-Ensemble at 0.844). Three
-architecture-level failure modes explain why complexity does not
+The three Rung~5 plain MTL rows in Tab.~\ref{tab:wf-results} (5b, 5c,
+5d) all fall below the linear floor: best is 5d at Sharpe~0.664, well
+under even the worst Rung~1--2 model (1b IC-Ensemble at 0.844). Rung~6
+Regime-Informed MoE-MTL adds HMM-conditioned expert specialization, but
+the additional architecture does not rescue out-of-sample performance.
+Three architecture-level failure modes explain why complexity does not
 recover here.
 
 \paragraph{Negative transfer in 5b (ret$+$ret\_3m).} Adding the
@@ -599,8 +685,8 @@ representation collapses toward the auxiliary task. Gradient-surgery
 methods such as PCGrad~\citep{yu_pcgrad} are designed for exactly this
 case but were beyond our deadline scope.
 
-\paragraph{Expert collapse in MoE.} The Regime-Gated and Enhanced
-MoE variants use a softmax gate over $K{=}3$ expert MLPs, with the
+\paragraph{Expert collapse in Rung 6.} The Regime-Informed and Enhanced
+MoE-MTL variants use a softmax gate over $K{=}3$ expert MLPs, with the
 gate conditioned on a 3-state HMM regime posterior. Per-fold gate
 weights average ${\approx}1/3$ across experts (standard deviation
 0.08--0.12), indicating that the gate effectively ignores its inputs
@@ -609,19 +695,19 @@ pathology of soft MoEs trained without load-balancing
 loss~\citep{shazeer_moe}; without an entropy-regularizer or
 load-balancing penalty, gradients flow uniformly through all experts
 and no specialization emerges. In effect, the MoE reduces to an
-ensemble of three weight-tied MLPs.
+ensemble of three weakly differentiated MLP heads.
 
-\paragraph{HMM under-identification on early folds.} The 3-state
-HMM gating signal is fitted per fold on five macro features (VIX,
-T10Y2Y, BAML high-yield, mkt return, mkt realized vol) with full
-covariance emissions. Free parameters: $K(K{-}1) = 6$ transition probabilities,
-$Kp = 15$ means, and $K p(p{+}1)/2 = 45$ covariance entries, totaling
-${\approx}66$. The earliest walk-forward folds have only 60~training
-observations: the HMM is materially under-identified. Posterior
-regime probabilities in those folds revert to the prior, contributing
-no usable gating signal until $n_\text{train} \gtrsim 100$. By the
-time the HMM is well-conditioned, expert collapse has already taken
-hold.
+\paragraph{HMM under-identification on early folds.} The 3-state HMM
+gating signal is fitted per fold on five market-level features (VIX,
+T10Y2Y, BAML high-yield spread, market return, and market realized
+volatility) with full covariance emissions. Free parameters:
+$K(K{-}1) = 6$ transition probabilities, $Kp = 15$ means, and
+$K p(p{+}1)/2 = 45$ covariance entries, totaling ${\approx}66$. The
+earliest walk-forward folds have only 60~training observations: the HMM
+is materially under-identified. Posterior regime probabilities in those
+folds revert toward weakly informative averages, contributing little
+usable gating signal until $n_\text{train} \gtrsim 100$. By the time the
+HMM is better-conditioned, expert collapse has already taken hold.
 
 % =====================================================================
 \section{Combinatorial Purged K-Fold (CPCV)}\label{sec:cpcv}
@@ -638,13 +724,15 @@ remainder, with adjacent-block embargo).
 $N{=}6$ contiguous blocks of 19--20~months each;
 $k_{\text{test}}{=}2$~blocks per path; 1-month embargo on either side
 of each test block; $\binom{6}{2}{=}15$ paths per model. We apply CPCV
-to the 8 top models from Rung~1, 2, and 3b. Rung 4--5 results are
-already dominated by linear baselines under walk-forward; CPCV would
-only confirm and not change the ranking.
+to the 8 top models from Rung~1, Rung~2, and tuned XGBoost from
+Rung~3. Rung~4--6 neural results are already dominated by linear
+baselines under walk-forward and are omitted from CPCV for compute
+budget reasons; this omission is listed as a limitation in
+Sec.~\ref{sec:limitations}.
 
 \paragraph{Result.}
 Tab.~\ref{tab:cpcv} reports the 15-path Sharpe distribution per model,
-ranked by mean. The 5--95\% Sharpe bands of the top-six models all
+ranked by mean. The 5--95\% Sharpe bands of the top-seven models all
 overlap (Fig.~\ref{fig:cpcv-sharpe}): single-path Pareto rankings are
 within path noise at this sample size. In the bivariate (IC, Sharpe)
 view (Fig.~\ref{fig:pareto-bounds}), one-standard-deviation error
@@ -676,7 +764,7 @@ Model & Sharpe mean & std & 5\% & 95\% & P($<0$) & WF Sharpe \\
 \end{table}
 
 \paragraph{Interpretation.}
-The top six models' [5\%, 95\%] Sharpe bands all overlap. The
+The top seven models' [5\%, 95\%] Sharpe bands all overlap. The
 single-path walk-forward ranking
 (LASSO~$1.000>$~ElNet~$0.997>$~XGB-GKX~$0.984>$~Ridge~$0.966>$~FM~$0.959$)
 is within \emph{path noise}: none of these orderings is statistically
@@ -692,19 +780,18 @@ also zero negative-Sharpe paths, making it the strongest
 the FM/Barra pair dominates.
 
 \paragraph{Linear-vs-XGBoost tail risk.}
-Six of eight models have~$P(\text{Sharpe}<0)=0\%$, meaning the
-predictive signal is positive in \emph{every} CPCV path. XGBoost-GKX
-and Barra each have one negative-Sharpe path out of fifteen; the
-specific path that fails for XGBoost is one that includes
-Q1~2020 (COVID crash) in the test set, suggesting a regime-specific
-fragility.
+Seven of eight models have~$P(\text{Sharpe}<0)=0\%$, meaning the
+predictive signal is positive in every CPCV path for those models.
+XGBoost-GKX has one negative-Sharpe path out of fifteen; the specific
+path that fails includes Q1~2020 (COVID crash) in the test set,
+suggesting regime-specific fragility.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{fig_cpcv_sharpe.pdf}
   \caption{CPCV 15-path Sharpe distribution per model. Boxes show
     25--75\% IQR; whiskers 5--95\%; black diamonds mark per-model means;
-    individual paths plotted as dots. The overlap of all top-six boxes
+    individual paths plotted as dots. The overlap of all top-seven boxes
     underscores that single-path Pareto comparisons are within path
     noise at our sample size.}
   \label{fig:cpcv-sharpe}
@@ -727,8 +814,8 @@ At our 119-month / 442-stock sample size, no model statistically
 dominates another. The Grinold-Kahn Barra factor model and
 Fama-MacBeth time-averaged regression are the most robust point
 estimates. Linear factor methods, when properly specified, are not
-improved upon by any non-linear, deep, or multi-task approach in our
-test window.
+improved upon by any non-linear, deep, multi-task, or regime-gated
+approach in our test window.
 
 Why do all top-seven models look the same? The arithmetic is direct.
 A 58-month walk-forward window with $\sim$442 stocks gives roughly
@@ -745,21 +832,21 @@ knots per GAM spline (the $n_{\text{splines}}{=}4$ finding);
 \emph{statistically}, at IC$\approx$0.01, signal magnitude is below
 the model-selection noise floor. Fig.~\ref{fig:effective-df}
 visualizes this directly: models with effective degrees of freedom
-ranging from $\sim$27~(linear) to $\sim$3{,}000~(MLP) all cluster
-within the same Sharpe band.
+ranging from $\sim$27~(linear) to $\sim$3{,}000--4{,}000~(MLP) all
+cluster within the same Sharpe band.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\textwidth]{fig_effective_df.pdf}
   \caption{Effective degrees of freedom vs.\ walk-forward LS Sharpe.
-    Despite a $100\times$ range in model capacity (27~parameters for
-    linear models to $>$3{,}000 for MLP), all top models cluster within
-    Sharpe~$\in[0.83, 1.13]$. Additional parameters do not translate
-    to additional predictive power at our sample size.}
+    Despite a large range in model capacity (27~parameters for
+    linear models to thousands for neural models), all top models
+    cluster within Sharpe~$\in[0.83, 1.13]$. Additional parameters do
+    not translate to additional predictive power at our sample size.}
   \label{fig:effective-df}
 \end{figure}
 
-The Rung~5 failure modes documented in Sec.~\ref{subsec:rung5-fail}
+The Rung~5--6 failure modes documented in Sec.~\ref{subsec:rung56-fail}
 (negative transfer, expert collapse, HMM under-identification) are
 architecture-specific manifestations of the same sample-size
 constraint: gradient-surgery, load-balancing, and HMM identification
@@ -769,6 +856,19 @@ architectural machinery is unidentifiable from the data and
 contributes only variance. This is not a refutation of multi-task or
 mixture-of-experts as paradigms, but a quantitative statement about
 the panel size at which they begin to add value.
+
+Importantly, this failure should not be interpreted as evidence that
+MTL or MoE-MTL models are inherently inappropriate for return
+prediction. These architectures are designed to exploit repeated
+patterns across tasks, market states, and regimes. A longer panel,
+higher-frequency decision grid, or broader stock universe would give
+the shared encoder and regime gate more opportunities to observe
+similar conditions multiple times. In that setting, the larger
+Rung~5--6 models may become more competitive, and possibly superior,
+because their additional parameters would be supported by more
+independent training environments. Our result is therefore best read as
+a sample-size limitation of the available monthly S\&P~500 panel, not a
+general rejection of neural multi-task or regime-gated architectures.
 
 Our null result is consistent with, not contradictory to,
 \citet{gu_kelly_xiu}, who report substantial ML benefit on a much
@@ -824,7 +924,7 @@ We list known limitations with explicit direction-of-bias estimates.
   $\sim$25{,}000 test observations---adequate to detect IC$>0$ for the
   best individual models but underpowered for pairwise comparisons.
   CPCV makes this constraint explicit. \emph{Direction:} more data would
-  narrow the CPCV bands and likely separate the top-6 cluster into a
+  narrow the CPCV bands and likely separate the top-7 cluster into a
   proper ordering.
 
 \item \textbf{Regime composition.} The 58-month test window includes
@@ -845,30 +945,34 @@ We list known limitations with explicit direction-of-bias estimates.
   the pipeline---well within CPCV path noise. We did not re-run for
   deadline reasons; the disclosure is explicit here.
 
-\item \textbf{Validation-split granularity.} The MLP/MTL training in
-  Rung~4--5 uses a row-based ($n_\text{val}=\lfloor 0.1\cdot
-  n_\text{train}\rfloor$) chronological-tail validation split rather
-  than a strict month-boundary split. This introduces minor
-  train/val month-boundary fuzziness. \emph{Direction:} negligible at
-  ${\sim}442$ stocks per month; partial-month boundaries affect at
-  most 442 of $\sim$25{,}000 observations.
+\item \textbf{Validation-split granularity.} The MLP, MTL, and
+  MoE-MTL training in Rung~4--6 uses a row-based
+  ($n_\text{val}=\lfloor 0.1\cdot n_\text{train}\rfloor$)
+  chronological-tail validation split rather than a strict
+  month-boundary split. This introduces minor train/val month-boundary
+  fuzziness. \emph{Direction:} negligible at ${\sim}442$ stocks per
+  month; partial-month boundaries affect at most 442 of $\sim$25{,}000
+  observations.
 
-\item \textbf{CPCV does not include Rung 4--5.} Walk-forward
-  point estimates for Rung~4 (MLP) and Rung~5 (MTL/MoE) appear in
-  Tab.~\ref{tab:wf-results}, but path-uncertainty bounds via CPCV are
-  not computed. Walk-forward already places them well below the linear
-  floor; CPCV would only further confirm dominance, not produce new
-  findings, and we omit it to preserve compute budget. Rung~5 results
-  in particular use the V2 14-feature panel (footnote in
-  Tab.~\ref{tab:wf-results}); the architectures were not retuned for V3.
+\item \textbf{CPCV does not include Rung 4--6.} Walk-forward point
+  estimates for Rung~4 (MLP), Rung~5 (plain MTL), and Rung~6
+  (Regime-Informed MoE-MTL) appear either in Tab.~\ref{tab:wf-results}
+  or in the audit outputs, but path-uncertainty bounds via CPCV are not
+  computed for these neural rungs. Given their walk-forward
+  underperformance relative to the linear floor, CPCV for Rung~4--6 was
+  omitted for compute-budget reasons; this remains a limitation. Rung~5
+  and Rung~6 results in particular use the V2 14-feature panel and were
+  not retuned for V3.
 
 \item \textbf{Hyperparameter search is not exhaustive.} GAM
-  $n_{\text{splines}}$ is swept over 9 values; XGBoost depth/$\eta$
-  is swept over a 9-config grid plus the GKX-tuned configuration. MoE
-  expert count $K$ and gate temperature were not swept (left at
-  $K{=}3$, $T{=}1$). \emph{Direction:} Rung~5 results may improve under
-  better-tuned MoE; extrapolating from Rung~4 single-task results, the
-  improvement is unlikely to exceed the linear floor.
+  $n_{\text{splines}}$ is swept over 10 candidate values, with $n=3$
+  invalid under the \texttt{pygam} spline-order constraint; XGBoost
+  depth/$\eta$ is swept over a 9-config grid plus the GKX-tuned
+  configuration. For Rung~6, MoE expert count $K$ and gate temperature
+  were not swept (left at $K{=}3$, $T{=}1$). \emph{Direction:}
+  Rung~6 results may improve under better-tuned gating, but
+  extrapolating from Rung~4--5 neural audits, the improvement is
+  unlikely to exceed the linear floor in this sample.
 
 \item \textbf{Transaction costs.} We report gross long-short Sharpe
   and net Sharpe at a fixed 10~bps cost per trade. Real costs vary by
@@ -881,6 +985,20 @@ We list known limitations with explicit direction-of-bias estimates.
   ends 2024-11. We have not deployed or paper-traded any of these
   models. All results are historical backtest only.
 
+\item \textbf{Monthly frequency and data accessibility.} The panel is
+monthly because many economically meaningful firm-level variables
+(fundamentals, analyst signals, short interest, and institutional
+ownership) update monthly, quarterly, or irregularly, and high-quality
+point-in-time daily versions of these data are difficult to obtain
+without paid institutional data access. This limits the effective
+number of independent training environments to 119 monthly
+cross-sections. \emph{Direction:} this limitation likely hurts the
+larger neural models most. Plain MTL and Regime-Informed MoE-MTL have
+more parameters and require repeated examples of similar auxiliary-task
+and regime relationships. A longer panel, broader universe, or
+higher-frequency point-in-time dataset could make these models more
+competitive relative to the linear baselines.
+
 \end{enumerate}
 
 % =====================================================================
@@ -889,13 +1007,16 @@ We list known limitations with explicit direction-of-bias estimates.
 On a 442-stock S\&P~500 panel across 119~months with 27~features,
 \emph{adding model complexity does not improve cross-sectional return
 prediction in a statistically meaningful way}. CPCV reveals that all
-top-seven models' 5--95\% Sharpe bands overlap; the Grinold-Kahn
-Barra factor model and Fama-MacBeth regression are the most robust
-point estimates (mean CPCV Sharpe~1.058 and~1.071, zero negative-Sharpe
-paths). Three independent attempts to improve the MLP all fail to beat
-any linear baseline, and the audit cycle surfaces two methodology
-pitfalls (bagging-metric mismatch, HP overtune on low-SNR validation)
-that generalize beyond this project.
+top-seven models' 5--95\% Sharpe bands overlap; the Grinold-Kahn Barra
+factor model and Fama-MacBeth regression are the most robust point
+estimates (mean CPCV Sharpe~1.058 and~1.071, zero negative-Sharpe
+paths). Three independent attempts to improve the single-task MLP fail to beat
+any linear baseline, and neither plain MTL nor Regime-Informed MoE-MTL
+rescues the neural rungs in this sample, though these architectures may
+require longer, higher-frequency, or broader panels before their
+additional capacity is estimable. The audit cycle surfaces two
+methodology pitfalls---bagging-metric mismatch and hyperparameter
+overtune on low-SNR validation---that generalize beyond this project.
 
 % =====================================================================
 \bibliographystyle{plainnat}
@@ -979,7 +1100,7 @@ Learning Representations (ICLR)}, 2017.
 
 \begin{table}[h]
 \centering
-\caption{Hyperparameter inventory across the 5-rung ladder. ``Tested''
+\caption{Hyperparameter inventory across the 6-rung ladder. ``Tested''
 indicates whether a sensitivity sweep was performed during the audit
 cycle.}
 \label{tab:hp-inventory}
@@ -989,7 +1110,7 @@ cycle.}
 Rung & Model & Hyperparameter (default) & Tested? \\
 \midrule
 1a & OLS                & none & --   \\
-1b & IC-Ensemble        & IC window~$=12\times 400$ rows & no   \\
+1b & IC-Ensemble        & IC window~$=12$ months & no   \\
 1c & Fama-MacBeth       & none & --   \\
 1d & Barra              & Ledoit-Wolf shrinkage (auto) & --   \\
 \midrule
@@ -1003,7 +1124,9 @@ Rung & Model & Hyperparameter (default) & Tested? \\
 \midrule
 4  & MLP                & hidden$=$64, $\eta=10^{-3}$, dropout$=$0.10 & yes (5 seeds, hidden sweep, HP search) \\
 \midrule
-5  & MoE                & $K{=}3$ experts, gate temp.~$T{=}1$ & no \\
+5  & Plain MTL          & task set, uncertainty weights, dropout$=$0.10 & yes (auxiliary-target ablations) \\
+\midrule
+6  & Regime-Informed MoE-MTL & $K{=}3$ experts, gate temp.~$T{=}1$, HMM states$=3$ & partial (architecture variants; no $K$ sweep) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1035,12 +1158,13 @@ Rung & Model & Hyperparameter (default) & Tested? \\
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.85\textwidth]{fig_regime_timeline.pdf}
-  \caption{Hidden Markov Model (K=3 states) regime posteriors over the
-    sample period, fitted on macro features (VIX, T10Y2Y, high-yield
-    spread, market return, realized volatility). The COVID crash
-    (2020~Q1), inflation regime (2022), and AI-concentration period
-    (2023) correspond to distinct regime transitions used as gate inputs
-    for the Rung~5 mixture-of-experts.}
+  \caption{Hidden Markov Model ($K=3$ states) regime posteriors over the
+    sample period, fitted on market-level features: VIX, T10Y2Y,
+    high-yield spread, market return, and realized volatility. The
+    COVID crash (2020~Q1), inflation regime (2022), and
+    AI-concentration period (2023) correspond to distinct regime
+    transitions used as gate inputs for the Rung~6
+    Regime-Informed MoE-MTL model.}
   \label{fig:regime-timeline}
 \end{figure}
 
@@ -1050,7 +1174,7 @@ Rung & Model & Hyperparameter (default) & Tested? \\
   \caption{Walk-forward LS Sharpe per model under V2 (14~features)
     vs.\ V3 (27~features). The Phase-2 feature expansion (IBES signals,
     Phase-2 firm-level signals, missingness flags) improves Sharpe for
-    most models; Barra benefits most (0.982 → 1.134).}
+    most models; Barra benefits most (0.982 $\to$ 1.134).}
   \label{fig:v2-vs-v3}
 \end{figure}
 
