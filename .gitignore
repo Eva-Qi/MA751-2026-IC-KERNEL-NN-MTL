@@ -5,6 +5,7 @@ __pycache__/
 .ipynb_checkpoints/
 .venvdata/wrds/crsp_daily.parquet
 .venv/**
+*/.venv/**
 .claude/
 analysis/eda.ipynb
 
@@ -25,3 +26,4 @@ MA751-paper/*.fls
 MA751-paper/*.fdb_latexmk
 MA751-paper/*.synctex.gz
 MA751-paper/*.pdf
+.venv/
